@@ -30,7 +30,7 @@
 | **WHY** | 바이브코더/AI 에이전트의 시크릿 하드코딩 및 .env 노출 문제 해결. 기존 도구의 서버 강제 + 고가격 + AI 에이전트 미지원 해소. "서버가 없으면 해킹 대상도 없다" |
 | **WHO** | 솔로 바이브코더 (Claude Code 사용자). 5-15개 시크릿을 관리하는 개인 개발자. 서버 가입/결제에 거부감이 있는 개발자 |
 | **RISK** | 암호화 구현 결함 시 제품 신뢰도 치명적 타격. Master Password 분실 시 복구 불가 (Recovery Key로 완화). ".env로 충분" 인식 극복 필요 |
-| **SUCCESS** | CLI 명령어 로컬 동작, 오프라인 100%, XChaCha20-Poly1305 + Argon2id 암호화, 설치->첫 시크릿 3분 이내, Claude Code 자동 인식(CLAUDE.md), Fake Door Test로 Cloud 수요 검증 |
+| **SUCCESS** | CLI 명령어 로컬 동작, 오프라인 100%, XChaCha20-Poly1305 + Argon2id 암호화, 설치->첫 시크릿 1분 이내, Claude Code 자동 인식(CLAUDE.md), Fake Door Test로 Cloud 수요 검증 |
 | **SCOPE** | Phase 1 (MVP, 2주): Go CLI + Claude Code 통합 + Fake Door. Phase 2 (수요 검증 후): $1 Cloud + --cursor/--windsurf 확장. Phase 3: 팀 기능 (가설) |
 
 ---
@@ -1282,7 +1282,7 @@ Phase 1:
 - [ ] **Homebrew tap** 배포 (`brew install tomo-kay/tap/tene`)
 - [ ] **curl 설치 스크립트** 동작
 - [ ] **go install** 동작
-- [ ] 설치 -> 첫 시크릿 저장 3분 이내 달성
+- [ ] 설치 -> 첫 시크릿 저장 1분 이내 달성
 - [ ] --json 플래그 동작 (Claude Code 파싱)
 - [ ] --stdin 플래그 동작 (shell history 방지)
 - [ ] 전체 테스트 커버리지 > 80%

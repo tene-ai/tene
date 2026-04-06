@@ -40,7 +40,7 @@ const features = [
         <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: "3 minutes to start",
+    title: "1 minute to start",
     description:
       "brew install → tene init → tene set → done. No signup, no config files, no dashboard to set up.",
     tag: null,

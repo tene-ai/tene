@@ -39,7 +39,7 @@ export function Terminal() {
         </div>
 
         <p className="mt-6 text-center text-sm text-muted">
-          From install to first secret injection — under 3 minutes. No account needed.
+          From install to first secret injection — under 1 minute. No account needed.
         </p>
       </div>
     </section>

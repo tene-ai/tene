@@ -36,7 +36,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-3xl">
         <h2 className="text-center text-3xl font-bold sm:text-4xl">
           Up and running in{" "}
-          <span className="text-accent">3 minutes</span>
+          <span className="text-accent">1 minute</span>
         </h2>
 
         <div className="mt-16 space-y-12">

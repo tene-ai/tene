@@ -18,7 +18,7 @@
 | 원칙 | v3 | v4 |
 |------|----|----|
 | **One Job** | 서버 없이 시크릿 저장+주입 + AI 자동 인식 | 서버 없이 시크릿 저장+주입 + **Claude Code 자동 인식** |
-| **1 Minute Magic** | 가입 없이 설치→AI 인식→사용 3분 | 가입 없이 **brew 한 줄→AI 인식→사용 1분** |
+| **1 Minute Magic** | 가입 없이 설치→AI 인식→사용 1분 | 가입 없이 **brew 한 줄→AI 인식→사용 1분** |
 | **No Server** | 서버 없음 (MVP), Cloud = Phase 2 | 유지 |
 | **Zero Dependencies** | Node.js 런타임 필요 | **Go 단일 바이너리, 런타임 불필요** |
 | **AI Native** | CLAUDE.md/.cursorrules 자동 생성 | **CLAUDE.md만 (MVP), .cursorrules는 Phase 2** |
