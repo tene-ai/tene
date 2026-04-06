@@ -107,7 +107,7 @@ const jsonLd = {
         {
           "@type": "HowToStep",
           name: "Install",
-          text: "Run brew install tomo-kay/tap/tene (macOS) or curl -fsSL https://tene.dev/install.sh | sh (Linux/WSL) to install the CLI.",
+          text: "Run go install github.com/tomo-kay/tene/cmd/tene@latest or download from GitHub Releases.",
         },
         {
           "@type": "HowToStep",

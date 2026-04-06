@@ -17,14 +17,15 @@ When you run `tene init`, it generates a `CLAUDE.md` file so Claude Code automat
 ## Install
 
 ```bash
-# macOS
-brew install tomo-kay/tap/tene
+# Go users (recommended)
+go install github.com/tomo-kay/tene/cmd/tene@latest
 
-# Linux / Windows (WSL)
-curl -fsSL https://tene.dev/install.sh | sh
+# Or download binary from GitHub Releases
+# https://github.com/tomo-kay/tene/releases
 
-# Go users
-go install github.com/tomo-kay/tene@latest
+# Or build from source
+git clone https://github.com/tomo-kay/tene.git
+cd tene && go build -o tene ./cmd/tene
 ```
 
 ## Quick Start
@@ -76,6 +77,8 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 | `tene passwd` | Change master password, re-encrypt vault |
 | `tene recover` | Recover vault with 12-word recovery key |
 | `tene whoami` | Show current vault status |
+| `tene sync` | Cloud sync waitlist (coming soon) |
+| `tene version` | Print version number |
 
 ### AI Agent Usage
 
@@ -155,17 +158,10 @@ Tene has no server. There is no database to breach, no API to exploit, no cloud 
 Tene is open source under the [MIT License](LICENSE).
 
 ```bash
-# Clone
 git clone https://github.com/tomo-kay/tene.git
 cd tene
-
-# Build
 go build -o tene ./cmd/tene
-
-# Test
 go test ./...
-
-# Lint
 golangci-lint run
 ```
 

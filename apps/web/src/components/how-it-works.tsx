@@ -4,8 +4,8 @@ const steps = [
   {
     step: "01",
     title: "Install",
-    command: "brew install tomo-kay/tap/tene",
-    description: "One command. No account creation, no API keys, no server setup. Single binary — no runtime needed.",
+    command: "go install github.com/tomo-kay/tene/cmd/tene@latest",
+    description: "One command. No account creation, no API keys, no server setup. Or download from GitHub Releases.",
   },
   {
     step: "02",

@@ -16,7 +16,7 @@ const faqs = [
   {
     question: "How do I install Tene?",
     answer:
-      "On macOS: brew install tomo-kay/tap/tene. On Linux or WSL: curl -fsSL https://tene.dev/install.sh | sh. Or if you have Go: go install github.com/tomo-kay/tene@latest. Single binary, no Node.js or other runtime required.",
+      "Run: go install github.com/tomo-kay/tene/cmd/tene@latest. Or download a prebuilt binary from GitHub Releases (https://github.com/tomo-kay/tene/releases). Works on macOS, Linux, and Windows (WSL). Single binary, no runtime required.",
   },
   {
     question: "Is Tene free?",

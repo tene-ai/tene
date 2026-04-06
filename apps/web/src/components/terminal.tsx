@@ -10,7 +10,7 @@ export function Terminal() {
             <span className="ml-3 text-xs text-muted font-mono">~/my-project</span>
           </div>
           <div className="overflow-x-auto p-4 font-mono text-xs leading-7 sm:p-6 sm:text-sm">
-            <Line prompt>brew install tomo-kay/tap/tene</Line>
+            <Line prompt>go install github.com/tomo-kay/tene/cmd/tene@latest</Line>
             <Line />
             <Line prompt>tene init</Line>
             <Line dim>  Master Password: ********</Line>

@@ -42,7 +42,7 @@ const features = [
     ),
     title: "1 minute to start",
     description:
-      "brew install → tene init → tene set → done. No signup, no config files, no dashboard to set up.",
+      "Install → tene init → tene set → done. No signup, no config files, no dashboard to set up.",
     tag: null,
   },
   {

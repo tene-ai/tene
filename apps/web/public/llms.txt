@@ -19,11 +19,11 @@ Tene is an open-source, local-first secret management tool built in Go, designed
 ## Quick Start
 
 ```bash
-# macOS
-brew install tomo-kay/tap/tene
+# Install
+go install github.com/tomo-kay/tene/cmd/tene@latest
 
-# Linux / Windows WSL
-curl -fsSL https://tene.dev/install.sh | sh
+# Or download from GitHub Releases
+# https://github.com/tomo-kay/tene/releases
 
 # Then
 tene init
@@ -43,7 +43,7 @@ tene run -- claude
 - Language: Go
 - CLI Framework: cobra
 - Database: modernc.org/sqlite (pure Go, no CGo)
-- Encryption: golang.org/x/crypto (nacl/secretbox + argon2)
+- Encryption: golang.org/x/crypto (XChaCha20-Poly1305 + Argon2id)
 - Keychain: zalando/go-keyring
 - Build: goreleaser (multi-platform binaries + Homebrew tap)
 

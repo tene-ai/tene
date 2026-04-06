@@ -26,7 +26,7 @@ export function Hero() {
         </p>
 
         <div className="mt-8 flex flex-col items-center gap-4 sm:mt-10 sm:flex-row sm:justify-center">
-          <CopyCommand command="brew install tomo-kay/tap/tene" className="relative w-full justify-center sm:w-auto" />
+          <CopyCommand command="go install github.com/tomo-kay/tene/cmd/tene@latest" className="relative w-full justify-center sm:w-auto" />
 
           <a
             href="https://github.com/tomo-kay/tene"
