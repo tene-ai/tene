@@ -1,12 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "border-b border-border/60 bg-background/60 backdrop-blur-xl shadow-lg shadow-black/20"
+          : "border-b border-transparent bg-transparent"
+      }`}
+    >
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
         <a href="/" className="flex items-center gap-2.5 font-mono text-lg font-bold">
           <svg className="h-7 w-7" viewBox="0 0 32 32" fill="none">
@@ -73,7 +87,7 @@ export function Nav() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="border-t border-border bg-background/95 backdrop-blur-md sm:hidden">
+        <div className="border-t border-border/60 bg-background/60 backdrop-blur-xl sm:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
             <a
               href="#features"
