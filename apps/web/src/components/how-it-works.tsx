@@ -4,15 +4,15 @@ const steps = [
   {
     step: "01",
     title: "Install",
-    command: "tene version",
-    description: "Download from GitHub Releases or run go install. Single binary, no runtime needed. No account, no server.",
+    command: "go install github.com/tomo-kay/tene/cmd/tene@latest",
+    description: "One command. Or download binary from GitHub Releases. No account, no server.",
   },
   {
     step: "02",
-    title: "Initialize",
+    title: "Project Initialize",
     command: "tene init",
     description:
-      "Creates an encrypted vault, generates CLAUDE.md for Claude Code, and issues a 12-word recovery key.",
+      "Navigate to your project folder first. Creates an encrypted vault, generates CLAUDE.md for Claude Code, and issues a 12-word recovery key.",
   },
   {
     step: "03",

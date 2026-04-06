@@ -1,3 +1,5 @@
+import { CopyCommand } from "./copy-command";
+
 export function CTA() {
   return (
     <section className="px-4 py-24 sm:px-6">
@@ -10,14 +12,18 @@ export function CTA() {
           No signup. No server. Free forever.
         </p>
 
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <div className="mt-8 flex justify-center">
+          <CopyCommand command="go install github.com/tomo-kay/tene/cmd/tene@latest" className="relative border-accent/30 text-xs sm:text-sm" />
+        </div>
+
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <a
             href="https://github.com/tomo-kay/tene/releases"
             target="_blank"
             rel="noopener noreferrer"
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-background transition-colors hover:bg-accent-dim sm:w-auto"
           >
-            Download for free
+            Download binary
           </a>
           <a
             href="https://github.com/tomo-kay/tene"

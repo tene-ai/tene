@@ -24,6 +24,10 @@ func runVersion(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	fmt.Printf("tene v%s (%s/%s)\n", version, runtime.GOOS, runtime.GOARCH)
+	v := version
+	if len(v) > 0 && v[0] != 'v' {
+		v = "v" + v
+	}
+	fmt.Printf("tene %s (%s/%s)\n", v, runtime.GOOS, runtime.GOARCH)
 	return nil
 }
