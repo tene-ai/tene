@@ -62,6 +62,13 @@ func resetFlags() {
 
 	// update command flag
 	updateFlagCheck = false
+
+	// init command flags
+	initFlagClaude = false
+	initFlagCursor = false
+	initFlagWindsurf = false
+	initFlagGemini = false
+	initFlagCodex = false
 }
 
 // run executes a tene CLI command and returns stdout, stderr, error.
