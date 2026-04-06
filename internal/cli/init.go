@@ -60,6 +60,11 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// 1. Check if already initialized
 	vaultPath := filepath.Join(dir, ".tene", "vault.db")
 	if fileExists(vaultPath) {
+		selected := selectedAgents()
+		if len(selected) > 0 {
+			// Vault exists but agent flags specified — generate agent files only
+			return addAgentFiles(dir, selected)
+		}
 		if flagJSON {
 			return printJSON(map[string]any{
 				"ok":      true,
@@ -267,6 +272,29 @@ func joinWords(words []string) string {
 		result += w
 	}
 	return result
+}
+
+// addAgentFiles generates only the specified agent context files when vault already exists.
+func addAgentFiles(dir string, names []string) error {
+	gen := claudemd.NewGenerator(dir)
+	created, err := gen.GenerateSelected(names)
+	if err != nil {
+		return fmt.Errorf("failed to generate agent files: %w", err)
+	}
+
+	if flagJSON {
+		return printJSON(map[string]any{
+			"ok":         true,
+			"agentFiles": created,
+		})
+	}
+
+	if len(created) == 0 {
+		fmt.Println("  Agent files already exist. Nothing to do.")
+	} else {
+		fmt.Printf("  Generated %s\n", strings.Join(created, ", "))
+	}
+	return nil
 }
 
 // selectedAgents returns agent names from init flags. Empty means all.
