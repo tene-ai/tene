@@ -50,7 +50,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	}
 
 	// Audit log
-	app.Vault.AddAuditLog("secret.read", keyName, "")
+	_ = app.Vault.AddAuditLog("secret.read", keyName, "")
 
 	if flagJSON {
 		return printJSON(map[string]any{

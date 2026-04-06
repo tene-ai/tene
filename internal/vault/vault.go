@@ -240,7 +240,7 @@ func (v *Vault) SetSecretBatch(secrets map[string]string, env string) error {
 	if err != nil {
 		return fmt.Errorf("vault: failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	query := `
 		INSERT INTO secrets (name, encrypted_value, environment, version, created_at, updated_at)
@@ -313,7 +313,7 @@ func (v *Vault) SetActiveEnvironment(name string) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Deactivate all
 	if _, err := tx.Exec("UPDATE environments SET is_active = 0"); err != nil {
@@ -347,7 +347,7 @@ func (v *Vault) DeleteEnvironment(name string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Count secrets that will be deleted
 	var count int

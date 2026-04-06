@@ -118,7 +118,9 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	}
 
 	// 7. Update vault meta
-	app.Vault.SetMeta("kdf_salt", encodeBase64(newSalt))
+	if err := app.Vault.SetMeta("kdf_salt", encodeBase64(newSalt)); err != nil {
+		return err
+	}
 
 	// 8. Generate new recovery key
 	newMnemonic, err := recovery.GenerateMnemonic()
@@ -129,13 +131,17 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	app.Vault.SetMeta("recovery_blob", encodeBase64(newBlob))
+	if err := app.Vault.SetMeta("recovery_blob", encodeBase64(newBlob)); err != nil {
+		return err
+	}
 
 	// 9. Update keychain
-	app.Keychain.Store(newMasterKey)
+	if err := app.Keychain.Store(newMasterKey); err != nil {
+		return err
+	}
 
 	// 10. Audit log
-	app.Vault.AddAuditLog("vault.recovered", "", "")
+	_ = app.Vault.AddAuditLog("vault.recovered", "", "")
 
 	if !flagQuiet {
 		fmt.Println()

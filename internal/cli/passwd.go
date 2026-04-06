@@ -96,7 +96,9 @@ func runPasswd(cmd *cobra.Command, args []string) error {
 	_ = env
 
 	// 5. Update vault meta
-	app.Vault.SetMeta("kdf_salt", encodeBase64(newSalt))
+	if err := app.Vault.SetMeta("kdf_salt", encodeBase64(newSalt)); err != nil {
+		return err
+	}
 
 	// 6. Generate new recovery key
 	mnemonic, err := recovery.GenerateMnemonic()
@@ -107,13 +109,17 @@ func runPasswd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	app.Vault.SetMeta("recovery_blob", encodeBase64(blob))
+	if err := app.Vault.SetMeta("recovery_blob", encodeBase64(blob)); err != nil {
+		return err
+	}
 
 	// 7. Update keychain
-	app.Keychain.Store(newMasterKey)
+	if err := app.Keychain.Store(newMasterKey); err != nil {
+		return err
+	}
 
 	// 8. Audit log
-	app.Vault.AddAuditLog("vault.passwd_changed", "", "")
+	_ = app.Vault.AddAuditLog("vault.passwd_changed", "", "")
 
 	if flagJSON {
 		return printJSON(map[string]any{

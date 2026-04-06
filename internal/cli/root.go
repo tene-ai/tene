@@ -195,15 +195,6 @@ func printJSON(v any) error {
 	return enc.Encode(v)
 }
 
-func printJSONError(errMsg string) {
-	data := map[string]any{
-		"ok":    false,
-		"error": errMsg,
-	}
-	enc := json.NewEncoder(os.Stderr)
-	enc.SetIndent("", "  ")
-	enc.Encode(data)
-}
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)

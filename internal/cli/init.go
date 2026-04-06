@@ -74,12 +74,24 @@ func runInit(cmd *cobra.Command, args []string) error {
 	defer v.Close()
 
 	// 6. Store metadata
-	v.SetMeta("schema_version", "1")
-	v.SetMeta("vault_version", "1")
-	v.SetMeta("created_at", time.Now().UTC().Format(time.RFC3339))
-	v.SetMeta("kdf_salt", encodeBase64(salt))
-	v.SetMeta("kdf_params", `{"time":3,"memory":65536,"threads":1,"keyLen":32}`)
-	v.SetMeta("project_name", projectName)
+	if err := v.SetMeta("schema_version", "1"); err != nil {
+		return err
+	}
+	if err := v.SetMeta("vault_version", "1"); err != nil {
+		return err
+	}
+	if err := v.SetMeta("created_at", time.Now().UTC().Format(time.RFC3339)); err != nil {
+		return err
+	}
+	if err := v.SetMeta("kdf_salt", encodeBase64(salt)); err != nil {
+		return err
+	}
+	if err := v.SetMeta("kdf_params", `{"time":3,"memory":65536,"threads":1,"keyLen":32}`); err != nil {
+		return err
+	}
+	if err := v.SetMeta("project_name", projectName); err != nil {
+		return err
+	}
 
 	// 7. Generate Recovery Key
 	mnemonic, err := recovery.GenerateMnemonic()
@@ -90,10 +102,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	v.SetMeta("recovery_blob", encodeBase64(blob))
+	if err := v.SetMeta("recovery_blob", encodeBase64(blob)); err != nil {
+		return err
+	}
 
 	// 8. Create default environment
-	v.SetActiveEnvironment("default")
+	if err := v.SetActiveEnvironment("default"); err != nil {
+		return err
+	}
 
 	// 9. Store master key in keychain
 	var ks keychain.KeyStore
@@ -108,17 +124,17 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	// 10. Create .tene/.gitignore
-	writeGitignore(filepath.Join(teneDir, ".gitignore"))
+	_ = writeGitignore(filepath.Join(teneDir, ".gitignore"))
 
 	// 11. Add .tene/ to root .gitignore
-	addToRootGitignore(dir)
+	_ = addToRootGitignore(dir)
 
 	// 12. Generate CLAUDE.md
 	gen := claudemd.NewGenerator(dir)
 	claudeCreated, _ := gen.Generate()
 
 	// 13. Audit log
-	v.AddAuditLog("vault.init", "", "project="+projectName)
+	_ = v.AddAuditLog("vault.init", "", "project="+projectName)
 
 	// 14. Output
 	if flagJSON {
