@@ -81,7 +81,7 @@ func runRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Audit log
-	app.Vault.AddAuditLog("secrets.inject", "", fmt.Sprintf("count=%d,env=%s,cmd=%s", injectedCount, env, cmdArgs[0]))
+	_ = app.Vault.AddAuditLog("secrets.inject", "", fmt.Sprintf("count=%d,env=%s,cmd=%s", injectedCount, env, cmdArgs[0]))
 
 	// Execute command
 	c := exec.Command(cmdArgs[0], cmdArgs[1:]...)
