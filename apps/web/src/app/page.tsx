@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
 import { FAQ } from "@/components/faq";
 import { InteractiveGrid } from "@/components/interactive-grid";
+import { SupportedAgents } from "@/components/supported-agents";
 
 export default function Home() {
   return (
@@ -23,6 +24,7 @@ export default function Home() {
       <Nav />
       <main className="relative z-10">
         <Hero />
+        <SupportedAgents />
         <Terminal />
         <Features />
         <HowItWorks />
