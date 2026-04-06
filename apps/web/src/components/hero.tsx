@@ -13,7 +13,7 @@ export function Hero() {
           {heroData.badge}
         </div>
 
-        <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+        <h1 className="whitespace-nowrap text-3xl font-bold leading-tight tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
           {heroData.h1}
           <br />
           <span className="text-accent">{heroData.h1Accent}</span>
