@@ -75,6 +75,7 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(whoamiCmd)
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(updateCmd)
 }
 
 // Execute runs the root command.

@@ -1,14 +1,30 @@
 # Tene
 
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://go.dev)
+[![Version](https://img.shields.io/github/v/release/tomo-kay/tene?color=green)](https://github.com/tomo-kay/tene/releases)
+[![CI](https://github.com/tomo-kay/tene/actions/workflows/ci.yml/badge.svg)](https://github.com/tomo-kay/tene/actions/workflows/ci.yml)
+[![Author](https://img.shields.io/badge/Author-monsa-purple)](https://github.com/tomo-kay/tene)
+
 <p align="center">
   <img src="branding/OG_image.png" alt="Tene — Secret management that AI agents understand" width="800">
 </p>
 
-**Secret management that AI agents understand.**
+**Secret management that AI agents understand.** | [Website](https://tene.sh) | [Releases](https://github.com/tomo-kay/tene/releases)
 
 Tene is a local-first, encrypted secret management CLI. It stores your API keys, tokens, and credentials in an encrypted SQLite vault on your device — no server, no signup, no cloud dependency.
 
 When you run `tene init`, it generates a `CLAUDE.md` file so Claude Code automatically knows how to use your secrets.
+
+### Supported Platforms
+
+| Platform | Architecture | Status |
+|----------|-------------|:------:|
+| macOS | Apple Silicon (arm64) | ✓ |
+| macOS | Intel (amd64) | ✓ |
+| Linux | x86_64 (amd64) | ✓ |
+| Linux | ARM (arm64) | ✓ |
+| Windows | x86_64 (via WSL) | ✓ |
 
 ## Why Tene?
 
@@ -50,14 +66,33 @@ sudo mv tene /usr/local/bin/
 
 ```bash
 # 1. Initialize — creates encrypted vault + CLAUDE.md
-tene init
+$ tene init
+
+  Welcome to Tene! Let's set up your local secret vault.
+  Master Password: ********
+  Confirm: ********
+
+  ✓ .tene/vault.db created (local encrypted vault)
+  ✓ CLAUDE.md created (Claude Code will auto-detect tene)
+  ✓ .tene/ added to .gitignore
+
+  Recovery Key (write this down and keep it safe!):
+  +--------------------------------------------------+
+  |   apple banana cherry dolphin eagle frost          |
+  |   grape harbor island jungle kite lemon            |
+  +--------------------------------------------------+
 
 # 2. Store secrets
-tene set STRIPE_KEY sk_test_51Hxxxxx
-tene set OPENAI_API_KEY sk-proj-xxxxx
+$ tene set STRIPE_KEY sk_test_51Hxxxxx
+  STRIPE_KEY saved (encrypted, default)
+
+$ tene set OPENAI_API_KEY sk-proj-xxxxx
+  OPENAI_API_KEY saved (encrypted, default)
 
 # 3. Run with secrets injected as environment variables
-tene run -- claude
+$ tene run -- claude
+  ✓ 2 secrets injected as environment variables
+  ✓ Starting: claude
 
 # That's it. Claude Code reads CLAUDE.md and knows how to use tene.
 ```
@@ -97,6 +132,17 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 | `tene whoami` | Show current vault status |
 | `tene sync` | Cloud sync waitlist (coming soon) |
 | `tene version` | Print version number |
+| `tene update` | Update to latest version (or `tene update v0.2.0`) |
+
+### Global Flags
+
+| Flag | Description |
+|------|-------------|
+| `--json` | JSON output (for AI agents and scripting) |
+| `--env <name>` | Target environment (default: active) |
+| `--quiet` | Minimal output (errors only) |
+| `--no-keychain` | Skip OS keychain (for CI/CD) |
+| `--no-color` | Disable color output |
 
 ### AI Agent Usage
 
@@ -169,6 +215,26 @@ tene import .env
 - **Open source**: every line of crypto code is auditable
 
 Tene has no server. There is no database to breach, no API to exploit, no cloud to compromise. Your secrets exist only on your device.
+
+## CI/CD Usage
+
+Use `TENE_MASTER_PASSWORD` environment variable and `--no-keychain` flag for non-interactive environments:
+
+```bash
+# GitHub Actions example
+env:
+  TENE_MASTER_PASSWORD: ${{ secrets.TENE_MASTER_PASSWORD }}
+
+steps:
+  - run: tene get DATABASE_URL --no-keychain
+  - run: tene run --no-keychain -- npm test
+```
+
+```bash
+# Docker / CI script
+export TENE_MASTER_PASSWORD="your-password"
+tene get API_KEY --no-keychain --json
+```
 
 ## Built With
 
