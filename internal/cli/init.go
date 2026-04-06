@@ -20,8 +20,32 @@ import (
 var initCmd = &cobra.Command{
 	Use:   "init [project-name]",
 	Short: "Initialize a new tene vault in the current project",
-	Args:  cobra.MaximumNArgs(1),
-	RunE:  runInit,
+	Long: `Initialize a new tene vault and generate AI editor context files.
+
+By default, context files are generated for all supported AI editors:
+  CLAUDE.md, .cursor/rules/tene.mdc, .windsurfrules, GEMINI.md, AGENTS.md
+
+Use flags to generate only specific editor files:
+  tene init --claude --gemini     # Only CLAUDE.md and GEMINI.md
+  tene init --cursor              # Only .cursor/rules/tene.mdc`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: runInit,
+}
+
+var (
+	initFlagClaude   bool
+	initFlagCursor   bool
+	initFlagWindsurf bool
+	initFlagGemini   bool
+	initFlagCodex    bool
+)
+
+func init() {
+	initCmd.Flags().BoolVar(&initFlagClaude, "claude", false, "Generate CLAUDE.md only")
+	initCmd.Flags().BoolVar(&initFlagCursor, "cursor", false, "Generate .cursor/rules/tene.mdc only")
+	initCmd.Flags().BoolVar(&initFlagWindsurf, "windsurf", false, "Generate .windsurfrules only")
+	initCmd.Flags().BoolVar(&initFlagGemini, "gemini", false, "Generate GEMINI.md only")
+	initCmd.Flags().BoolVar(&initFlagCodex, "codex", false, "Generate AGENTS.md only")
 }
 
 func runInit(cmd *cobra.Command, args []string) error {
@@ -143,7 +167,13 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// 12. Generate AI editor context files (CLAUDE.md, .cursor/rules/tene.mdc, etc.)
 	gen := claudemd.NewGenerator(dir)
-	agentFiles, _ := gen.GenerateAll()
+	selected := selectedAgents()
+	var agentFiles []string
+	if len(selected) > 0 {
+		agentFiles, _ = gen.GenerateSelected(selected)
+	} else {
+		agentFiles, _ = gen.GenerateAll()
+	}
 
 	// 13. Audit log
 	_ = v.AddAuditLog("vault.init", "", "project="+projectName)
@@ -187,7 +217,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println("  Next: tene set KEY VALUE to add your first secret.")
 		fmt.Println()
 		fmt.Println("  Tip: No server needed. Your secrets stay on this device.")
-		fmt.Println("       AI editors will automatically use tene.")
+		fmt.Println("       AI agents will automatically use tene.")
 	} else {
 		fmt.Println("Created .tene/vault.db")
 		if len(agentFiles) > 0 {
@@ -237,6 +267,27 @@ func joinWords(words []string) string {
 		result += w
 	}
 	return result
+}
+
+// selectedAgents returns agent names from init flags. Empty means all.
+func selectedAgents() []string {
+	var names []string
+	if initFlagClaude {
+		names = append(names, "claude")
+	}
+	if initFlagCursor {
+		names = append(names, "cursor")
+	}
+	if initFlagWindsurf {
+		names = append(names, "windsurf")
+	}
+	if initFlagGemini {
+		names = append(names, "gemini")
+	}
+	if initFlagCodex {
+		names = append(names, "codex")
+	}
+	return names
 }
 
 // Ensure json import is used

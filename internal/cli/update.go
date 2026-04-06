@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
 
@@ -69,11 +71,11 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 	if flagJSON {
 		return printJSON(map[string]any{
-			"currentVersion": currentDisplay,
-			"latestVersion":  latest.TagName,
-			"targetVersion":  targetVersion,
+			"currentVersion":  currentDisplay,
+			"latestVersion":   latest.TagName,
+			"targetVersion":   targetVersion,
 			"updateAvailable": currentDisplay != latest.TagName && currentDisplay != "vdev",
-			"releaseUrl":     latest.HTMLURL,
+			"releaseUrl":      latest.HTMLURL,
 		})
 	}
 
@@ -94,18 +96,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Check if go is available
-	goPath, err := exec.LookPath("go")
-	if err != nil {
-		// No Go installed — suggest manual download
-		fmt.Println()
-		fmt.Printf("  Go is not installed. Download the binary manually:\n")
-		fmt.Printf("  https://github.com/tomo-kay/tene/releases/tag/%s\n", targetVersion)
-		fmt.Println()
-		fmt.Printf("  Or install Go first: https://go.dev/dl/\n")
-		return nil
-	}
-
 	// Confirm update
 	if isTerminal() && !flagQuiet {
 		fmt.Printf("\n  Update to %s? (y/N) ", targetVersion)
@@ -117,35 +107,120 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Run go install
-	installPath := fmt.Sprintf("github.com/tomo-kay/tene/cmd/tene@%s", targetVersion)
-	fmt.Printf("\n  Installing %s...\n", installPath)
+	// Resolve current binary path
+	binPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("cannot determine binary path: %w", err)
+	}
 
-	goInstall := exec.Command(goPath, "install", installPath)
-	goInstall.Stdout = os.Stdout
-	goInstall.Stderr = os.Stderr
-	goInstall.Env = os.Environ()
+	// Download release binary from GitHub
+	versionNum := strings.TrimPrefix(targetVersion, "v")
+	assetName := fmt.Sprintf("tene_%s_%s_%s.tar.gz", versionNum, runtime.GOOS, runtime.GOARCH)
+	downloadURL := fmt.Sprintf("https://github.com/tomo-kay/tene/releases/download/%s/%s", targetVersion, assetName)
 
-	if err := goInstall.Run(); err != nil {
-		return fmt.Errorf("update failed: %w\n\n  Try manually: go install %s", err, installPath)
+	fmt.Printf("\n  Downloading %s...\n", assetName)
+
+	tmpBin, err := downloadBinaryFromTarGz(downloadURL)
+	if err != nil {
+		return fmt.Errorf("download failed: %w", err)
+	}
+	defer os.Remove(tmpBin)
+
+	// Replace current binary
+	if err := replaceBinary(binPath, tmpBin); err != nil {
+		return fmt.Errorf("failed to replace binary: %w\n\n  Try manually: curl -sSfL https://tene.sh/install.sh | sh", err)
 	}
 
 	fmt.Printf("\n  Updated to %s.\n", targetVersion)
 	fmt.Printf("  Run 'tene version' to verify.\n")
-
-	// Show PATH hint if needed
-	gobin := os.Getenv("GOBIN")
-	if gobin == "" {
-		gopath := os.Getenv("GOPATH")
-		if gopath == "" {
-			home, _ := os.UserHomeDir()
-			gopath = home + "/go"
-		}
-		gobin = gopath + "/bin"
-	}
-	fmt.Printf("\n  Binary location: %s/tene\n", gobin)
+	fmt.Printf("\n  Binary location: %s\n", binPath)
 
 	return nil
+}
+
+// downloadBinaryFromTarGz downloads a .tar.gz release asset and extracts the tene binary to a temp file.
+func downloadBinaryFromTarGz(url string) (string, error) {
+	resp, err := http.Get(url) //nolint:gosec
+	if err != nil {
+		return "", fmt.Errorf("cannot download: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("download returned HTTP %d (check version exists)", resp.StatusCode)
+	}
+
+	gz, err := gzip.NewReader(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("invalid gzip: %w", err)
+	}
+	defer func() { _ = gz.Close() }()
+
+	tr := tar.NewReader(gz)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("invalid tar: %w", err)
+		}
+		if hdr.Name == "tene" && hdr.Typeflag == tar.TypeReg {
+			tmp, err := os.CreateTemp("", "tene-update-*")
+			if err != nil {
+				return "", err
+			}
+			if _, err := io.Copy(tmp, tr); err != nil {
+				_ = tmp.Close()
+				_ = os.Remove(tmp.Name())
+				return "", err
+			}
+			_ = tmp.Close()
+			if err := os.Chmod(tmp.Name(), 0755); err != nil {
+				_ = os.Remove(tmp.Name())
+				return "", err
+			}
+			return tmp.Name(), nil
+		}
+	}
+
+	return "", fmt.Errorf("tene binary not found in archive")
+}
+
+// replaceBinary atomically replaces the binary at dst with the one at src.
+func replaceBinary(dst, src string) error {
+	// Check write permission by opening for write
+	f, err := os.OpenFile(dst, os.O_WRONLY, 0)
+	if err != nil {
+		return fmt.Errorf("no write permission on %s (try with sudo)", dst)
+	}
+	_ = f.Close()
+
+	// Rename is atomic on same filesystem; fall back to copy if cross-device
+	if err := os.Rename(src, dst); err != nil {
+		return copyFile(src, dst)
+	}
+	return nil
+}
+
+// copyFile copies src to dst, preserving executable permission.
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = in.Close() }()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = out.Close() }()
+
+	if _, err := io.Copy(out, in); err != nil {
+		return err
+	}
+	return os.Chmod(dst, 0755)
 }
 
 func fetchLatestRelease() (*githubRelease, error) {

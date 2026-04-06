@@ -38,6 +38,30 @@ func (g *Generator) GenerateAll() ([]string, error) {
 	return created, nil
 }
 
+// GenerateSelected creates context files only for the specified agent names.
+// Returns a list of file paths that were created or modified.
+func (g *Generator) GenerateSelected(names []string) ([]string, error) {
+	selected := make(map[string]bool, len(names))
+	for _, n := range names {
+		selected[n] = true
+	}
+
+	var created []string
+	for _, af := range AgentFiles {
+		if !selected[af.Name] {
+			continue
+		}
+		ok, err := g.generateFile(af)
+		if err != nil {
+			return created, err
+		}
+		if ok {
+			created = append(created, af.Path)
+		}
+	}
+	return created, nil
+}
+
 // generateFile creates or appends the tene section to a single agent file.
 func (g *Generator) generateFile(af AgentFile) (bool, error) {
 	path := filepath.Join(g.projectDir, af.Path)
