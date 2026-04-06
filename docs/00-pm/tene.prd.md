@@ -115,7 +115,7 @@
    $ brew install tomo-kay/tap/tene
    
    # Linux / Windows WSL
-   $ curl -fsSL https://tene.dev/install.sh | sh
+   $ curl -fsSL https://tene.sh/install.sh | sh
    
    # Go 사용자
    $ go install github.com/tomo-kay/tene@latest
@@ -154,7 +154,7 @@ $ tene sync
 > 클라우드 동기화 기능을 준비하고 있습니다!
 > 관심이 있으시면 waitlist에 등록하세요.
 >
-> https://tene.dev/cloud
+> https://tene.sh/cloud
 >
 > 현재는 tene export --encrypted로 수동 백업을 권장합니다.
 ```
@@ -396,7 +396,7 @@ Cloud 구축: ECS Fargate + NLB + RDS PostgreSQL + S3
 | 플랫폼 | 설치 명령 | 비고 |
 |--------|----------|------|
 | **macOS** | `brew install tomo-kay/tap/tene` | Homebrew tap |
-| **Linux** | `curl -fsSL https://tene.dev/install.sh \| sh` | 단일 바이너리 다운로드 |
+| **Linux** | `curl -fsSL https://tene.sh/install.sh \| sh` | 단일 바이너리 다운로드 |
 | **Windows** | WSL에서 curl 설치 | WSL 권장 |
 | **Go 사용자** | `go install github.com/tomo-kay/tene@latest` | 소스 빌드 |
 

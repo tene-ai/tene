@@ -145,7 +145,7 @@ tene/
 ├── .goreleaser.yml                    # 멀티 플랫폼 빌드 + Homebrew tap
 ├── .golangci.yml                      # 린터 설정
 ├── Makefile                           # 개발 편의 (make build, make test, make lint)
-├── install.sh                         # curl -fsSL https://tene.dev/install.sh | sh
+├── install.sh                         # curl -fsSL https://tene.sh/install.sh | sh
 ├── CLAUDE.md                          # 프로젝트 컨텍스트
 └── .gitignore
 ```
@@ -465,7 +465,7 @@ brews:
   - repository:
       owner: tomo-kay
       name: homebrew-tap
-    homepage: "https://tene.dev"
+    homepage: "https://tene.sh"
     description: "Agentic Secret Runtime - Local-first encrypted secret management"
     install: |
       bin.install "tene"
@@ -495,7 +495,7 @@ brew install tomo-kay/tap/tene
 
 ```bash
 #!/bin/sh
-# tene installer - https://tene.dev/install.sh
+# tene installer - https://tene.sh/install.sh
 set -e
 
 REPO="tomo-kay/tene"

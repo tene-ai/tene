@@ -967,7 +967,7 @@ $ tene sync
   - All for just $1/month
 
   Join the waitlist to get early access:
-  -> https://tene.dev/waitlist
+  -> https://tene.sh/waitlist
 
   In the meantime, use `tene export --encrypted` for local backup.
 
@@ -978,7 +978,7 @@ $ tene sync
 
 1. 화면 출력
 2. 대화형이면 `Open waitlist page?` 프롬프트
-   - `Y`: `open https://tene.dev/waitlist` (macOS) 또는 `xdg-open` (Linux)
+   - `Y`: `open https://tene.sh/waitlist` (macOS) 또는 `xdg-open` (Linux)
    - `N`: 종료
 3. `~/.tene/config.json`에 analytics 기록:
    - `syncAttempts` += 1
@@ -990,7 +990,7 @@ $ tene sync
 {
   "ok": true,
   "message": "cloud_sync_not_available",
-  "waitlistUrl": "https://tene.dev/waitlist",
+  "waitlistUrl": "https://tene.sh/waitlist",
   "tip": "Use tene export --encrypted for local backup."
 }
 ```
@@ -2102,7 +2102,7 @@ Given: 볼트가 초기화되어 있다
 When: tene sync
 Then:
   - Cloud Sync 안내 메시지 출력
-  - waitlist URL (https://tene.dev/waitlist) 표시
+  - waitlist URL (https://tene.sh/waitlist) 표시
   - ~/.tene/config.json의 syncAttempts += 1
   - 종료 코드 0
 ```

@@ -205,7 +205,7 @@ $ tene sync
   | 클라우드 동기화 기능을 준비하고 있습니다!              |
   |                                                    |
   | 관심이 있으시면 waitlist에 등록하세요:               |
-  | https://tene.dev/cloud                             |
+  | https://tene.sh/cloud                             |
   |                                                    |
   | 현재는 tene export --encrypted로                   |
   | 수동 암호화 백업을 권장합니다.                       |
@@ -370,7 +370,7 @@ go.sum
 |------|------|------|
 | 총 설치 수 | 10,000+ | GitHub Releases |
 | GitHub Stars | 2,000+ | GitHub |
-| waitlist 등록 | 100+ | tene.dev/cloud |
+| waitlist 등록 | 100+ | tene.sh/cloud |
 | Cloud 구축 결정 | Yes/No | waitlist 분석 |
 
 ---

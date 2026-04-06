@@ -1369,7 +1369,7 @@ var syncCmd = &cobra.Command{
   - All for just $1/month
 
   Join the waitlist to get early access:
-  -> https://tene.dev/waitlist
+  -> https://tene.sh/waitlist
 
   In the meantime, use 'tene export --encrypted' for local backup.`)
 

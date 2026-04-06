@@ -284,7 +284,7 @@ $ tene sync
   - All for just $1/month
 
   Join the waitlist to get early access:
-  -> https://tene.dev/waitlist
+  -> https://tene.sh/waitlist
 
   In the meantime, use `tene export --encrypted` for local backup.
 
@@ -961,7 +961,7 @@ $ tene sync
   - All for just $1/month
 
   Join the waitlist to get early access:
-  -> https://tene.dev/waitlist
+  -> https://tene.sh/waitlist
 
   In the meantime, use `tene export --encrypted` for local backup.
 
@@ -1019,7 +1019,7 @@ brews:
     repository:
       owner: tomo-kay
       name: homebrew-tap
-    homepage: "https://tene.dev"
+    homepage: "https://tene.sh"
     description: "Secret management that AI agents understand"
     install: |
       bin.install "tene"
@@ -1044,7 +1044,7 @@ release:
 brew install tomo-kay/tap/tene
 
 # Linux / Windows WSL (curl 스크립트)
-curl -fsSL https://tene.dev/install.sh | sh
+curl -fsSL https://tene.sh/install.sh | sh
 
 # Go 사용자
 go install github.com/tomo-kay/tene@latest
@@ -1348,7 +1348,7 @@ docs: add quickstart guide
 |   (users, devices,        (Encrypted Vault Blobs)                       |
 |    subscriptions)                                                       |
 |                                                                         |
-|   CloudFront + Route 53 (tene.dev, api.tene.dev)                        |
+|   CloudFront + Route 53 (tene.sh, api.tene.sh)                        |
 +-----------------------------------------------------------------------+
 ```
 

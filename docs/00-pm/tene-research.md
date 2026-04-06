@@ -45,7 +45,7 @@
 | **WTP** | `tene export --encrypted`로 수동 백업에 만족하거나, Cloud waitlist에 등록 |
 | **Tene 사용** | 로컬 전용, 프로젝트 5-10개, `tene export --encrypted`로 백업 |
 
-**핵심 시나리오**: 재현은 Tene 무료로 프로젝트 10개를 관리한다. `tene export --encrypted > ~/backup/secrets.enc`로 정기 백업. `tene sync` 실행 → "클라우드 동기화 준비 중! waitlist: tene.dev/cloud" → waitlist 등록.
+**핵심 시나리오**: 재현은 Tene 무료로 프로젝트 10개를 관리한다. `tene export --encrypted > ~/backup/secrets.enc`로 정기 백업. `tene sync` 실행 → "클라우드 동기화 준비 중! waitlist: tene.sh/cloud" → waitlist 등록.
 
 ---
 

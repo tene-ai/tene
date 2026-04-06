@@ -47,7 +47,7 @@
 |     (users, audit)  (암호화된 vault blob)                 |
 |                                                         |
 |  CloudFront --- S3 (대시보드 정적 파일)                  |
-|  Route 53 (tene.dev, api.tene.dev)                      |
+|  Route 53 (tene.sh, api.tene.sh)                      |
 |                                                         |
 +-------------------------------------------------------+
 ```
@@ -119,7 +119,7 @@ tene get STRIPE_KEY --json
 brew install tomo-kay/tap/tene
 
 # Linux / Windows WSL
-curl -fsSL https://tene.dev/install.sh | sh
+curl -fsSL https://tene.sh/install.sh | sh
 
 # Go 사용자
 go install github.com/tomo-kay/tene@latest
@@ -401,7 +401,7 @@ MVP (Phase 1):                          Phase 2 (수요 검증 후):
 
 설치:
 brew install tomo-kay/tap/tene           # macOS
-curl -fsSL https://tene.dev/install.sh | sh  # Linux/WSL
+curl -fsSL https://tene.sh/install.sh | sh  # Linux/WSL
 
 만드는 것 (MVP):
 [Go CLI]      로컬 시크릿 암호화/관리          <- 핵심. 이것만으로 제품.
