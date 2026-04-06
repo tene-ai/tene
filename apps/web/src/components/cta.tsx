@@ -13,7 +13,7 @@ export function CTA() {
         </p>
 
         <div className="mt-8 flex justify-center">
-          <CopyCommand command="go install github.com/tomo-kay/tene/cmd/tene@latest" className="relative border-accent/30 text-xs sm:text-sm" />
+          <CopyCommand command="curl -sSfL https://tene.sh/install.sh | sh" className="relative border-accent/30 text-xs sm:text-sm" />
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">

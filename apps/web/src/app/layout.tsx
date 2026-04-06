@@ -147,7 +147,7 @@ const jsonLd = {
         {
           "@type": "HowToStep",
           name: "Install",
-          text: "Download the binary from GitHub Releases (github.com/tomo-kay/tene/releases) or run: go install github.com/tomo-kay/tene/cmd/tene@latest",
+          text: "Run: curl -sSfL https://tene.sh/install.sh | sh — or download from GitHub Releases (github.com/tomo-kay/tene/releases)",
         },
         {
           "@type": "HowToStep",

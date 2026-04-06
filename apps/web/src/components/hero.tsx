@@ -26,7 +26,7 @@ export function Hero() {
         </p>
 
         <div className="mt-8 flex flex-col items-center gap-3 sm:mt-10">
-          <CopyCommand command="go install github.com/tomo-kay/tene/cmd/tene@latest" className="relative w-full justify-center sm:w-auto" />
+          <CopyCommand command="curl -sSfL https://tene.sh/install.sh | sh" className="relative w-full justify-center sm:w-auto" />
 
           <div className="flex flex-col items-center gap-3 sm:flex-row">
             <a

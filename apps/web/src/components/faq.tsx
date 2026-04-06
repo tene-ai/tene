@@ -16,7 +16,7 @@ const faqs = [
   {
     question: "How do I install Tene?",
     answer:
-      "Run: go install github.com/tomo-kay/tene/cmd/tene@latest. Or download a prebuilt binary from GitHub Releases (https://github.com/tomo-kay/tene/releases). Works on macOS, Linux, and Windows (WSL). Single binary, no runtime required.",
+      "Run: curl -sSfL https://tene.sh/install.sh | sh — it auto-detects your OS and installs the latest binary. Or download directly from GitHub Releases (https://github.com/tomo-kay/tene/releases). Works on macOS, Linux, and Windows (WSL). No Go required.",
   },
   {
     question: "Is Tene free?",

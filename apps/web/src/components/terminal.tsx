@@ -8,7 +8,7 @@ type Line =
   | { type: "blank" };
 
 const SCRIPT: Line[] = [
-  { type: "command", text: "go install github.com/tomo-kay/tene/cmd/tene@latest" },
+  { type: "command", text: "curl -sSfL https://tene.sh/install.sh | sh" },
   { type: "blank" },
   { type: "command", text: "tene version" },
   { type: "output", text: "  tene v0.1.0 (darwin/arm64)", style: "green" },
