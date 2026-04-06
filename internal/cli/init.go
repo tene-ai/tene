@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -140,9 +141,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// 11. Add .tene/ to root .gitignore
 	_ = addToRootGitignore(dir)
 
-	// 12. Generate CLAUDE.md
+	// 12. Generate AI editor context files (CLAUDE.md, .cursor/rules/tene.mdc, etc.)
 	gen := claudemd.NewGenerator(dir)
-	claudeCreated, _ := gen.Generate()
+	agentFiles, _ := gen.GenerateAll()
 
 	// 13. Audit log
 	_ = v.AddAuditLog("vault.init", "", "project="+projectName)
@@ -153,7 +154,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 			"ok":          true,
 			"project":     projectName,
 			"vault":       ".tene/vault.db",
-			"claudeMd":    "CLAUDE.md",
+			"agentFiles":  agentFiles,
 			"recoveryKey": mnemonic,
 			"environment": "default",
 		})
@@ -164,8 +165,8 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Created .tene/vault.db (local encrypted vault)\n")
 		fmt.Printf("  Added .tene/ to .gitignore\n")
 		fmt.Printf("  Master Key saved to OS Keychain\n")
-		if claudeCreated {
-			fmt.Printf("  Generated CLAUDE.md (Claude Code will auto-detect tene)\n")
+		if len(agentFiles) > 0 {
+			fmt.Printf("  Generated %s\n", strings.Join(agentFiles, ", "))
 		}
 		fmt.Println()
 		fmt.Println("  Recovery Key (write this down and keep it safe!):")
@@ -186,10 +187,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println("  Next: tene set KEY VALUE to add your first secret.")
 		fmt.Println()
 		fmt.Println("  Tip: No server needed. Your secrets stay on this device.")
-		fmt.Println("       Claude Code will automatically use tene.")
+		fmt.Println("       AI editors will automatically use tene.")
 	} else {
 		fmt.Println("Created .tene/vault.db")
-		fmt.Println("Generated CLAUDE.md")
+		if len(agentFiles) > 0 {
+			fmt.Printf("Generated %s\n", strings.Join(agentFiles, ", "))
+		}
 		fmt.Printf("Recovery Key: %s\n", mnemonic)
 	}
 

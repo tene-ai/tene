@@ -2,19 +2,76 @@ package claudemd
 
 const SectionHeader = "# Secrets Management"
 
-const SecretsMdTemplate = `# Secrets Management
+const SecretsMdTemplate = `# Secrets Management — tene
 
 This project uses [tene](https://github.com/tomo-kay/tene) for secret management.
+Secrets are encrypted locally with XChaCha20-Poly1305. No server, no cloud.
 
-## Usage
-- Get a secret: ` + "`tene get <KEY>`" + `
-- List secrets: ` + "`tene list`" + `
-- Run with secrets injected: ` + "`tene run -- <command>`" + `
-- Set a secret: ` + "`tene set <KEY> <VALUE>`" + `
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| List available secrets | ` + "`tene list`" + ` |
+| Get a secret value | ` + "`tene get <KEY>`" + ` |
+| Get secret as JSON | ` + "`tene get <KEY> --json`" + ` |
+| Set a secret | ` + "`tene set <KEY> <VALUE>`" + ` |
+| Set from stdin | ` + "`echo \"value\" | tene set <KEY> --stdin`" + ` |
+| Run with secrets injected | ` + "`tene run -- <command>`" + ` |
+| Import from .env | ` + "`tene import .env`" + ` |
+| Export to .env | ` + "`tene export`" + ` |
+| Switch environment | ` + "`tene env <name>`" + ` |
+| List environments | ` + "`tene env list`" + ` |
 
 ## Rules
-- Never hardcode secret values in source code
-- Access secrets via environment variables
-- Do not create .env files -- use ` + "`tene run`" + ` instead
-- Use ` + "`tene list`" + ` to see available secrets
+
+1. **Never hardcode secrets** in source code, config files, or comments
+2. **Never create .env files** — use ` + "`tene run -- <command>`" + ` to inject secrets as environment variables
+3. **Access secrets via environment variables** — ` + "`process.env.KEY_NAME`" + ` (Node.js), ` + "`os.Getenv(\"KEY_NAME\")`" + ` (Go), ` + "`os.environ[\"KEY_NAME\"]`" + ` (Python)
+4. **Use ` + "`tene list`" + ` first** to check what secrets are available before asking the user
+5. **If a secret is missing**, tell the user to run: ` + "`tene set <KEY> <VALUE>`" + `
+6. **Use ` + "`--json`" + ` flag** for programmatic parsing: ` + "`tene get KEY --json`" + ` returns ` + "`{\"name\":\"KEY\",\"value\":\"...\",\"environment\":\"...\"}`" + `
+7. **Environment isolation**: secrets are scoped per environment (default, dev, staging, prod). Use ` + "`--env <name>`" + ` to target a specific environment
+
+## Available Environments
+
+Run ` + "`tene env list`" + ` to see all environments and which is active.
+
+## Example Workflows
+
+### Starting a new feature that needs an API key
+1. Check if key exists: ` + "`tene list`" + `
+2. If not: ask user to run ` + "`tene set STRIPE_KEY sk_test_xxx`" + `
+3. Use in code via ` + "`process.env.STRIPE_KEY`" + `
+4. Run/test with: ` + "`tene run -- npm test`" + `
+
+### Running the project
+` + "```bash" + `
+tene run -- npm start          # Node.js
+tene run -- go run .           # Go
+tene run -- python main.py     # Python
+` + "```" + `
 `
+
+// CursorMdcFrontmatter is the frontmatter for .mdc files used by Cursor.
+const CursorMdcFrontmatter = `---
+description: Secret management with tene
+globs:
+alwaysApply: true
+---
+`
+
+// AgentFile describes an AI editor context file.
+type AgentFile struct {
+	Name   string // e.g. "claude", "cursor"
+	Path   string // relative path from project root
+	Format string // "markdown" or "mdc"
+}
+
+// AgentFiles lists all supported AI editor context files.
+var AgentFiles = []AgentFile{
+	{Name: "claude", Path: "CLAUDE.md", Format: "markdown"},
+	{Name: "cursor", Path: ".cursor/rules/tene.mdc", Format: "mdc"},
+	{Name: "windsurf", Path: ".windsurfrules", Format: "markdown"},
+	{Name: "gemini", Path: "GEMINI.md", Format: "markdown"},
+	{Name: "codex", Path: "AGENTS.md", Format: "markdown"},
+}

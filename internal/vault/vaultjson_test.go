@@ -29,8 +29,15 @@ func TestWriteVaultJSON(t *testing.T) {
 	if vj.VaultVersion != 1 {
 		t.Errorf("VaultVersion = %d, want 1", vj.VaultVersion)
 	}
-	if len(vj.Agents) != 1 || vj.Agents[0] != "claude" {
-		t.Errorf("Agents = %v, want [claude]", vj.Agents)
+	expectedAgents := []string{"claude", "cursor", "windsurf", "gemini", "codex"}
+	if len(vj.Agents) != len(expectedAgents) {
+		t.Errorf("Agents = %v, want %v", vj.Agents, expectedAgents)
+	} else {
+		for i, a := range expectedAgents {
+			if vj.Agents[i] != a {
+				t.Errorf("Agents[%d] = %q, want %q", i, vj.Agents[i], a)
+			}
+		}
 	}
 	if vj.CreatedAt == "" {
 		t.Error("CreatedAt should not be empty")

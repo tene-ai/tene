@@ -1,5 +1,4 @@
 import { Hero } from "@/components/hero";
-import { Terminal } from "@/components/terminal";
 import { Features } from "@/components/features";
 import { Comparison } from "@/components/comparison";
 import { HowItWorks } from "@/components/how-it-works";
@@ -23,7 +22,6 @@ export default function Home() {
       <Nav />
       <main className="relative z-10">
         <Hero />
-        <Terminal />
         <Features />
         <HowItWorks />
         <Security />

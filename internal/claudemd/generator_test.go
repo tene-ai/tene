@@ -98,3 +98,171 @@ func TestHasTeneSection(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerateAll_CreatesAllFiles(t *testing.T) {
+	dir := t.TempDir()
+	gen := NewGenerator(dir)
+
+	created, err := gen.GenerateAll()
+	if err != nil {
+		t.Fatalf("GenerateAll() error: %v", err)
+	}
+
+	if len(created) != len(AgentFiles) {
+		t.Errorf("expected %d files created, got %d: %v", len(AgentFiles), len(created), created)
+	}
+
+	// Verify all files exist
+	for _, af := range AgentFiles {
+		path := filepath.Join(dir, af.Path)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			t.Errorf("file %s was not created", af.Path)
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("cannot read %s: %v", af.Path, err)
+			continue
+		}
+
+		// All files should contain the section header
+		if !strings.Contains(string(content), SectionHeader) {
+			t.Errorf("%s should contain section header", af.Path)
+		}
+
+		// All files should contain Quick Reference table
+		if !strings.Contains(string(content), "Quick Reference") {
+			t.Errorf("%s should contain Quick Reference", af.Path)
+		}
+	}
+}
+
+func TestCursorMdcFormat(t *testing.T) {
+	dir := t.TempDir()
+	gen := NewGenerator(dir)
+
+	_, err := gen.GenerateAll()
+	if err != nil {
+		t.Fatalf("GenerateAll() error: %v", err)
+	}
+
+	mdcPath := filepath.Join(dir, ".cursor", "rules", "tene.mdc")
+	content, err := os.ReadFile(mdcPath)
+	if err != nil {
+		t.Fatalf("cannot read .mdc file: %v", err)
+	}
+
+	s := string(content)
+
+	// Check frontmatter
+	if !strings.HasPrefix(s, "---\n") {
+		t.Error(".mdc file should start with frontmatter ---")
+	}
+	if !strings.Contains(s, "description: Secret management with tene") {
+		t.Error(".mdc file should contain description in frontmatter")
+	}
+	if !strings.Contains(s, "alwaysApply: true") {
+		t.Error(".mdc file should contain alwaysApply in frontmatter")
+	}
+
+	// Check body content is also present
+	if !strings.Contains(s, SectionHeader) {
+		t.Error(".mdc file should contain section header after frontmatter")
+	}
+}
+
+func TestGenerateAll_ExistingFileAppend(t *testing.T) {
+	dir := t.TempDir()
+
+	// Pre-create a GEMINI.md with existing content
+	existing := "# My Gemini Rules\n\nSome content.\n"
+	os.WriteFile(filepath.Join(dir, "GEMINI.md"), []byte(existing), 0644)
+
+	gen := NewGenerator(dir)
+	created, err := gen.GenerateAll()
+	if err != nil {
+		t.Fatalf("GenerateAll() error: %v", err)
+	}
+
+	// GEMINI.md should be in the created list (was modified)
+	found := false
+	for _, f := range created {
+		if f == "GEMINI.md" {
+			found = true
+		}
+	}
+	if !found {
+		t.Error("GEMINI.md should be in created list")
+	}
+
+	content, _ := os.ReadFile(filepath.Join(dir, "GEMINI.md"))
+	s := string(content)
+
+	if !strings.Contains(s, "# My Gemini Rules") {
+		t.Error("should preserve existing content")
+	}
+	if !strings.Contains(s, SectionHeader) {
+		t.Error("should append tene section")
+	}
+}
+
+func TestGenerateAll_SkipExisting(t *testing.T) {
+	dir := t.TempDir()
+
+	// Pre-create AGENTS.md with tene section already present
+	existing := "# My Agent Rules\n\n# Secrets Management\n\nAlready configured.\n"
+	os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte(existing), 0644)
+
+	gen := NewGenerator(dir)
+	created, err := gen.GenerateAll()
+	if err != nil {
+		t.Fatalf("GenerateAll() error: %v", err)
+	}
+
+	// AGENTS.md should NOT be in the created list (was skipped)
+	for _, f := range created {
+		if f == "AGENTS.md" {
+			t.Error("AGENTS.md should have been skipped (already has tene section)")
+		}
+	}
+
+	// Other files should still be created
+	if len(created) != len(AgentFiles)-1 {
+		t.Errorf("expected %d files created, got %d", len(AgentFiles)-1, len(created))
+	}
+}
+
+func TestCursorDirectoryCreation(t *testing.T) {
+	dir := t.TempDir()
+	gen := NewGenerator(dir)
+
+	_, err := gen.GenerateAll()
+	if err != nil {
+		t.Fatalf("GenerateAll() error: %v", err)
+	}
+
+	// .cursor/rules/ directory should exist
+	rulesDir := filepath.Join(dir, ".cursor", "rules")
+	info, err := os.Stat(rulesDir)
+	if os.IsNotExist(err) {
+		t.Fatal(".cursor/rules/ directory was not created")
+	}
+	if !info.IsDir() {
+		t.Error(".cursor/rules/ should be a directory")
+	}
+}
+
+func TestAgentNames(t *testing.T) {
+	names := AgentNames()
+	expected := []string{"claude", "cursor", "windsurf", "gemini", "codex"}
+
+	if len(names) != len(expected) {
+		t.Fatalf("expected %d names, got %d", len(expected), len(names))
+	}
+
+	for i, name := range names {
+		if name != expected[i] {
+			t.Errorf("name[%d] = %q, want %q", i, name, expected[i])
+		}
+	}
+}

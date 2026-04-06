@@ -33,6 +33,21 @@ func TestInit_Basic(t *testing.T) {
 		t.Error("vault.json not created")
 	}
 
+	// AI editor context files should exist
+	agentContextFiles := []string{
+		"CLAUDE.md",
+		".cursor/rules/tene.mdc",
+		".windsurfrules",
+		"GEMINI.md",
+		"AGENTS.md",
+	}
+	for _, f := range agentContextFiles {
+		p := filepath.Join(env.Dir, f)
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			t.Errorf("agent context file %s not created", f)
+		}
+	}
+
 	// Recovery Key should be in stdout (quiet mode)
 	if len(stdout) == 0 {
 		t.Error("expected recovery key in stdout")

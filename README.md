@@ -109,7 +109,7 @@ $ tene init
   Confirm: ********
 
   ✓ .tene/vault.db created (local encrypted vault)
-  ✓ CLAUDE.md created (Claude Code will auto-detect tene)
+  ✓ Generated CLAUDE.md, .cursor/rules/tene.mdc, .windsurfrules, GEMINI.md, AGENTS.md
   ✓ .tene/ added to .gitignore
 
   Recovery Key (write this down and keep it safe!):
@@ -130,7 +130,7 @@ $ tene run -- claude
   ✓ 2 secrets injected as environment variables
   ✓ Starting: claude
 
-# That's it. Claude Code reads CLAUDE.md and knows how to use tene.
+# That's it. AI editors read the generated files and know how to use tene.
 ```
 
 ## How It Works
@@ -153,7 +153,7 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 
 | Command | Description |
 |---------|-------------|
-| `tene init` | Create vault, set master password, generate CLAUDE.md |
+| `tene init` | Create vault, set master password, generate AI agent context files |
 | `tene set KEY VALUE` | Encrypt and store a secret |
 | `tene get KEY` | Decrypt and print a secret to stdout |
 | `tene run -- CMD` | Inject secrets as env vars, run command |
@@ -180,19 +180,110 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 | `--no-keychain` | Skip OS keychain (for CI/CD) |
 | `--no-color` | Disable color output |
 
+### Supported AI Editors
+
+`tene init` auto-generates context files for all major AI editors:
+
+| AI Editor | Generated File | Format |
+|-----------|---------------|--------|
+| Claude Code | `CLAUDE.md` | Markdown |
+| Cursor | `.cursor/rules/tene.mdc` | MDC (frontmatter) |
+| Windsurf | `.windsurfrules` | Markdown |
+| Gemini / Jules | `GEMINI.md` | Markdown |
+| Codex / OpenAI | `AGENTS.md` | Markdown |
+
+Each file contains a complete guide: 10 commands, 7 rules, example workflows. The AI editor reads it and knows how to use tene automatically.
+
 ### AI Agent Usage
 
-Claude Code can call tene directly from bash:
+Any AI agent can call tene directly from bash:
 
 ```bash
 # Get a single secret
 STRIPE_KEY=$(tene get STRIPE_KEY)
 
-# JSON output for parsing
+# JSON output for programmatic parsing
 tene get STRIPE_KEY --json
+# → {"name":"STRIPE_KEY","value":"sk_test_xxx","environment":"default"}
 
 # List all available secrets
 tene list --json
+# → {"ok":true,"count":3,"secrets":[...]}
+
+# JSON error output (for error handling)
+tene get NONEXISTENT --json
+# → {"ok":false,"error":"SECRET_NOT_FOUND","message":"..."}
+```
+
+### Detailed Command Usage
+
+#### Set secrets
+
+```bash
+# Basic set
+tene set STRIPE_KEY sk_test_51Hxxxxx
+
+# Update an existing secret (requires --overwrite)
+tene set STRIPE_KEY sk_live_NEW999 --overwrite
+
+# Read value from stdin (avoids shell history)
+echo "sk_test_xxx" | tene set STRIPE_KEY --stdin
+
+# Set in a specific environment
+tene set DATABASE_URL postgres://prod-host/db --env prod
+```
+
+#### Environment management
+
+```bash
+# List environments
+tene env list
+#   * default (active, 3 secrets)
+#     staging (1 secret)
+#     prod (2 secrets)
+
+# Create a new environment
+tene env create staging
+
+# Switch active environment
+tene env staging
+
+# Delete an environment
+tene env delete staging --force
+
+# Set/get in a specific environment without switching
+tene set API_KEY xxx --env prod
+tene get API_KEY --env prod
+tene run --env prod -- node server.js
+```
+
+#### Backup and restore
+
+```bash
+# Export as encrypted backup
+tene export --encrypted --file backup.tene.enc
+
+# Restore from encrypted backup (on another machine)
+tene init
+tene import backup.tene.enc --encrypted
+```
+
+#### Change master password
+
+```bash
+tene passwd
+# Enter current password, set new password
+# All secrets are re-encrypted with new key
+# New 12-word recovery key is issued
+```
+
+#### Recover vault (forgot password)
+
+```bash
+tene recover
+# Enter 12-word recovery key
+# Set new master password
+# All secrets remain intact
 ```
 
 ### Migrate from .env
@@ -213,9 +304,12 @@ tene import .env
 
 - Store secrets locally with XChaCha20-Poly1305 encryption
 - Inject secrets as environment variables via `tene run`
-- Generate CLAUDE.md so Claude Code auto-detects your secrets
+- Generate context files for 5 AI editors (Claude Code, Cursor, Windsurf, Gemini, Codex)
 - Support multiple environments (dev, staging, prod)
 - Provide encrypted backup via `tene export --encrypted`
+- Memory zeroing — master keys cleared from memory after use
+- Structured error codes (`--json` error responses for AI parsing)
+- Self-update via `tene update`
 
 ### Doesn't (yet)
 

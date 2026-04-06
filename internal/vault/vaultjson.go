@@ -23,7 +23,7 @@ func WriteVaultJSON(path, projectName, activeEnv string) error {
 		CreatedAt:         time.Now().UTC().Format(time.RFC3339),
 		VaultVersion:      1,
 		ActiveEnvironment: activeEnv,
-		Agents:            []string{"claude"},
+		Agents:            []string{"claude", "cursor", "windsurf", "gemini", "codex"},
 	}
 
 	data, err := json.MarshalIndent(vj, "", "  ")

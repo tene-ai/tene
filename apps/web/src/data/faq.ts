@@ -28,6 +28,11 @@ export const faqs: FAQ[] = [
       "Yes, Tene CLI is 100% free and open source under the MIT license. Local encrypted secret management has no limits. Cloud sync for teams and multi-project is coming at $1/user/month.",
   },
   {
+    question: "Which AI Agents does Tene support?",
+    answer:
+      "Tene supports Claude Code, Cursor, Windsurf, Gemini, and Codex. When you run tene init, it auto-generates context files for each editor (CLAUDE.md, .cursor/rules/tene.mdc, .windsurfrules, GEMINI.md, AGENTS.md). Each AI editor reads its file and knows how to use tene automatically — no manual setup needed.",
+  },
+  {
     question: "What encryption does Tene use?",
     answer:
       "XChaCha20-Poly1305 for secret encryption with 192-bit random nonces. Argon2id (64MB memory, 3 iterations) for key derivation. Master key stored in your OS keychain. 12-word BIP-39 recovery key.",

@@ -11,17 +11,25 @@ type Line =
 const SCRIPT: Line[] = [
   { type: "command", text: "cat .env" },
   { type: "output", text: "  STRIPE_KEY=sk_test_51Hxxxxx", style: "red" },
-  { type: "output", text: "  OPENAI_API_KEY=sk-proj-xxxxx", style: "red" },
-  { type: "output", text: "  \u2191 AI can see this", style: "dim" },
+  { type: "output", text: "  DB_PASSWORD=s3cur3_p@ss", style: "red" },
+  { type: "blank" },
+  { type: "command", text: 'claude "deploy this project"' },
+  { type: "output", text: "  \u26A0 AI agent read 2 secrets from .env", style: "red" },
+  { type: "output", text: "  \u26A0 STRIPE_KEY sent to model context", style: "red" },
+  { type: "blank" },
+  { type: "command", text: "tene init" },
+  { type: "output", text: "  \u2713 Vault created (XChaCha20-Poly1305)", style: "green" },
+  { type: "output", text: "  \u2713 CLAUDE.md generated", style: "green" },
   { type: "blank" },
   { type: "command", text: "tene import .env" },
-  { type: "output", text: "  \u2713 2 secrets imported and encrypted", style: "green" },
+  { type: "output", text: "  \u2713 2 secrets encrypted", style: "green" },
   { type: "output", text: "  \u2713 .env can now be deleted", style: "green" },
   { type: "blank" },
+  { type: "command", text: "rm .env" },
+  { type: "blank" },
   { type: "command", text: "tene run -- claude" },
-  { type: "output", text: "  \u2713 2 secrets injected as environment variables", style: "green" },
-  { type: "output", text: "  \u2713 Starting: claude", style: "green" },
-  { type: "output", text: "  \u2713 AI cannot see secret values", style: "accent" },
+  { type: "output", text: "  \u2713 Secrets injected as env vars", style: "green" },
+  { type: "output", text: "  \u2713 AI sees nothing", style: "accent" },
 ];
 
 const TYPING_SPEED = 40;
@@ -95,9 +103,8 @@ export function Terminal() {
   const currentScript = currentLine < SCRIPT.length ? SCRIPT[currentLine] : null;
 
   return (
-    <section className="px-4 py-12 sm:px-6">
-      <div className="mx-auto max-w-2xl">
-        <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-2xl shadow-black/40">
+    <div className="w-full">
+      <div className="overflow-hidden rounded-xl border border-border bg-surface shadow-2xl shadow-black/40">
           <div className="flex items-center gap-2 border-b border-border px-4 py-3">
             <span className="h-3 w-3 rounded-full bg-[#ff5f56]" />
             <span className="h-3 w-3 rounded-full bg-[#ffbd2e]" />
@@ -107,7 +114,7 @@ export function Terminal() {
 
           <div
             ref={containerRef}
-            className="h-[340px] overflow-y-auto p-4 font-mono text-sm leading-6"
+            className="overflow-y-auto p-4 font-mono text-sm leading-6"
           >
             {lines.map((line, i) => {
               if (line.type === "blank") return <div key={i} className="h-3" />;
@@ -150,7 +157,6 @@ export function Terminal() {
           From .env exposure to encrypted runtime injection &mdash; under 1
           minute.
         </p>
-      </div>
-    </section>
+    </div>
   );
 }
