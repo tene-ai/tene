@@ -14,6 +14,9 @@ export default function AuthCallbackPage() {
     const refreshToken = searchParams.get("refresh_token");
 
     if (accessToken && refreshToken) {
+      // Set cookie so Next.js middleware can verify auth on server-side
+      document.cookie = `tene_access_token=${accessToken}; path=/; max-age=${15 * 60}; SameSite=Lax`;
+      // Store in Zustand (persisted to localStorage)
       login(accessToken, refreshToken);
       router.replace("/");
     } else {

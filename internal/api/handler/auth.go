@@ -21,7 +21,7 @@ const stateTTL = 5 * time.Minute
 
 type stateEntry struct {
 	codeVerifier string
-	redirectTo   string // "dashboard" or empty (API-only)
+	redirectTo   string // "dashboard", "cli:{port}", or empty (API-only)
 	expiresAt    time.Time
 }
 
@@ -90,10 +90,16 @@ func (h *AuthHandler) GitHubAuthorize(c echo.Context) error {
 	if err != nil {
 		return response.Err(c, err)
 	}
+	// Determine redirect target
+	redirectTo := c.QueryParam("redirect") // "dashboard" or empty
+	if port := c.QueryParam("callback_port"); port != "" {
+		redirectTo = "cli:" + port // CLI local callback server
+	}
+
 	h.mu.Lock()
 	h.states[state] = stateEntry{
 		codeVerifier: pkce.CodeVerifier,
-		redirectTo:   c.QueryParam("redirect"), // "dashboard" or empty
+		redirectTo:   redirectTo,
 		expiresAt:    time.Now().Add(stateTTL),
 	}
 	h.mu.Unlock()
@@ -173,7 +179,15 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 		return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 	}
 
-	// CLI / API-only flow: return JSON
+	// If request came from CLI, redirect tokens to CLI's local callback server
+	if len(entry.redirectTo) > 4 && entry.redirectTo[:4] == "cli:" {
+		port := entry.redirectTo[4:]
+		redirectURL := fmt.Sprintf("http://127.0.0.1:%s/callback?access_token=%s&refresh_token=%s&user_id=%s&plan=%s",
+			port, accessToken, refreshToken, user.ID, user.Plan)
+		return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+	}
+
+	// API-only flow: return JSON
 	return response.OK(c, http.StatusOK, map[string]any{
 		"user": user,
 		"tokens": domain.TokenPair{

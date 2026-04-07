@@ -112,6 +112,17 @@ func decodeBase64(s string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(s)
 }
 
+// apiErrMsg builds a user-friendly error message from API error responses.
+func apiErrMsg(code, message string, status int) string {
+	if message != "" {
+		return message
+	}
+	if code != "" {
+		return fmt.Sprintf("%s (HTTP %d)", code, status)
+	}
+	return fmt.Sprintf("API error (HTTP %d)", status)
+}
+
 func encodeBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
 }

@@ -130,8 +130,10 @@ func createVaultViaAPI(apiURL, token, projectName string) (string, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
-		OK   bool `json:"ok"`
-		Data struct {
+		OK      bool   `json:"ok"`
+		Error   string `json:"error"`
+		Message string `json:"message"`
+		Data    struct {
 			ID string `json:"id"`
 		} `json:"data"`
 	}
@@ -139,7 +141,7 @@ func createVaultViaAPI(apiURL, token, projectName string) (string, error) {
 		return "", fmt.Errorf("create vault: decode: %w", err)
 	}
 	if !apiResp.OK {
-		return "", fmt.Errorf("create vault: API error (status %d)", resp.StatusCode)
+		return "", fmt.Errorf("create vault: %s", apiErrMsg(apiResp.Error, apiResp.Message, resp.StatusCode))
 	}
 
 	return apiResp.Data.ID, nil

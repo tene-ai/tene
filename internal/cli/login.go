@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -57,24 +56,22 @@ func runLogin(cmd *cobra.Command, args []string) error {
 				return
 			}
 
-			// Read the tokens from query params (returned by our API after OAuth)
-			code := r.URL.Query().Get("code")
-			state := r.URL.Query().Get("state")
+			// Read tokens directly from query params (API redirects with tokens after OAuth)
+			accessToken := r.URL.Query().Get("access_token")
+			refreshToken := r.URL.Query().Get("refresh_token")
+			userID := r.URL.Query().Get("user_id")
+			plan := r.URL.Query().Get("plan")
 
-			if code == "" {
+			if accessToken == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprint(w, "Missing code parameter")
-				errCh <- fmt.Errorf("missing code in callback")
+				_, _ = fmt.Fprint(w, "Missing access_token parameter")
+				errCh <- fmt.Errorf("missing access_token in callback")
 				return
 			}
 
-			// Exchange code via our API
-			result, err := exchangeCodeViaAPI(r.Context(), apiURL, code, state)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = fmt.Fprintf(w, "Login failed: %v", err)
-				errCh <- err
-				return
+			result := &loginResult{
+				User:   domain.User{ID: userID, Plan: plan},
+				Tokens: domain.TokenPair{AccessToken: accessToken, RefreshToken: refreshToken},
 			}
 
 			w.Header().Set("Content-Type", "text/html")
@@ -135,41 +132,6 @@ func runLogin(cmd *cobra.Command, args []string) error {
 type loginResult struct {
 	User   domain.User      `json:"user"`
 	Tokens domain.TokenPair `json:"tokens"`
-}
-
-func exchangeCodeViaAPI(ctx context.Context, apiURL, code, state string) (*loginResult, error) {
-	u, _ := url.Parse(apiURL + "/api/v1/auth/github/callback")
-	q := u.Query()
-	q.Set("code", code)
-	q.Set("state", state)
-	u.RawQuery = q.Encode()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("exchange code: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("exchange code: API returned %d", resp.StatusCode)
-	}
-
-	var apiResp struct {
-		OK   bool         `json:"ok"`
-		Data loginResult  `json:"data"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return nil, fmt.Errorf("exchange code: decode: %w", err)
-	}
-	if !apiResp.OK {
-		return nil, fmt.Errorf("exchange code: API error")
-	}
-
-	return &apiResp.Data, nil
 }
 
 func openBrowser(url string) error {

@@ -304,14 +304,16 @@ func runTeamRemove(cmd *cobra.Command, args []string) error {
 	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
-		OK   bool           `json:"ok"`
-		Data map[string]any `json:"data"`
+		OK      bool           `json:"ok"`
+		Error   string         `json:"error"`
+		Message string         `json:"message"`
+		Data    map[string]any `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
 		return fmt.Errorf("team remove: decode: %w", err)
 	}
 	if !apiResp.OK {
-		return fmt.Errorf("team remove: API error (status %d)", resp.StatusCode)
+		return fmt.Errorf("team remove: %s", apiErrMsg(apiResp.Error, apiResp.Message, resp.StatusCode))
 	}
 
 	if flagJSON {
@@ -372,14 +374,16 @@ func teamAPIPost(url, token string, body []byte) (map[string]any, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
-		OK   bool           `json:"ok"`
-		Data map[string]any `json:"data"`
+		OK      bool           `json:"ok"`
+		Error   string         `json:"error"`
+		Message string         `json:"message"`
+		Data    map[string]any `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if !apiResp.OK {
-		return nil, fmt.Errorf("API error (status %d)", resp.StatusCode)
+		return nil, fmt.Errorf("%s", apiErrMsg(apiResp.Error, apiResp.Message, resp.StatusCode))
 	}
 	return apiResp.Data, nil
 }
@@ -398,14 +402,16 @@ func teamAPIGetList(url, token string) ([]map[string]any, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
-		OK   bool             `json:"ok"`
-		Data []map[string]any `json:"data"`
+		OK      bool             `json:"ok"`
+		Error   string           `json:"error"`
+		Message string           `json:"message"`
+		Data    []map[string]any `json:"data"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 	if !apiResp.OK {
-		return nil, fmt.Errorf("API error (status %d)", resp.StatusCode)
+		return nil, fmt.Errorf("%s", apiErrMsg(apiResp.Error, apiResp.Message, resp.StatusCode))
 	}
 	return apiResp.Data, nil
 }
