@@ -8,7 +8,10 @@ AI agents auto-detect secrets via CLAUDE.md generation.
 
 ## Rules (detailed guides)
 
-- [Environments & Infrastructure](.claude/rules/environments.md) — local/staging/prod 환경, 포트, 서비스, 아키텍처
+- [Architecture & Clean Code](.claude/rules/architecture.md) — 클린 아키텍처, 패키지 의존성, API 라우트, 암호화 체계, DB 스키마
+- [Coding Conventions](.claude/rules/conventions.md) — Go/Frontend 코딩 규칙, 린팅, 디자인 시스템, Git 전략
+- [Secret Management](.claude/rules/secrets.md) — tene 시크릿 주입, 환경별 설정, OAuth, CORS, CI/CD
+- [Environments & Infrastructure](.claude/rules/environments.md) — local/staging/prod 환경, 포트, 서비스, 네트워크
 - [Deployment Guide](.claude/rules/deployment.md) — 배포 절차, 롤백, 모니터링
 
 ## Architecture
