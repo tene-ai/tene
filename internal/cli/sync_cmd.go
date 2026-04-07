@@ -29,11 +29,15 @@ func runSync(cmd *cobra.Command, args []string) error {
 	fmt.Println(`
   Tene Cloud Sync -- Coming Soon!
 
-  Cloud sync will enable:
-  - Multi-device secret synchronization
+  Solo ($5/month):
+  - Cross-machine vault sync
   - Encrypted cloud backup (zero-knowledge)
-  - Web dashboard for secret overview
-  - All for just $1/month
+  - Device management & audit log
+
+  Team ($10/user/month):
+  - Team secret sharing with RBAC
+  - Environment-level permissions
+  - Team dashboard & audit log
 
   Join the waitlist to get early access:
   -> https://tene.sh/waitlist

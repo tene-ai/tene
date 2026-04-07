@@ -119,7 +119,7 @@ const jsonLd = {
           name: "Is Tene free?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, Tene is 100% free and open source under the MIT license. There are no paid tiers, no usage limits, and no hidden costs.",
+            text: "Yes, Tene CLI is 100% free and open source under the MIT license. Local encrypted secret management has no limits. Cloud sync for multi-machine access starts at $5/month, and team sharing at $10/user/month.",
           },
         },
         {
