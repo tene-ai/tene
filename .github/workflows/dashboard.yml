@@ -2,11 +2,11 @@ name: Dashboard
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
     paths:
       - "apps/dashboard/**"
   pull_request:
-    branches: [main]
+    branches: [main, staging]
     paths:
       - "apps/dashboard/**"
 

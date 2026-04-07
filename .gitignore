@@ -16,7 +16,7 @@ bin/
 /tene-dev
 
 # Terraform
-infra/terraform/environments/prod/.terraform/
-infra/terraform/environments/prod/terraform.tfstate*
+infra/terraform/environments/**/.terraform/
+infra/terraform/environments/**/terraform.tfstate*
 *.tfstate
 *.tfstate.backup

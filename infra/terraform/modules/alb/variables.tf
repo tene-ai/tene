@@ -9,3 +9,8 @@ variable "container_port" {
 }
 
 variable "acm_certificate_arn" { type = string }
+
+variable "enable_deletion_protection" {
+  type    = bool
+  default = true
+}

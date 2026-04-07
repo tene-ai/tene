@@ -4,8 +4,8 @@ data "aws_route53_zone" "main" {
 }
 
 resource "aws_acm_certificate" "api" {
-  domain_name               = "api.${var.domain_name}"
-  subject_alternative_names = ["app.${var.domain_name}"]
+  domain_name               = "${var.subdomain_prefix}.${var.domain_name}"
+  subject_alternative_names = [for prefix in var.san_prefixes : "${prefix}.${var.domain_name}"]
   validation_method         = "DNS"
 
   lifecycle {
