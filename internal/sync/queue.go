@@ -2,6 +2,7 @@ package sync
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -74,7 +75,10 @@ func (q *SyncQueue) IsEmpty() bool {
 func (q *SyncQueue) save(entries []QueueEntry) error {
 	data, err := json.MarshalIndent(entries, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("sync: marshal queue: %w", err)
 	}
-	return os.WriteFile(q.path, data, 0600)
+	if err := os.WriteFile(q.path, data, 0600); err != nil {
+		return fmt.Errorf("sync: write queue file: %w", err)
+	}
+	return nil
 }

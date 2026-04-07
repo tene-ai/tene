@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -317,6 +316,3 @@ func selectedAgents() []string {
 	}
 	return names
 }
-
-// Ensure json import is used
-var _ = json.Marshal

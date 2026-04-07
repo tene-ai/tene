@@ -12,13 +12,27 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use:                "run -- COMMAND [ARGS...]",
-	Short:              "Run a command with secrets injected as environment variables",
+	Use:   "run -- COMMAND [ARGS...]",
+	Short: "Run a command with secrets injected as environment variables",
+	Example: `  # Run with injected secrets
+  tene run -- npm start
+
+  # Run Go server with local secrets
+  tene run --env local -- go run ./cmd/server
+
+  # Run with specific environment
+  tene run --env prod -- ./scripts/deploy.sh`,
+	RunE: runRun,
+	// Note: We manually parse --env before "--" since DisableFlagParsing
+	// would prevent cobra from parsing it, and not disabling it would
+	// cause cobra to try parsing flags after "--".
 	DisableFlagParsing: true,
-	RunE:               runRun,
 }
 
 func runRun(cmd *cobra.Command, args []string) error {
+	// Manually parse --env flag before "--" since DisableFlagParsing is true
+	parseFlagsBeforeDash(args)
+
 	// Parse args after "--"
 	cmdArgs := extractArgsAfterDash(args)
 	if len(cmdArgs) == 0 {
@@ -103,6 +117,27 @@ func runRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
+}
+
+// parseFlagsBeforeDash manually parses known flags (--env, --json, --quiet)
+// from args before the "--" separator. This is needed because run command uses
+// DisableFlagParsing to avoid consuming flags after "--" that belong to the child command.
+func parseFlagsBeforeDash(args []string) {
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--" {
+			break
+		}
+		if (args[i] == "--env" || args[i] == "-e") && i+1 < len(args) {
+			flagEnv = args[i+1]
+			i++ // skip value
+		}
+		if args[i] == "--json" {
+			flagJSON = true
+		}
+		if args[i] == "--quiet" || args[i] == "-q" {
+			flagQuiet = true
+		}
+	}
 }
 
 func extractArgsAfterDash(args []string) []string {

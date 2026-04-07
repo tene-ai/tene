@@ -212,7 +212,7 @@ func (e *Engine) doPush(ctx context.Context, opts PushOptions, blob []byte, hash
 	url := opts.APIBaseURL + "/api/v1/vaults/" + opts.VaultID + "/push"
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: create push request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+opts.AccessToken)
 	req.Header.Set("Content-Type", "application/octet-stream")
@@ -264,7 +264,7 @@ func (e *Engine) doGetManifest(ctx context.Context, opts PullOptions) (*pullMani
 	url := opts.APIBaseURL + "/api/v1/vaults/" + opts.VaultID + "/pull"
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: create pull request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+opts.AccessToken)
 
@@ -291,12 +291,12 @@ func (e *Engine) doGetManifest(ctx context.Context, opts PullOptions) (*pullMani
 func (e *Engine) doDownload(ctx context.Context, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: create download request: %w", err)
 	}
 
 	resp, err := e.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: download blob: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -350,11 +350,11 @@ func syncStatePath(vaultDBPath string) string {
 func loadSyncState(vaultDBPath string) (*syncStateFile, error) {
 	data, err := os.ReadFile(syncStatePath(vaultDBPath))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: read sync state: %w", err)
 	}
 	var state syncStateFile
 	if err := json.Unmarshal(data, &state); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sync: parse sync state: %w", err)
 	}
 	return &state, nil
 }
@@ -362,23 +362,28 @@ func loadSyncState(vaultDBPath string) (*syncStateFile, error) {
 func saveSyncState(vaultDBPath string, state *syncStateFile) error {
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("sync: marshal sync state: %w", err)
 	}
-	return os.WriteFile(syncStatePath(vaultDBPath), data, 0600)
+	if err := os.WriteFile(syncStatePath(vaultDBPath), data, 0600); err != nil {
+		return fmt.Errorf("sync: write sync state: %w", err)
+	}
+	return nil
 }
 
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
-		return err
+		return fmt.Errorf("sync: open source file: %w", err)
 	}
 	defer in.Close()
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("sync: create destination file: %w", err)
 	}
 	defer out.Close()
-	_, err = io.Copy(out, in)
-	return err
+	if _, err = io.Copy(out, in); err != nil {
+		return fmt.Errorf("sync: copy file: %w", err)
+	}
+	return nil
 }
 

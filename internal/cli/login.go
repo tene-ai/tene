@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -137,8 +138,12 @@ type loginResult struct {
 }
 
 func exchangeCodeViaAPI(ctx context.Context, apiURL, code, state string) (*loginResult, error) {
-	url := fmt.Sprintf("%s/api/v1/auth/github/callback?code=%s&state=%s", apiURL, code, state)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	u, _ := url.Parse(apiURL + "/api/v1/auth/github/callback")
+	q := u.Query()
+	q.Set("code", code)
+	q.Set("state", state)
+	u.RawQuery = q.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}

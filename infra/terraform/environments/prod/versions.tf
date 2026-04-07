@@ -8,14 +8,16 @@ terraform {
     }
   }
 
-  # Uncomment after bootstrap:
-  # backend "s3" {
-  #   bucket         = "tene-terraform-state-ap-northeast-2"
-  #   key            = "prod/terraform.tfstate"
-  #   region         = "ap-northeast-2"
-  #   dynamodb_table = "tene-terraform-lock"
-  #   encrypt        = true
-  # }
+  # To activate: run bootstrap first (see infra/terraform/bootstrap/)
+  # then uncomment this block and run: terraform init -migrate-state
+  backend "s3" {
+    bucket         = "tene-terraform-state-ap-northeast-2"
+    key            = "prod/terraform.tfstate"
+    region         = "ap-northeast-2"
+    dynamodb_table = "tene-terraform-lock"
+    encrypt        = true
+    profile        = "monsa-sandbox"
+  }
 }
 
 provider "aws" {

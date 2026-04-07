@@ -4,6 +4,8 @@ package api
 import (
 	"context"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	echoMw "github.com/labstack/echo/v4/middleware"
@@ -96,10 +98,15 @@ func NewServer(cfg Config) *echo.Echo {
 	e.Use(echoMw.Recover())
 	e.Use(mw.SecurityHeaders())
 	e.Use(echoMw.BodyLimit("2M")) // Default body limit for most routes
+	// M-03: CORS origins from environment (no localhost in prod)
+	corsOrigins := []string{"https://tene.sh", "https://app.tene.sh"}
+	if extra := os.Getenv("CORS_EXTRA_ORIGINS"); extra != "" {
+		corsOrigins = append(corsOrigins, strings.Split(extra, ",")...)
+	}
 	e.Use(echoMw.CORSWithConfig(echoMw.CORSConfig{
-		AllowOrigins: []string{"https://tene.sh", "https://app.tene.sh", "http://localhost:3000", "http://localhost:3001"},
-		AllowMethods: []string{"GET", "POST", "OPTIONS"}, // M-03: restrict to used methods
-		AllowHeaders: []string{"Authorization", "Content-Type", "X-Request-ID"},
+		AllowOrigins: corsOrigins,
+		AllowMethods: []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
+		AllowHeaders: []string{"Authorization", "Content-Type", "X-Request-ID", "If-Match"},
 	}))
 	e.Use(rateLimiter.Middleware())
 

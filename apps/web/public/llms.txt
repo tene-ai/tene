@@ -1,61 +1,78 @@
 # Tene
 
-> Local-first encrypted secret management CLI that Claude Code understands.
+> Agentic Secret Runtime -- local-first encrypted secret management that AI agents understand.
 
-## Overview
-
-Tene is an open-source, local-first secret management tool built in Go, designed for developers working with Claude Code. It encrypts API keys, tokens, and credentials in a local SQLite vault using XChaCha20-Poly1305 encryption. Single binary, no runtime needed, no server, no signup, no cloud dependency.
+Tene encrypts secrets locally with XChaCha20-Poly1305 + Argon2id, generates CLAUDE.md for AI context, and syncs to the cloud with Zero-Knowledge encryption.
 
 ## Key Features
 
-- **Claude Code Auto-Detection**: `tene init` generates CLAUDE.md so Claude Code automatically knows how to retrieve secrets.
-- **Local-First Encryption**: Secrets are encrypted with XChaCha20-Poly1305 (256-bit keys) and stored in a local SQLite vault.
-- **Zero Network Calls**: 100% offline. No server, no telemetry, no internet requirement.
-- **One Command Injection**: `tene run -- <command>` injects all secrets as environment variables.
-- **Environment Switching**: `tene env prod` switches between development, staging, and production secrets.
-- **.env Migration**: `tene import .env` migrates existing environment variables into the encrypted vault.
-- **Single Binary**: Built in Go. No Node.js or other runtime required.
+- Local-first: secrets never leave your machine unencrypted
+- Zero-Knowledge cloud sync: 4-layer encryption (L1 values, L2 envelope, L3 TLS, L4 S3 SSE)
+- AI-native: auto-generates CLAUDE.md so AI agents discover secrets without seeing values
+- Team sharing: X25519 ECDH key wrapping for secure team collaboration
+- Multi-environment: dev, staging, prod with isolated vaults
+- Recovery: BIP-39 12-word mnemonic for master key recovery
+- Cross-platform: macOS, Linux, Windows (amd64/arm64)
 
 ## Quick Start
 
-```bash
-# Download binary from GitHub Releases
-# https://github.com/tomo-kay/tene/releases
+  curl -fsSL https://tene.sh/install.sh | sh
+  tene init              # Create vault + master password + recovery key + CLAUDE.md
+  tene set API_KEY sk_xxx  # Encrypt and store a secret
+  tene run -- npm start  # Inject all secrets as env vars and run command
 
-# Or with Go
-go install github.com/tomo-kay/tene/cmd/tene@latest
+## For AI Agents
 
-# Then
-tene init
-tene set STRIPE_KEY sk_test_xxx
-tene run -- claude
-```
+Tene auto-generates CLAUDE.md for project-specific context:
+  tene init          # Creates .tene/vault.db + CLAUDE.md with secret references
+
+Key commands for agents:
+  tene list          # List available secret keys (values masked)
+  tene run -- CMD    # Inject secrets into any command as environment variables
+  tene env           # Switch between environments (dev/staging/prod)
+
+IMPORTANT: Never use `tene get <KEY>` in AI conversations -- plaintext values may leak into logs.
+Use `tene list` to verify secrets exist, and `tene run --` to inject them.
+
+## Cloud Features (Pro Plan)
+
+  tene login         # OAuth login via GitHub
+  tene push          # Encrypt vault + upload to cloud (Sync Envelope)
+  tene pull          # Download + decrypt remote vault
+  tene sync          # Push + Pull combined
+  tene team create   # Create team with X25519 project key
+  tene team invite   # Invite member with wrapped project key
+  tene billing       # View subscription status
+
+## Dashboard
+
+Web dashboard at app.tene.sh for:
+- Vault management and sync status
+- Team member management and RBAC
+- Device registration (X25519 public keys)
+- Audit logs
+- Billing and subscription management
 
 ## Encryption Architecture
 
-- Master Password -> Argon2id (64MB memory, 3 iterations) -> Master Key (256-bit)
-- Master Key cached in OS Keychain
-- Each secret encrypted with XChaCha20-Poly1305 (unique 192-bit nonce)
-- 12-word BIP-39 recovery key
+Master Password -> Argon2id (64MB, 3 iter) -> Master Key (256-bit)
+Master Key -> HKDF-SHA256 -> Encryption Key, Sync Key, Device Key, Auth Hash
+Secrets encrypted with XChaCha20-Poly1305 (192-bit nonce, key name as AAD)
+Cloud sync: Sync Envelope wraps entire vault before upload (Zero-Knowledge)
+Team: X25519 ECDH shared secret -> HKDF(projectID) -> wrap Project Key per member
 
 ## Tech Stack
 
-- Language: Go
-- CLI Framework: cobra
-- Database: modernc.org/sqlite (pure Go, no CGo)
-- Encryption: golang.org/x/crypto (XChaCha20-Poly1305 + Argon2id)
-- Keychain: zalando/go-keyring
-- Build: goreleaser (multi-platform binaries + Homebrew tap)
+- CLI: Go 1.25+, Cobra, modernc.org/sqlite
+- API: Go + Echo v4, PostgreSQL 16
+- Frontend: Next.js 15, Tailwind CSS v4
+- Infra: AWS ECS Fargate, RDS, S3, Terraform
+- Auth: ES256 JWT + GitHub OAuth (PKCE)
+- Billing: LemonSqueezy (Merchant of Record)
 
 ## Links
 
 - Website: https://tene.sh
+- Dashboard: https://app.tene.sh
 - GitHub: https://github.com/tomo-kay/tene
 - License: MIT
-- Price: Free (forever)
-
-## Supported Platforms
-
-- macOS (arm64, amd64)
-- Linux (arm64, amd64)
-- Windows (WSL)

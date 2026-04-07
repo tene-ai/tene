@@ -71,7 +71,8 @@ resource "aws_ecs_task_definition" "api" {
       { name = "DB_NAME", value = var.db_name },
       { name = "S3_BUCKET", value = var.s3_bucket_name },
       { name = "AWS_REGION", value = var.aws_region },
-      { name = "CALLBACK_BASE", value = "https://api.tene.sh" },
+      { name = "CALLBACK_BASE", value = var.callback_base },
+      { name = "DASHBOARD_URL", value = var.dashboard_url },
       { name = "LEMON_STORE_ID", value = var.lemon_store_id },
       { name = "LEMON_VARIANT_PRO", value = var.lemon_variant_pro },
     ]

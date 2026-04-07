@@ -69,7 +69,12 @@ func runPasswd(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	totalReencrypted := 0
+	// Phase 1: Decrypt all secrets and re-encrypt in memory (atomic preparation)
+	type reEncEntry struct {
+		name, env, newEncVal string
+	}
+	var prepared []reEncEntry
+
 	for _, e := range envs {
 		allSecrets, err := app.Vault.GetAllSecrets(e.Name)
 		if err != nil {
@@ -79,24 +84,29 @@ func runPasswd(cmd *cobra.Command, args []string) error {
 		for name, encVal := range allSecrets {
 			ct, err := decodeBase64(encVal)
 			if err != nil {
-				return fmt.Errorf("Re-encryption failed. Vault is unchanged.")
+				return fmt.Errorf("re-encryption failed (vault unchanged): decode %s: %w", name, err)
 			}
 			pt, err := crypto.Decrypt(oldEncKey, ct, []byte(name))
 			if err != nil {
-				return fmt.Errorf("Re-encryption failed. Vault is unchanged.")
+				return fmt.Errorf("re-encryption failed (vault unchanged): decrypt %s: %w", name, err)
 			}
 
 			newCt, err := crypto.Encrypt(newEncKey, pt, []byte(name))
 			if err != nil {
-				return fmt.Errorf("Re-encryption failed. Vault is unchanged.")
+				return fmt.Errorf("re-encryption failed (vault unchanged): encrypt %s: %w", name, err)
 			}
 
-			if err := app.Vault.SetSecret(name, encodeBase64(newCt), e.Name); err != nil {
-				return fmt.Errorf("Re-encryption failed. Vault is unchanged.")
-			}
-			totalReencrypted++
+			prepared = append(prepared, reEncEntry{name: name, env: e.Name, newEncVal: encodeBase64(newCt)})
 		}
 	}
+
+	// Phase 2: Write all re-encrypted secrets (all-or-nothing intent)
+	for _, entry := range prepared {
+		if err := app.Vault.SetSecret(entry.name, entry.newEncVal, entry.env); err != nil {
+			return fmt.Errorf("re-encryption write failed at %s/%s: %w", entry.env, entry.name, err)
+		}
+	}
+	totalReencrypted := len(prepared)
 
 	_ = env
 

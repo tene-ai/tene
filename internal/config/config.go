@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -66,7 +67,7 @@ func DefaultConfig() *Config {
 func ConfigDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("config: get home dir: %w", err)
 	}
 	return filepath.Join(home, ".tene"), nil
 }
@@ -75,7 +76,7 @@ func ConfigDir() (string, error) {
 func ConfigPath() (string, error) {
 	dir, err := ConfigDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("config: get config path: %w", err)
 	}
 	return filepath.Join(dir, "config.json"), nil
 }
@@ -93,7 +94,7 @@ func Load() (*Config, error) {
 		if os.IsNotExist(err) {
 			return DefaultConfig(), nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("config: read config file: %w", err)
 	}
 
 	var cfg Config
@@ -108,29 +109,35 @@ func Load() (*Config, error) {
 func Save(cfg *Config) error {
 	dir, err := ConfigDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("config: save get dir: %w", err)
 	}
 
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return err
+		return fmt.Errorf("config: create config dir: %w", err)
 	}
 
 	path := filepath.Join(dir, "config.json")
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("config: marshal config: %w", err)
 	}
 
-	return os.WriteFile(path, append(data, '\n'), 0600)
+	if err := os.WriteFile(path, append(data, '\n'), 0600); err != nil {
+		return fmt.Errorf("config: write config file: %w", err)
+	}
+	return nil
 }
 
 // EnsureConfigDir creates ~/.tene/ if it does not exist.
 func EnsureConfigDir() error {
 	dir, err := ConfigDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("config: ensure config dir: %w", err)
 	}
-	return os.MkdirAll(dir, 0700)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("config: create config dir: %w", err)
+	}
+	return nil
 }
 
 // IncrementSyncAttempts increments syncAttempts and records a timestamp.

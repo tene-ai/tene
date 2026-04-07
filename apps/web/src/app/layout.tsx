@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.svg",
-    apple: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Tene — Your .env is not a secret. AI can read it.",
@@ -54,8 +54,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/og-image.png",
-        width: 1437,
-        height: 821,
+        width: 1200,
+        height: 630,
         alt: "Tene — Your .env is not a secret. AI can read it.",
       },
     ],

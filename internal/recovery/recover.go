@@ -34,7 +34,7 @@ func EncryptMasterKey(masterKey []byte, mnemonic string) ([]byte, error) {
 	// Derive encryption sub-key from recovery key
 	encKey, err := crypto.DeriveSubKey(recoveryKey, RecoveryPurpose, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recovery: derive sub-key: %w", err)
 	}
 
 	// Encrypt master key
@@ -58,7 +58,7 @@ func RecoverMasterKey(blob []byte, mnemonic string) ([]byte, error) {
 
 	encKey, err := crypto.DeriveSubKey(recoveryKey, RecoveryPurpose, 32)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("recovery: derive sub-key: %w", err)
 	}
 
 	masterKey, err := crypto.Decrypt(encKey, blob, []byte("recovery"))

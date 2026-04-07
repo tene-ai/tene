@@ -281,6 +281,9 @@ func itoa(n int64) string {
 // generateFamily creates a unique token family identifier (H-04).
 func generateFamily() string {
 	b := make([]byte, 8)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to timestamp-based ID if CSPRNG fails
+		return hex.EncodeToString([]byte(fmt.Sprintf("%d", time.Now().UnixNano())))
+	}
 	return hex.EncodeToString(b)
 }

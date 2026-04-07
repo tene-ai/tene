@@ -39,9 +39,9 @@ func colorize(color, text string) string {
 }
 
 // Convenience functions
-func colorRed_(text string) string    { return colorize(colorRed, text) }
-func colorGreen_(text string) string  { return colorize(colorGreen, text) }
-func colorYellow_(text string) string { return colorize(colorYellow, text) }
-func colorBlue_(text string) string   { return colorize(colorBlue, text) }
-func colorBold_(text string) string   { return colorize(colorBold, text) }
-func colorDim_(text string) string    { return colorize(colorDim, text) }
+func redText(text string) string    { return colorize(colorRed, text) }
+func greenText(text string) string  { return colorize(colorGreen, text) }
+func yellowText(text string) string { return colorize(colorYellow, text) }
+func blueText(text string) string   { return colorize(colorBlue, text) }
+func boldText(text string) string   { return colorize(colorBold, text) }
+func dimText(text string) string    { return colorize(colorDim, text) }

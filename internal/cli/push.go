@@ -23,6 +23,11 @@ Requires Pro plan and active login (tene login).
 
 Uses optimistic locking: if the remote version is newer, you must pull first
 or use --force to overwrite.`,
+		Example: `  # Push vault to cloud
+  tene push
+
+  # Push specific environment
+  tene push --env prod`,
 		RunE: runPush,
 	}
 	cmd.Flags().Bool("force", false, "Force push, overwriting remote version")

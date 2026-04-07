@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SecretKeyRow } from "@/components/secret-key-row";
 
 interface VaultDetailPageProps {
@@ -22,7 +23,7 @@ export default async function VaultDetailPage({ params }: VaultDetailPageProps) 
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2">
-          <a href="/vaults" className="text-muted hover:text-foreground text-sm">&larr; Vaults</a>
+          <Link href="/vaults" className="text-muted hover:text-foreground text-sm">&larr; Vaults</Link>
           <span className="text-muted">/</span>
           <h1 className="text-2xl font-bold font-mono text-accent">{vault.project_name}</h1>
         </div>

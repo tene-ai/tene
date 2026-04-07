@@ -20,6 +20,11 @@ Requires Pro plan and active login (tene login).
 
 Creates a backup of the current vault.db before overwriting.
 Use --force to skip backup and overwrite directly.`,
+		Example: `  # Pull vault from cloud
+  tene pull
+
+  # Pull specific environment
+  tene pull --env prod`,
 		RunE: runPull,
 	}
 	cmd.Flags().Bool("force", false, "Force pull, overwriting local vault without backup")

@@ -17,7 +17,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-56 border-r border-border bg-surface h-screen sticky top-0">
+    <aside aria-label="Main navigation" className="hidden lg:flex flex-col w-56 border-r border-border bg-surface h-screen sticky top-0">
       <div className="p-4 border-b border-border">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-accent font-mono font-bold text-lg">tene</span>

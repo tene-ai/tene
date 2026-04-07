@@ -2,6 +2,7 @@ package keychain
 
 import (
 	"encoding/base64"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -20,10 +21,13 @@ func NewFileStore(path string) *FileStore {
 func (f *FileStore) Store(key []byte) error {
 	dir := filepath.Dir(f.path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return err
+		return fmt.Errorf("keychain: create key dir: %w", err)
 	}
 	encoded := base64.StdEncoding.EncodeToString(key)
-	return os.WriteFile(f.path, []byte(encoded), 0600)
+	if err := os.WriteFile(f.path, []byte(encoded), 0600); err != nil {
+		return fmt.Errorf("keychain: write key file: %w", err)
+	}
+	return nil
 }
 
 func (f *FileStore) Load() ([]byte, error) {
@@ -32,9 +36,13 @@ func (f *FileStore) Load() ([]byte, error) {
 		if os.IsNotExist(err) {
 			return nil, ErrKeyNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("keychain: read key file: %w", err)
 	}
-	return base64.StdEncoding.DecodeString(string(data))
+	decoded, err := base64.StdEncoding.DecodeString(string(data))
+	if err != nil {
+		return nil, fmt.Errorf("keychain: decode key: %w", err)
+	}
+	return decoded, nil
 }
 
 func (f *FileStore) Delete() error {
@@ -42,7 +50,10 @@ func (f *FileStore) Delete() error {
 	if os.IsNotExist(err) {
 		return nil
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("keychain: delete key file: %w", err)
+	}
+	return nil
 }
 
 func (f *FileStore) Exists() bool {

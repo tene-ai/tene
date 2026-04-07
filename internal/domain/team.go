@@ -10,6 +10,7 @@ type Team struct {
 	OwnerID             string    `json:"owner_id"`
 	LemonSubscriptionID string    `json:"lemon_subscription_id,omitempty"`
 	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 // TeamMember represents a user's membership in a team.

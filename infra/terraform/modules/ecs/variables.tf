@@ -49,6 +49,16 @@ variable "db_name" { type = string }
 variable "s3_bucket_name" { type = string }
 variable "secrets_arn" { type = string }
 
+variable "callback_base" {
+  type    = string
+  default = "https://api.tene.sh"
+}
+
+variable "dashboard_url" {
+  type    = string
+  default = "https://app.tene.sh"
+}
+
 variable "lemon_store_id" {
   type    = string
   default = ""

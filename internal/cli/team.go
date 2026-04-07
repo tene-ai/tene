@@ -22,6 +22,20 @@ func newTeamCmd() *cobra.Command {
 		Use:   "team",
 		Short: "Manage teams for shared vault access",
 		Long:  "Create teams, invite members, and manage roles for shared secret management.",
+		Example: `  # Create a new team
+  tene team create "My Project"
+
+  # List your teams
+  tene team list
+
+  # Invite a member (wraps project key via X25519 ECDH)
+  tene team invite <team-id> <user-id>
+
+  # Remove a member (triggers key rotation)
+  tene team remove <team-id> <user-id>
+
+  # List team members
+  tene team members <team-id>`,
 	}
 
 	cmd.AddCommand(newTeamCreateCmd())

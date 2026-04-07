@@ -3,6 +3,7 @@ package vault
 import (
 	"database/sql"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -49,10 +50,9 @@ func New(dbPath string) (*Vault, error) {
 		return nil, fmt.Errorf("vault: migration failed: %w", err)
 	}
 
-	// Set file permissions to 0600
+	// Set file permissions to 0600 (best-effort: some FS don't support chmod)
 	if err := os.Chmod(dbPath, 0600); err != nil {
-		// Non-fatal on some systems
-		_ = err
+		slog.Warn("vault: chmod 0600 failed", "path", dbPath, "error", err)
 	}
 
 	return v, nil
@@ -73,7 +73,7 @@ func (v *Vault) migrate() error {
 	if err != nil {
 		// First run: initialize schema
 		if err := v.initSchema(); err != nil {
-			return err
+			return fmt.Errorf("vault: init schema: %w", err)
 		}
 		return v.SetMeta("schema_version", strconv.Itoa(currentSchemaVersion))
 	}
@@ -86,9 +86,13 @@ func (v *Vault) migrate() error {
 func (v *Vault) getSchemaVersion() (int, error) {
 	val, err := v.GetMeta("schema_version")
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: get schema version: %w", err)
 	}
-	return strconv.Atoi(val)
+	version, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, fmt.Errorf("vault: parse schema version: %w", err)
+	}
+	return version, nil
 }
 
 // --- Metadata ---
@@ -153,8 +157,12 @@ func (v *Vault) GetSecret(name, env string) (*Secret, error) {
 		return nil, fmt.Errorf("vault: failed to get secret %q: %w", name, err)
 	}
 
-	s.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
-	s.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAt)
+	if t, err := time.Parse("2006-01-02 15:04:05", createdAt); err == nil {
+		s.CreatedAt = t
+	}
+	if t, err := time.Parse("2006-01-02 15:04:05", updatedAt); err == nil {
+		s.UpdatedAt = t
+	}
 	return &s, nil
 }
 
@@ -176,11 +184,18 @@ func (v *Vault) ListSecrets(env string) ([]Secret, error) {
 		if err := rows.Scan(&s.ID, &s.Name, &s.EncryptedValue, &s.Environment, &s.Version, &createdAt, &updatedAt); err != nil {
 			return nil, fmt.Errorf("vault: failed to scan secret: %w", err)
 		}
-		s.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
-		s.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAt)
+		if t, err := time.Parse("2006-01-02 15:04:05", createdAt); err == nil {
+			s.CreatedAt = t
+		}
+		if t, err := time.Parse("2006-01-02 15:04:05", updatedAt); err == nil {
+			s.UpdatedAt = t
+		}
 		secrets = append(secrets, s)
 	}
-	return secrets, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("vault: list secrets rows: %w", err)
+	}
+	return secrets, nil
 }
 
 // DeleteSecret deletes a secret.
@@ -192,7 +207,7 @@ func (v *Vault) DeleteSecret(name, env string) error {
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return fmt.Errorf("vault: delete secret rows affected: %w", err)
 	}
 	if affected == 0 {
 		return fmt.Errorf("%w: %s", ErrSecretNotFound, name)
@@ -205,14 +220,20 @@ func (v *Vault) DeleteSecret(name, env string) error {
 func (v *Vault) SecretExists(name, env string) (bool, error) {
 	var count int
 	err := v.db.QueryRow("SELECT COUNT(*) FROM secrets WHERE name = ? AND environment = ?", name, env).Scan(&count)
-	return count > 0, err
+	if err != nil {
+		return false, fmt.Errorf("vault: check secret exists: %w", err)
+	}
+	return count > 0, nil
 }
 
 // CountSecrets returns the number of secrets in the given environment.
 func (v *Vault) CountSecrets(env string) (int, error) {
 	var count int
 	err := v.db.QueryRow("SELECT COUNT(*) FROM secrets WHERE environment = ?", env).Scan(&count)
-	return count, err
+	if err != nil {
+		return 0, fmt.Errorf("vault: count secrets: %w", err)
+	}
+	return count, nil
 }
 
 // GetAllSecrets returns all secrets as a name->encryptedValue map.
@@ -227,11 +248,14 @@ func (v *Vault) GetAllSecrets(env string) (map[string]string, error) {
 	for rows.Next() {
 		var name, val string
 		if err := rows.Scan(&name, &val); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vault: scan secret: %w", err)
 		}
 		result[name] = val
 	}
-	return result, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("vault: get all secrets rows: %w", err)
+	}
+	return result, nil
 }
 
 // SetSecretBatch stores multiple secrets in a single transaction.
@@ -284,13 +308,18 @@ func (v *Vault) ListEnvironments() ([]Environment, error) {
 		var isActive int
 		var createdAt string
 		if err := rows.Scan(&e.Name, &isActive, &createdAt); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("vault: scan environment: %w", err)
 		}
 		e.IsActive = isActive == 1
-		e.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAt)
+		if t, err := time.Parse("2006-01-02 15:04:05", createdAt); err == nil {
+			e.CreatedAt = t
+		}
 		envs = append(envs, e)
 	}
-	return envs, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("vault: list environments rows: %w", err)
+	}
+	return envs, nil
 }
 
 // GetActiveEnvironment returns the active environment name.
@@ -311,13 +340,13 @@ func (v *Vault) GetActiveEnvironment() (string, error) {
 func (v *Vault) SetActiveEnvironment(name string) error {
 	tx, err := v.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("vault: set active environment begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	// Deactivate all
 	if _, err := tx.Exec("UPDATE environments SET is_active = 0"); err != nil {
-		return err
+		return fmt.Errorf("vault: deactivate environments: %w", err)
 	}
 
 	// Insert or update the target environment
@@ -325,10 +354,13 @@ func (v *Vault) SetActiveEnvironment(name string) error {
 		VALUES (?, 1, datetime('now'))
 		ON CONFLICT(name) DO UPDATE SET is_active = 1`
 	if _, err := tx.Exec(query, name); err != nil {
-		return err
+		return fmt.Errorf("vault: set active environment: %w", err)
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("vault: set active environment commit: %w", err)
+	}
+	return nil
 }
 
 // CreateEnvironment creates a new environment.
@@ -345,25 +377,25 @@ func (v *Vault) CreateEnvironment(name string) error {
 func (v *Vault) DeleteEnvironment(name string) (int, error) {
 	tx, err := v.db.Begin()
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: delete environment begin tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	// Count secrets that will be deleted
 	var count int
 	if err := tx.QueryRow("SELECT COUNT(*) FROM secrets WHERE environment = ?", name).Scan(&count); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: count environment secrets: %w", err)
 	}
 
 	// Delete secrets
 	if _, err := tx.Exec("DELETE FROM secrets WHERE environment = ?", name); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: delete environment secrets: %w", err)
 	}
 
 	// Delete environment
 	result, err := tx.Exec("DELETE FROM environments WHERE name = ?", name)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: delete environment: %w", err)
 	}
 
 	affected, _ := result.RowsAffected()
@@ -372,7 +404,7 @@ func (v *Vault) DeleteEnvironment(name string) (int, error) {
 	}
 
 	if err := tx.Commit(); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("vault: delete environment commit: %w", err)
 	}
 	return count, nil
 }
@@ -381,7 +413,10 @@ func (v *Vault) DeleteEnvironment(name string) (int, error) {
 func (v *Vault) EnvironmentExists(name string) (bool, error) {
 	var count int
 	err := v.db.QueryRow("SELECT COUNT(*) FROM environments WHERE name = ?", name).Scan(&count)
-	return count > 0, err
+	if err != nil {
+		return false, fmt.Errorf("vault: check environment exists: %w", err)
+	}
+	return count > 0, nil
 }
 
 // --- Audit Log ---

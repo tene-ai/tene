@@ -152,6 +152,29 @@ func (s *MemTeamStore) IsMember(teamID, userID string) bool {
 	return false
 }
 
+// GetEnvPermissions returns the environment permissions for a user in a team.
+func (s *MemTeamStore) GetEnvPermissions(teamID, userID string) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	// Owner has access to all environments
+	if t, ok := s.teams[teamID]; ok && t.OwnerID == userID {
+		return []string{"*"}, nil
+	}
+	for _, m := range s.members[teamID] {
+		if m.UserID == userID {
+			if len(m.EnvPermissions) > 0 {
+				return m.EnvPermissions, nil
+			}
+			// Default: admin gets all, member gets dev only
+			if m.Role == "admin" {
+				return []string{"*"}, nil
+			}
+			return []string{"dev", "staging"}, nil
+		}
+	}
+	return nil, domain.ErrNotTeamMember
+}
+
 // IsAdmin checks if a user is an admin or owner of a team.
 func (s *MemTeamStore) IsAdmin(teamID, userID string) bool {
 	s.mu.RLock()

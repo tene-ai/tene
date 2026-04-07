@@ -26,6 +26,7 @@ type Device struct {
 	X25519PublicKey []byte    `json:"x25519_public_key"`
 	LastSeenAt      time.Time `json:"last_seen_at"`
 	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // AuditLog represents an audit trail entry.

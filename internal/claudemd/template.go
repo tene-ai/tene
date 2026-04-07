@@ -22,6 +22,10 @@ Secrets are encrypted locally with XChaCha20-Poly1305. No server, no cloud.
 | Switch environment | ` + "`tene env <name>`" + ` |
 | List environments | ` + "`tene env list`" + ` |
 
+## Setup
+
+Run ` + "`tene init`" + ` to create the vault, set a master password, generate a recovery key, and produce this context file.
+
 ## Rules
 
 1. **Never hardcode secrets** in source code, config files, or comments
@@ -31,6 +35,8 @@ Secrets are encrypted locally with XChaCha20-Poly1305. No server, no cloud.
 5. **If a secret is missing**, tell the user to run: ` + "`tene set <KEY> <VALUE>`" + `
 6. **Use ` + "`--json`" + ` flag** for programmatic parsing: ` + "`tene get KEY --json`" + ` returns ` + "`{\"name\":\"KEY\",\"value\":\"...\",\"environment\":\"...\"}`" + `
 7. **Environment isolation**: secrets are scoped per environment (default, dev, staging, prod). Use ` + "`--env <name>`" + ` to target a specific environment
+8. **Never run ` + "`tene get <KEY>`" + `** to inspect secret values — they may leak into AI conversation logs
+9. **Never run ` + "`tene export`" + `** — it outputs all plaintext secrets to stdout
 
 ## Available Environments
 

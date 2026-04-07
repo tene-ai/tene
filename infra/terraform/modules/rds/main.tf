@@ -71,7 +71,7 @@ resource "aws_db_instance" "this" {
   vpc_security_group_ids = [aws_security_group.rds.id]
   parameter_group_name   = aws_db_parameter_group.this.name
 
-  multi_az            = false
+  multi_az            = var.multi_az
   publicly_accessible = false
 
   backup_retention_period = 7

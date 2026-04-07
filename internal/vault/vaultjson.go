@@ -2,6 +2,7 @@ package vault
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"time"
 )
@@ -28,22 +29,25 @@ func WriteVaultJSON(path, projectName, activeEnv string) error {
 
 	data, err := json.MarshalIndent(vj, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("vault: marshal vault.json: %w", err)
 	}
 
-	return os.WriteFile(path, append(data, '\n'), 0600)
+	if err := os.WriteFile(path, append(data, '\n'), 0600); err != nil {
+		return fmt.Errorf("vault: write vault.json: %w", err)
+	}
+	return nil
 }
 
 // ReadVaultJSON reads the .tene/vault.json file.
 func ReadVaultJSON(path string) (*VaultJSON, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("vault: read vault.json: %w", err)
 	}
 
 	var vj VaultJSON
 	if err := json.Unmarshal(data, &vj); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("vault: parse vault.json: %w", err)
 	}
 	return &vj, nil
 }
@@ -52,15 +56,18 @@ func ReadVaultJSON(path string) (*VaultJSON, error) {
 func UpdateVaultJSONEnv(path, env string) error {
 	vj, err := ReadVaultJSON(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("vault: update env read: %w", err)
 	}
 
 	vj.ActiveEnvironment = env
 
 	data, err := json.MarshalIndent(vj, "", "  ")
 	if err != nil {
-		return err
+		return fmt.Errorf("vault: marshal vault.json: %w", err)
 	}
 
-	return os.WriteFile(path, append(data, '\n'), 0600)
+	if err := os.WriteFile(path, append(data, '\n'), 0600); err != nil {
+		return fmt.Errorf("vault: write vault.json: %w", err)
+	}
+	return nil
 }

@@ -20,7 +20,15 @@ var setCmd = &cobra.Command{
 	Use:   "set KEY [VALUE]",
 	Short: "Store an encrypted secret",
 	Args:  cobra.RangeArgs(1, 2),
-	RunE:  runSet,
+	Example: `  # Store a secret
+  tene set STRIPE_KEY sk_test_xxx
+
+  # Store from stdin
+  echo "value" | tene set API_KEY --stdin
+
+  # Store in specific environment
+  tene set DB_PASSWORD mypass --env prod`,
+	RunE: runSet,
 }
 
 func init() {

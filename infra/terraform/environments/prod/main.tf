@@ -118,6 +118,21 @@ module "rds" {
   db_password           = var.db_password
 }
 
+# ── CloudWatch Alarms ─────────────────────────────
+module "cloudwatch" {
+  source = "../../modules/cloudwatch"
+
+  project     = local.project
+  environment = local.environment
+  aws_region  = local.region
+
+  ecs_cluster_name        = module.ecs.cluster_name
+  ecs_service_name        = module.ecs.service_name
+  rds_instance_id         = module.rds.instance_id
+  alb_arn_suffix          = module.alb.alb_arn_suffix
+  target_group_arn_suffix = module.alb.target_group_arn_suffix
+}
+
 # ── Route 53 (api.tene.sh → ALB) ─────────────────
 module "route53" {
   source = "../../modules/route53"
