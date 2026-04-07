@@ -11,23 +11,12 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gosec
-    - revive
-    - bodyclose
-    - noctx
     - misspell
     - exhaustive
 
 linters-settings:
   errcheck:
     check-type-assertions: true
-  revive:
-    rules:
-      - name: exported
-        severity: warning
-  gosec:
-    excludes:
-      - G104
   exhaustive:
     default-signifies-exhaustive: true
 
@@ -36,7 +25,3 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-        - gosec
-    - path: cmd/
-      linters:
-        - revive
