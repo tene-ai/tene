@@ -16,7 +16,7 @@ export function Pricing() {
           features.
         </p>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-3">
+        <div className="mt-16 mx-auto grid max-w-3xl gap-6 lg:grid-cols-2">
           {pricingTiers.map((tier) => (
             <GlowCard
               key={tier.name}
@@ -78,7 +78,7 @@ export function Pricing() {
         {/* Shared waitlist form */}
         <div className="mx-auto mt-12 max-w-lg text-center">
           <p className="mb-4 text-sm text-muted">
-            Interested in Solo or Team? Join the waitlist for early access.
+            Interested in Pro? Join the waitlist for early access.
           </p>
           <WaitlistForm />
         </div>
