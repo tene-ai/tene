@@ -94,7 +94,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// 4. Create .tene/ directory
 	teneDir := filepath.Join(dir, ".tene")
 	if err := os.MkdirAll(teneDir, 0700); err != nil {
-		return fmt.Errorf("Cannot create .tene/ directory: %w", err)
+		return fmt.Errorf("cannot create .tene/ directory: %w", err)
 	}
 
 	// 5. Create SQLite vault
@@ -102,7 +102,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer v.Close()
+	defer func() { _ = v.Close() }()
 
 	// 6. Store metadata
 	if err := v.SetMeta("schema_version", "1"); err != nil {

@@ -34,9 +34,9 @@ func TestSealOpen_RoundTrip(t *testing.T) {
 
 func TestOpen_WrongKey(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 	wrongKey := make([]byte, 32)
-	rand.Read(wrongKey)
+	_, _ = rand.Read(wrongKey)
 
 	envelope, err := Seal(syncKey, []byte("secret data"), "proj", "dev")
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestOpen_WrongKey(t *testing.T) {
 
 func TestOpen_WrongAAD(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 
 	envelope, err := Seal(syncKey, []byte("secret data"), "proj-a", "dev")
 	require.NoError(t, err)
@@ -61,7 +61,7 @@ func TestOpen_WrongAAD(t *testing.T) {
 
 func TestSeal_EmptyPlaintext(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 
 	_, err := Seal(syncKey, nil, "proj", "dev")
 	assert.Error(t, err, "should reject empty plaintext")
@@ -77,7 +77,7 @@ func TestSeal_InvalidKeyLength(t *testing.T) {
 
 func TestOpen_TruncatedEnvelope(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 
 	_, err := Open(syncKey, []byte("short"), "proj", "dev")
 	assert.Error(t, err, "should reject truncated envelope")
@@ -85,7 +85,7 @@ func TestOpen_TruncatedEnvelope(t *testing.T) {
 
 func TestOpen_InvalidMagic(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 
 	envelope, err := Seal(syncKey, []byte("data"), "proj", "dev")
 	require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestChecksum(t *testing.T) {
 
 func TestDeriveSyncKey(t *testing.T) {
 	masterKey := make([]byte, 32)
-	rand.Read(masterKey)
+	_, _ = rand.Read(masterKey)
 
 	key1, err := DeriveSyncKey(masterKey)
 	require.NoError(t, err)
@@ -125,7 +125,7 @@ func TestDeriveSyncKey(t *testing.T) {
 
 	// Different master key → different sync key
 	otherMaster := make([]byte, 32)
-	rand.Read(otherMaster)
+	_, _ = rand.Read(otherMaster)
 	key3, err := DeriveSyncKey(otherMaster)
 	require.NoError(t, err)
 	assert.NotEqual(t, key1, key3)
@@ -133,11 +133,11 @@ func TestDeriveSyncKey(t *testing.T) {
 
 func TestSealOpen_LargePayload(t *testing.T) {
 	syncKey := make([]byte, 32)
-	rand.Read(syncKey)
+	_, _ = rand.Read(syncKey)
 
 	// 1MB payload
 	largePlaintext := make([]byte, 1<<20)
-	rand.Read(largePlaintext)
+	_, _ = rand.Read(largePlaintext)
 
 	envelope, err := Seal(syncKey, largePlaintext, "big-project", "prod")
 	require.NoError(t, err)

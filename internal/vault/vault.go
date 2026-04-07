@@ -33,20 +33,20 @@ func New(dbPath string) (*Vault, error) {
 
 	// Enable WAL mode for better concurrency
 	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("vault: failed to set WAL mode: %w", err)
 	}
 
 	// Enable foreign keys
 	if _, err := db.Exec("PRAGMA foreign_keys=ON"); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("vault: failed to enable foreign keys: %w", err)
 	}
 
 	v := &Vault{db: db, dbPath: dbPath}
 
 	if err := v.migrate(); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("vault: migration failed: %w", err)
 	}
 
@@ -175,7 +175,7 @@ func (v *Vault) ListSecrets(env string) ([]Secret, error) {
 	if err != nil {
 		return nil, fmt.Errorf("vault: failed to list secrets: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var secrets []Secret
 	for rows.Next() {
@@ -242,7 +242,7 @@ func (v *Vault) GetAllSecrets(env string) (map[string]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("vault: failed to get all secrets: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	result := make(map[string]string)
 	for rows.Next() {
@@ -278,7 +278,7 @@ func (v *Vault) SetSecretBatch(secrets map[string]string, env string) error {
 	if err != nil {
 		return fmt.Errorf("vault: failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for name, encVal := range secrets {
 		if _, err := stmt.Exec(name, encVal, env); err != nil {
@@ -300,7 +300,7 @@ func (v *Vault) ListEnvironments() ([]Environment, error) {
 	if err != nil {
 		return nil, fmt.Errorf("vault: failed to list environments: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var envs []Environment
 	for rows.Next() {

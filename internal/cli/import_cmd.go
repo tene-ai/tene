@@ -35,7 +35,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	env := resolveEnv(app)
 
@@ -66,7 +66,7 @@ func importDotEnv(app *App, filePath, env string, encKey []byte) error {
 		}
 		return err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	secrets := make(map[string]string)
 	scanner := bufio.NewScanner(file)
@@ -102,7 +102,7 @@ func importDotEnv(app *App, filePath, env string, encKey []byte) error {
 	}
 
 	if len(secrets) == 0 {
-		return fmt.Errorf("No secrets found in %q.", filePath)
+		return fmt.Errorf("no secrets found in %q", filePath)
 	}
 
 	// Check for existing secrets

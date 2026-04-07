@@ -196,7 +196,7 @@ func runTeamList(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", shortID, name, sl, created)
 	}
-	w.Flush()
+	_ = w.Flush()
 	return nil
 }
 

@@ -230,7 +230,7 @@ func (e *Engine) doPush(ctx context.Context, opts PushOptions, blob []byte, hash
 	if err != nil {
 		return nil, fmt.Errorf("push API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp pushAPIResponse
 	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
@@ -272,7 +272,7 @@ func (e *Engine) doGetManifest(ctx context.Context, opts PullOptions) (*pullMani
 	if err != nil {
 		return nil, fmt.Errorf("pull API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
 		OK   bool         `json:"ok"`
@@ -298,7 +298,7 @@ func (e *Engine) doDownload(ctx context.Context, url string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("sync: download blob: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("download: status %d", resp.StatusCode)
@@ -375,12 +375,12 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("sync: open source file: %w", err)
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("sync: create destination file: %w", err)
 	}
-	defer out.Close()
+	defer func() { _ = out.Close() }()
 	if _, err = io.Copy(out, in); err != nil {
 		return fmt.Errorf("sync: copy file: %w", err)
 	}

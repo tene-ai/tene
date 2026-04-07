@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -94,7 +95,25 @@ func NewServer(cfg Config) *echo.Echo {
 
 	// Global middleware (order matters)
 	e.Use(echoMw.RequestID())
-	e.Use(echoMw.Logger())
+	e.Use(echoMw.RequestLoggerWithConfig(echoMw.RequestLoggerConfig{
+		LogURI:      true,
+		LogStatus:   true,
+		LogMethod:   true,
+		LogLatency:  true,
+		LogRemoteIP: true,
+		LogError:    true,
+		LogValuesFunc: func(c echo.Context, v echoMw.RequestLoggerValues) error {
+			slog.Info("request",
+				"method", v.Method,
+				"uri", v.URI,
+				"status", v.Status,
+				"latency", v.Latency.String(),
+				"remote_ip", v.RemoteIP,
+				"error", v.Error,
+			)
+			return nil
+		},
+	}))
 	e.Use(echoMw.Recover())
 	e.Use(mw.SecurityHeaders())
 	e.Use(echoMw.BodyLimit("2M")) // Default body limit for most routes

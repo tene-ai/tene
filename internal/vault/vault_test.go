@@ -15,7 +15,7 @@ func tempVault(t *testing.T) *Vault {
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
-	t.Cleanup(func() { v.Close() })
+	t.Cleanup(func() { _ = v.Close() })
 	return v
 }
 
@@ -26,7 +26,7 @@ func TestNew(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
-	defer v.Close()
+	defer func() { _ = v.Close() }()
 
 	// Check file permissions
 	info, err := os.Stat(dbPath)
@@ -65,8 +65,8 @@ func TestSetGetSecret(t *testing.T) {
 func TestSetSecret_Upsert(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("API_KEY", "v1", "default")
-	v.SetSecret("API_KEY", "v2", "default")
+	_ = v.SetSecret("API_KEY", "v1", "default")
+	_ = v.SetSecret("API_KEY", "v2", "default")
 
 	secret, _ := v.GetSecret("API_KEY", "default")
 	if secret.Version != 2 {
@@ -89,9 +89,9 @@ func TestGetSecret_NotFound(t *testing.T) {
 func TestListSecrets(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("A_KEY", "val1", "default")
-	v.SetSecret("B_KEY", "val2", "default")
-	v.SetSecret("C_KEY", "val3", "prod")
+	_ = v.SetSecret("A_KEY", "val1", "default")
+	_ = v.SetSecret("B_KEY", "val2", "default")
+	_ = v.SetSecret("C_KEY", "val3", "prod")
 
 	secrets, err := v.ListSecrets("default")
 	if err != nil {
@@ -105,7 +105,7 @@ func TestListSecrets(t *testing.T) {
 func TestDeleteSecret(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("API_KEY", "val", "default")
+	_ = v.SetSecret("API_KEY", "val", "default")
 	err := v.DeleteSecret("API_KEY", "default")
 	if err != nil {
 		t.Fatalf("DeleteSecret() error: %v", err)
@@ -129,8 +129,8 @@ func TestDeleteSecret_NotFound(t *testing.T) {
 func TestCountSecrets(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("A", "v", "default")
-	v.SetSecret("B", "v", "default")
+	_ = v.SetSecret("A", "v", "default")
+	_ = v.SetSecret("B", "v", "default")
 
 	count, err := v.CountSecrets("default")
 	if err != nil {
@@ -144,8 +144,8 @@ func TestCountSecrets(t *testing.T) {
 func TestGetAllSecrets(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("A", "va", "default")
-	v.SetSecret("B", "vb", "default")
+	_ = v.SetSecret("A", "va", "default")
+	_ = v.SetSecret("B", "vb", "default")
 
 	all, err := v.GetAllSecrets("default")
 	if err != nil {
@@ -230,8 +230,8 @@ func TestEnvironmentCRUD(t *testing.T) {
 func TestEnvironmentIsolation(t *testing.T) {
 	v := tempVault(t)
 
-	v.SetSecret("KEY", "default_val", "default")
-	v.SetSecret("KEY", "prod_val", "prod")
+	_ = v.SetSecret("KEY", "default_val", "default")
+	_ = v.SetSecret("KEY", "prod_val", "prod")
 
 	s1, _ := v.GetSecret("KEY", "default")
 	s2, _ := v.GetSecret("KEY", "prod")
@@ -258,7 +258,7 @@ func TestMeta(t *testing.T) {
 	}
 
 	// Update
-	v.SetMeta("test_key", "updated")
+	_ = v.SetMeta("test_key", "updated")
 	val, _ = v.GetMeta("test_key")
 	if val != "updated" {
 		t.Errorf("value = %q, want %q", val, "updated")
@@ -283,7 +283,7 @@ func TestAuditLog(t *testing.T) {
 	}
 
 	// Verify by setting and getting a secret (which also adds audit entries)
-	v.SetSecret("KEY", "val", "default")
+	_ = v.SetSecret("KEY", "val", "default")
 
 	// Just verify no errors occurred
 }

@@ -34,7 +34,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	// Check if already logged in
 	token, _ := loadAuthToken()
 	if token != "" {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  Already logged in. Run 'tene logout' first to switch accounts.")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Already logged in. Run 'tene logout' first to switch accounts.")
 		return nil
 	}
 
@@ -63,7 +63,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 			if code == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, "Missing code parameter")
+				_, _ = fmt.Fprint(w, "Missing code parameter")
 				errCh <- fmt.Errorf("missing code in callback")
 				return
 			}
@@ -78,7 +78,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			fmt.Fprint(w, `<html><body><h2>Login successful!</h2><p>You can close this window and return to the terminal.</p></body></html>`)
+			_, _ = fmt.Fprint(w, `<html><body><h2>Login successful!</h2><p>You can close this window and return to the terminal.</p></body></html>`)
 			resultCh <- result
 		}),
 	}
@@ -127,7 +127,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	// Shutdown callback server
 	shutCtx, shutCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer shutCancel()
-	srv.Shutdown(shutCtx)
+	_ = srv.Shutdown(shutCtx)
 
 	return nil
 }

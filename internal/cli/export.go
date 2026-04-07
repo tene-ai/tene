@@ -54,7 +54,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(allSecrets) == 0 {
-		return fmt.Errorf("No secrets to export in %q environment.", env)
+		return fmt.Errorf("no secrets to export in %q environment", env)
 	}
 
 	// Decrypt all secrets
@@ -102,7 +102,7 @@ func exportDotEnv(env string, keys []string, decrypted map[string]string) error 
 
 	if exportFlagFile != "" {
 		if err := os.WriteFile(exportFlagFile, []byte(content), 0600); err != nil {
-			return fmt.Errorf("Cannot write to %q: %w", exportFlagFile, err)
+			return fmt.Errorf("cannot write to %q: %w", exportFlagFile, err)
 		}
 		if !flagQuiet {
 			fmt.Printf("%d secrets exported to %s\n", len(keys), exportFlagFile)
@@ -140,7 +140,7 @@ func exportEncrypted(app *App, env string, keys []string, decrypted map[string]s
 	}
 
 	if err := os.WriteFile(outFile, ciphertext, 0600); err != nil {
-		return fmt.Errorf("Cannot write to %q: %w", outFile, err)
+		return fmt.Errorf("cannot write to %q: %w", outFile, err)
 	}
 
 	if flagJSON {

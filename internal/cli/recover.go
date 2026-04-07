@@ -45,7 +45,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	// 2. Load recovery blob from vault
 	blobB64, err := app.Vault.GetMeta("recovery_blob")
 	if err != nil {
-		return fmt.Errorf("Recovery data not found in vault.")
+		return fmt.Errorf("recovery data not found in vault")
 	}
 	blob, err := decodeBase64(blobB64)
 	if err != nil {

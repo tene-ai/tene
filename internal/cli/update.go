@@ -124,7 +124,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
-	defer os.Remove(tmpBin)
+	defer func() { _ = os.Remove(tmpBin) }()
 
 	// Replace current binary
 	if err := replaceBinary(binPath, tmpBin); err != nil {
