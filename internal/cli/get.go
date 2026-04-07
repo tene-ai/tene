@@ -22,7 +22,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	masterKey, err := loadOrPromptMasterKey(app)
 	if err != nil {

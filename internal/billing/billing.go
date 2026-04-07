@@ -119,7 +119,7 @@ func (s *Service) CreateCheckoutURL(ctx context.Context, userID, email string) (
 	if err != nil {
 		return "", fmt.Errorf("billing: checkout API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *Service) GetPortalURL(ctx context.Context, userID string) (string, erro
 	if err != nil {
 		return "", fmt.Errorf("billing: portal API: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var result struct {
 		Data struct {

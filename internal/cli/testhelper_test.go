@@ -91,14 +91,14 @@ func (e *testEnv) run(args ...string) (string, string, error) {
 	err := rootCmd.Execute()
 
 	// Restore stdout/stderr and read captured output
-	wOut.Close()
-	wErr.Close()
+	_ = wOut.Close()
+	_ = wErr.Close()
 	os.Stdout = oldStdout
 	os.Stderr = oldStderr
 
 	var stdoutBuf, stderrBuf bytes.Buffer
-	stdoutBuf.ReadFrom(rOut)
-	stderrBuf.ReadFrom(rErr)
+	_, _ = stdoutBuf.ReadFrom(rOut)
+	_, _ = stderrBuf.ReadFrom(rErr)
 
 	return stdoutBuf.String(), stderrBuf.String(), err
 }

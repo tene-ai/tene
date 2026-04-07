@@ -27,7 +27,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// 1. Get recovery key (12 words)
 	fmt.Fprint(os.Stderr, "Enter Recovery Key (12 words): ")
@@ -45,7 +45,7 @@ func runRecover(cmd *cobra.Command, args []string) error {
 	// 2. Load recovery blob from vault
 	blobB64, err := app.Vault.GetMeta("recovery_blob")
 	if err != nil {
-		return fmt.Errorf("Recovery data not found in vault.")
+		return fmt.Errorf("recovery data not found in vault")
 	}
 	blob, err := decodeBase64(blobB64)
 	if err != nil {

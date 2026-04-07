@@ -35,7 +35,7 @@ func TestGenerate_NewFile(t *testing.T) {
 func TestGenerate_ExistingWithoutSection(t *testing.T) {
 	dir := t.TempDir()
 	existing := "# My Project\n\nSome existing content.\n"
-	os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644)
 
 	gen := NewGenerator(dir)
 	created, err := gen.Generate()
@@ -58,7 +58,7 @@ func TestGenerate_ExistingWithoutSection(t *testing.T) {
 func TestGenerate_ExistingWithSection(t *testing.T) {
 	dir := t.TempDir()
 	existing := "# My Project\n\n# Secrets Management\n\nAlready has tene.\n"
-	os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "CLAUDE.md"), []byte(existing), 0644)
 
 	gen := NewGenerator(dir)
 	created, err := gen.Generate()
@@ -176,7 +176,7 @@ func TestGenerateAll_ExistingFileAppend(t *testing.T) {
 
 	// Pre-create a GEMINI.md with existing content
 	existing := "# My Gemini Rules\n\nSome content.\n"
-	os.WriteFile(filepath.Join(dir, "GEMINI.md"), []byte(existing), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "GEMINI.md"), []byte(existing), 0644)
 
 	gen := NewGenerator(dir)
 	created, err := gen.GenerateAll()
@@ -211,7 +211,7 @@ func TestGenerateAll_SkipExisting(t *testing.T) {
 
 	// Pre-create AGENTS.md with tene section already present
 	existing := "# My Agent Rules\n\n# Secrets Management\n\nAlready configured.\n"
-	os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte(existing), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "AGENTS.md"), []byte(existing), 0644)
 
 	gen := NewGenerator(dir)
 	created, err := gen.GenerateAll()

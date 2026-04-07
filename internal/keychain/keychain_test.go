@@ -50,7 +50,7 @@ func TestFileStore_Delete(t *testing.T) {
 	dir := t.TempDir()
 	store := NewFileStore(filepath.Join(dir, "keyfile"))
 
-	store.Store([]byte("somekey"))
+	_ = store.Store([]byte("somekey"))
 
 	err := store.Delete()
 	if err != nil {

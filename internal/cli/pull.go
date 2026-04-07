@@ -47,7 +47,7 @@ func runPull(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// Get master key for Sync Envelope decryption
 	masterKey, err := loadOrPromptMasterKey(app)
@@ -66,7 +66,7 @@ func runPull(cmd *cobra.Command, args []string) error {
 	}
 
 	if !flagQuiet {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Pulling vault '%s' (env: %s)...\n", projectName, env)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Pulling vault '%s' (env: %s)...\n", projectName, env)
 	}
 
 	engine := sync.NewEngine()
@@ -88,8 +88,8 @@ func runPull(cmd *cobra.Command, args []string) error {
 		return printJSON(result)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Pulled v%d\n", result.Version)
-	fmt.Fprintf(cmd.ErrOrStderr(), "    Hash: %s\n", result.Hash[:16]+"...")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Pulled v%d\n", result.Version)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "    Hash: %s\n", result.Hash[:16]+"...")
 	return nil
 }
 

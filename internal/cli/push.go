@@ -50,7 +50,7 @@ func runPush(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// Get master key for Sync Envelope encryption
 	masterKey, err := loadOrPromptMasterKey(app)
@@ -69,7 +69,7 @@ func runPush(cmd *cobra.Command, args []string) error {
 	}
 
 	if !flagQuiet {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Pushing vault '%s' (env: %s)...\n", projectName, env)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Pushing vault '%s' (env: %s)...\n", projectName, env)
 	}
 
 	engine := sync.NewEngine()
@@ -91,8 +91,8 @@ func runPush(cmd *cobra.Command, args []string) error {
 		return printJSON(result)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Pushed v%d (%d bytes)\n", result.Version, result.Size)
-	fmt.Fprintf(cmd.ErrOrStderr(), "    Hash: %s\n", result.Hash[:16]+"...")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Pushed v%d (%d bytes)\n", result.Version, result.Size)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "    Hash: %s\n", result.Hash[:16]+"...")
 	return nil
 }
 
@@ -127,7 +127,7 @@ func createVaultViaAPI(apiURL, token, projectName string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("create vault: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
 		OK   bool `json:"ok"`

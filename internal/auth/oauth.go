@@ -99,7 +99,7 @@ func (s *OAuthService) ExchangeGitHubCode(ctx context.Context, code, codeVerifie
 	if err != nil {
 		return nil, fmt.Errorf("auth: github user fetch: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 1024)) // M-06: limit error body read
@@ -128,7 +128,7 @@ func (s *OAuthService) fetchGitHubPrimaryEmail(ctx context.Context, client *http
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var emails []struct {
 		Email   string `json:"email"`

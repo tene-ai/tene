@@ -53,7 +53,7 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// Check if environment exists
 	exists, err := app.Vault.EnvironmentExists(envName)
@@ -96,7 +96,7 @@ func runEnvList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	envs, err := app.Vault.ListEnvironments()
 	if err != nil {
@@ -153,7 +153,7 @@ func runEnvCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	if err := app.Vault.CreateEnvironment(envName); err != nil {
 		return teneerr.ErrEnvironmentAlreadyExists(envName)
@@ -183,7 +183,7 @@ func runEnvDelete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// Cannot delete "default"
 	if envName == "default" {

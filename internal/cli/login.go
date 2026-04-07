@@ -34,11 +34,11 @@ func runLogin(cmd *cobra.Command, args []string) error {
 	// Check if already logged in
 	token, _ := loadAuthToken()
 	if token != "" {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  Already logged in. Run 'tene logout' first to switch accounts.")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Already logged in. Run 'tene logout' first to switch accounts.")
 		return nil
 	}
 
-	fmt.Fprintln(cmd.ErrOrStderr(), "  Signing in with GitHub...")
+	_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Signing in with GitHub...")
 
 	// Start local callback server
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -63,7 +63,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 			if code == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				fmt.Fprint(w, "Missing code parameter")
+				_, _ = fmt.Fprint(w, "Missing code parameter")
 				errCh <- fmt.Errorf("missing code in callback")
 				return
 			}
@@ -72,13 +72,13 @@ func runLogin(cmd *cobra.Command, args []string) error {
 			result, err := exchangeCodeViaAPI(r.Context(), apiURL, code, state)
 			if err != nil {
 				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "Login failed: %v", err)
+				_, _ = fmt.Fprintf(w, "Login failed: %v", err)
 				errCh <- err
 				return
 			}
 
 			w.Header().Set("Content-Type", "text/html")
-			fmt.Fprint(w, `<html><body><h2>Login successful!</h2><p>You can close this window and return to the terminal.</p></body></html>`)
+			_, _ = fmt.Fprint(w, `<html><body><h2>Login successful!</h2><p>You can close this window and return to the terminal.</p></body></html>`)
 			resultCh <- result
 		}),
 	}
@@ -91,12 +91,12 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 	// Open browser to GitHub OAuth (via our API's authorize endpoint)
 	authURL := fmt.Sprintf("%s/api/v1/auth/github/authorize?callback_port=%d", apiURL, port)
-	fmt.Fprintf(cmd.ErrOrStderr(), "  Opening browser...\n")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Opening browser...\n")
 	if err := openBrowser(authURL); err != nil {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Could not open browser. Visit this URL:\n  %s\n", authURL)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Could not open browser. Visit this URL:\n  %s\n", authURL)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  Waiting for authentication...")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Waiting for authentication...")
 
 	// Wait for callback (3 min timeout)
 	ctx, cancel := context.WithTimeout(cmd.Context(), 3*time.Minute)
@@ -104,7 +104,7 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 	select {
 	case result := <-resultCh:
-		fmt.Fprintf(cmd.ErrOrStderr(), " done\n\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " done\n\n")
 		// Save tokens
 		if err := saveAuthToken(result.Tokens.AccessToken); err != nil {
 			return fmt.Errorf("login: save token: %w", err)
@@ -113,21 +113,21 @@ func runLogin(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("login: save refresh token: %w", err)
 		}
 
-		fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Signed in as %s (%s)\n", result.User.Name, result.User.Email)
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Plan: %s\n\n", result.User.Plan)
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Signed in as %s (%s)\n", result.User.Name, result.User.Email)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Plan: %s\n\n", result.User.Plan)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
 	case err := <-errCh:
-		fmt.Fprintf(cmd.ErrOrStderr(), " failed\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " failed\n")
 		return fmt.Errorf("login: %w", err)
 	case <-ctx.Done():
-		fmt.Fprintf(cmd.ErrOrStderr(), " timed out\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " timed out\n")
 		return fmt.Errorf("login: timed out waiting for authentication")
 	}
 
 	// Shutdown callback server
 	shutCtx, shutCancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer shutCancel()
-	srv.Shutdown(shutCtx)
+	_ = srv.Shutdown(shutCtx)
 
 	return nil
 }
@@ -152,7 +152,7 @@ func exchangeCodeViaAPI(ctx context.Context, apiURL, code, state string) (*login
 	if err != nil {
 		return nil, fmt.Errorf("exchange code: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("exchange code: API returned %d", resp.StatusCode)

@@ -24,10 +24,10 @@ func runPasswd(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	// 1. Verify current password
-	fmt.Fprintln(cmd.ErrOrStderr(), "Enter current Master Password:")
+	_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Enter current Master Password:")
 	oldMasterKey, err := loadOrPromptMasterKey(app)
 	if err != nil {
 		return teneerr.ErrInvalidPassword

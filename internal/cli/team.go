@@ -135,11 +135,11 @@ func runTeamCreate(cmd *cobra.Command, args []string) error {
 				_ = os.WriteFile(pkPath, encPK, 0600)
 			}
 		}
-		app.Vault.Close()
+		_ = app.Vault.Close()
 	}
 
 	if !flagQuiet {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Creating team '%s'...\n", name)
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Creating team '%s'...\n", name)
 	}
 
 	body, _ := json.Marshal(map[string]string{"name": name, "slug": slug})
@@ -153,9 +153,9 @@ func runTeamCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	teamID, _ := result["id"].(string)
-	fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Team '%s' created (ID: %s)\n", name, teamID)
-	fmt.Fprintf(cmd.ErrOrStderr(), "    Slug: %s\n", slug)
-	fmt.Fprintf(cmd.ErrOrStderr(), "    Project key generated and stored locally.\n")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Team '%s' created (ID: %s)\n", name, teamID)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "    Slug: %s\n", slug)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "    Project key generated and stored locally.\n")
 	return nil
 }
 
@@ -176,12 +176,12 @@ func runTeamList(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(result) == 0 {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  No teams. Create one with 'tene team create [name]'")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  No teams. Create one with 'tene team create [name]'")
 		return nil
 	}
 
 	w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 2, 2, ' ', 0)
-	fmt.Fprintln(w, "  ID\tNAME\tSLUG\tCREATED")
+	_, _ = fmt.Fprintln(w, "  ID\tNAME\tSLUG\tCREATED")
 	for _, t := range result {
 		id, _ := t["id"].(string)
 		name, _ := t["name"].(string)
@@ -194,9 +194,9 @@ func runTeamList(cmd *cobra.Command, args []string) error {
 		if len(shortID) > 8 {
 			shortID = shortID[:8] + "..."
 		}
-		fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", shortID, name, sl, created)
+		_, _ = fmt.Fprintf(w, "  %s\t%s\t%s\t%s\n", shortID, name, sl, created)
 	}
-	w.Flush()
+	_ = w.Flush()
 	return nil
 }
 
@@ -242,13 +242,13 @@ func runTeamInvite(cmd *cobra.Command, args []string) error {
 						}
 					}
 				}
-				app.Vault.Close()
+				_ = app.Vault.Close()
 			}
 		}
 	}
 
 	if !flagQuiet {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Inviting user to team...\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Inviting user to team...\n")
 	}
 
 	reqBody := map[string]any{
@@ -269,9 +269,9 @@ func runTeamInvite(cmd *cobra.Command, args []string) error {
 		return printJSON(result)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ User %s invited as %s\n", userID, role)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ User %s invited as %s\n", userID, role)
 	if wrappedPK != nil {
-		fmt.Fprintln(cmd.ErrOrStderr(), "    Project key wrapped and transmitted (zero-knowledge).")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "    Project key wrapped and transmitted (zero-knowledge).")
 	}
 	return nil
 }
@@ -287,7 +287,7 @@ func runTeamRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	if !flagQuiet {
-		fmt.Fprintf(cmd.ErrOrStderr(), "  Removing member and rotating keys...\n")
+		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Removing member and rotating keys...\n")
 	}
 
 	req, err := http.NewRequest(http.MethodDelete,
@@ -301,7 +301,7 @@ func runTeamRemove(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("team remove: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
 		OK   bool           `json:"ok"`
@@ -318,11 +318,11 @@ func runTeamRemove(cmd *cobra.Command, args []string) error {
 		return printJSON(apiResp.Data)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Member removed\n")
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Member removed\n")
 
 	// Key rotation: generate new PK, re-wrap for remaining members
 	if rotation, ok := apiResp.Data["key_rotation"].(bool); ok && rotation {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  ⟳ Key rotation triggered. Run 'tene push --force' to re-encrypt vault.")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  ⟳ Key rotation triggered. Run 'tene push --force' to re-encrypt vault.")
 	}
 
 	return nil
@@ -348,10 +348,10 @@ func runTeamMembers(cmd *cobra.Command, args []string) error {
 		return printJSON(result)
 	}
 
-	fmt.Fprintf(cmd.ErrOrStderr(), "  Team: %s\n\n", teamID)
+	_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Team: %s\n\n", teamID)
 	// TODO: fetch actual member list from API when endpoint available
 	_ = result
-	fmt.Fprintln(cmd.ErrOrStderr(), "  Use the dashboard at app.tene.sh to manage team members.")
+	_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Use the dashboard at app.tene.sh to manage team members.")
 	return nil
 }
 
@@ -369,7 +369,7 @@ func teamAPIPost(url, token string, body []byte) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
 		OK   bool           `json:"ok"`
@@ -395,7 +395,7 @@ func teamAPIGetList(url, token string) ([]map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var apiResp struct {
 		OK   bool             `json:"ok"`

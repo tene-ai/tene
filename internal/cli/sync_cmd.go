@@ -25,7 +25,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	// Check auth
 	token, _ := loadAuthToken()
 	if token == "" {
-		fmt.Fprintln(cmd.ErrOrStderr(), `
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), `
   Tene Cloud Sync
 
   Push and pull your encrypted vault across devices.
@@ -43,13 +43,13 @@ func runSync(cmd *cobra.Command, args []string) error {
 
 	// Authenticated: run pull then push
 	if !flagQuiet {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  Syncing...")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Syncing...")
 	}
 
 	// Pull first
 	if err := runPull(cmd, nil); err != nil {
 		if !flagQuiet {
-			fmt.Fprintf(cmd.ErrOrStderr(), "  Pull skipped: %v\n", err)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Pull skipped: %v\n", err)
 		}
 	}
 
@@ -59,7 +59,7 @@ func runSync(cmd *cobra.Command, args []string) error {
 	}
 
 	if !flagQuiet {
-		fmt.Fprintln(cmd.ErrOrStderr(), "  ✓ Sync complete")
+		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  ✓ Sync complete")
 	}
 	return nil
 }

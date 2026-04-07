@@ -18,7 +18,7 @@ func runWhoami(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer app.Vault.Close()
+	defer func() { _ = app.Vault.Close() }()
 
 	env := resolveEnv(app)
 	projectName, _ := app.Vault.GetMeta("project_name")
