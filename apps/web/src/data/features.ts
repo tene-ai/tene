@@ -3,7 +3,7 @@ export type Feature = {
   icon: string;
   title: string;
   description: string;
-  tag: "Problem" | "Solution" | "Coming Soon" | null;
+  tag: "Problem" | "Solution" | "Coming Soon" | "New" | null;
 };
 
 export const features: Feature[] = [
@@ -46,7 +46,7 @@ export const features: Feature[] = [
     icon: "cloud",
     title: "Cloud sync",
     description:
-      "Manage secrets across all your projects and machines. No more repeated init and set. $1/user/month.",
-    tag: "Coming Soon",
+      "Push and pull your encrypted vault across devices. Zero-knowledge — the server never sees your secrets. $5/month.",
+    tag: "New",
   },
 ];

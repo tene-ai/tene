@@ -73,10 +73,18 @@ func init() {
 	rootCmd.AddCommand(envCmd)
 	rootCmd.AddCommand(passwdCmd)
 	rootCmd.AddCommand(recoverCmd)
-	rootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(newSyncCmd())
 	rootCmd.AddCommand(whoamiCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
+
+	// Cloud commands
+	rootCmd.AddCommand(newLoginCmd())
+	rootCmd.AddCommand(newLogoutCmd())
+	rootCmd.AddCommand(newPushCmd())
+	rootCmd.AddCommand(newPullCmd())
+	rootCmd.AddCommand(newBillingCmd())
+	rootCmd.AddCommand(newTeamCmd())
 }
 
 // Execute runs the root command.
@@ -197,6 +205,15 @@ func printJSON(v any) error {
 	return enc.Encode(v)
 }
 
+
+// envOrDefault returns the environment variable value or a fallback default.
+// Used for CLI flag defaults that should respect tene-injected env vars.
+func envOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)

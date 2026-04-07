@@ -23,6 +23,7 @@ const (
 	// HKDF purpose labels
 	PurposeEncryption = "tene-encryption-key"
 	PurposeAuth       = "tene-auth-hash"
+	PurposeDeviceKey  = "tene-device-key"
 )
 
 // GenerateSalt generates a 128-bit random salt.

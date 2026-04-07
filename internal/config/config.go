@@ -26,6 +26,27 @@ type Preferences struct {
 	AutoKeychain bool `json:"autoKeychain"`
 }
 
+// CloudConfig holds Tene Cloud connection settings.
+type CloudConfig struct {
+	APIURL       string `json:"apiUrl"`       // e.g. "https://api.tene.sh"
+	AccessToken  string `json:"accessToken"`  // JWT (cached, may be expired)
+	RefreshToken string `json:"refreshToken"` // for token renewal
+	UserID       string `json:"userId"`
+	Plan         string `json:"plan"` // "free" or "pro"
+}
+
+// SyncInfo holds per-project sync state metadata.
+type SyncInfo struct {
+	VaultID      string `json:"vaultId"`
+	LocalVersion int64  `json:"localVersion"`
+	RemoteVersion int64 `json:"remoteVersion"`
+	LocalHash    string `json:"localHash"`
+	RemoteHash   string `json:"remoteHash"`
+	LastPushedAt string `json:"lastPushedAt,omitempty"`
+	LastPulledAt string `json:"lastPulledAt,omitempty"`
+	BaseSnapshot string `json:"baseSnapshot,omitempty"` // path to base vault.db snapshot for 3-way merge
+}
+
 // DefaultConfig returns the default configuration.
 func DefaultConfig() *Config {
 	return &Config{

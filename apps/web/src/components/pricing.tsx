@@ -3,6 +3,8 @@ import { CopyCommand } from "./copy-command";
 import { WaitlistForm } from "./waitlist-form";
 import { GlowCard } from "./glow-card";
 
+const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.tene.sh";
+
 export function Pricing() {
   return (
     <section id="pricing" className="px-4 py-24 sm:px-6">
@@ -29,11 +31,15 @@ export function Pricing() {
               <div className="relative z-10 flex h-full flex-col">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold">{tier.name}</h3>
-                  {tier.comingSoon && (
+                  {tier.comingSoon ? (
                     <span className="rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2.5 py-0.5 text-xs text-yellow-400">
                       Coming Soon
                     </span>
-                  )}
+                  ) : tier.highlighted ? (
+                    <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-xs text-accent">
+                      Available
+                    </span>
+                  ) : null}
                 </div>
 
                 <div className="mt-4 flex items-baseline gap-1">
@@ -69,18 +75,25 @@ export function Pricing() {
                       className="w-full justify-center text-xs"
                     />
                   )}
+                  {tier.cta.action === "signup" && (
+                    <a
+                      href={`${dashboardUrl}/login`}
+                      className="block w-full rounded-lg bg-accent py-3 text-center text-sm font-medium text-background transition-colors hover:bg-accent-dim active:scale-[0.98]"
+                    >
+                      {tier.cta.label}
+                    </a>
+                  )}
                 </div>
               </div>
             </GlowCard>
           ))}
         </div>
 
-        {/* Shared waitlist form */}
+        {/* CTA */}
         <div className="mx-auto mt-12 max-w-lg text-center">
-          <p className="mb-4 text-sm text-muted">
-            Interested in Pro? Join the waitlist for early access.
+          <p className="text-sm text-muted">
+            Questions? Check our <a href={dashboardUrl} className="text-accent hover:underline">dashboard</a> or run <code className="font-mono text-accent">tene billing</code> in your terminal.
           </p>
-          <WaitlistForm />
         </div>
       </div>
     </section>

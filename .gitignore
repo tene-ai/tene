@@ -5,9 +5,16 @@ dist/
 .env.*
 *.tene.enc
 .bkit/
-.claude/
+.claude/agent-memory/
 .DS_Store
 .next/
 bin/
 tene
+server
 docs/
+
+# Terraform
+infra/terraform/environments/prod/.terraform/
+infra/terraform/environments/prod/terraform.tfstate*
+*.tfstate
+*.tfstate.backup

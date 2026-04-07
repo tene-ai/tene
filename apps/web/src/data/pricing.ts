@@ -4,7 +4,7 @@ export type PricingTier = {
   period: string;
   description: string;
   features: string[];
-  cta: { label: string; action: "install" | "waitlist" };
+  cta: { label: string; action: "install" | "waitlist" | "signup" };
   highlighted: boolean;
   comingSoon: boolean;
 };
@@ -43,8 +43,8 @@ export const pricingTiers: PricingTier[] = [
       "Environment-level permissions",
       "Audit log & dashboard",
     ],
-    cta: { label: "Join waitlist", action: "waitlist" },
+    cta: { label: "Get started", action: "signup" },
     highlighted: true,
-    comingSoon: true,
+    comingSoon: false,
   },
 ];

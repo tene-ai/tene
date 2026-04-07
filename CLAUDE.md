@@ -2,18 +2,31 @@
 
 ## Overview
 
-Local-first encrypted secret management CLI built in Go.
-AI agents (Claude Code) auto-detect secrets via CLAUDE.md generation.
-No server, no cloud dependency, no signup required for MVP.
+Local-first encrypted secret management platform with Zero-Knowledge cloud sync.
+CLI (Go) + Cloud API (Go/Echo) + Dashboard (Next.js) + AWS infrastructure.
+AI agents auto-detect secrets via CLAUDE.md generation.
+
+## Rules (detailed guides)
+
+- [Environments & Infrastructure](.claude/rules/environments.md) — local/staging/prod 환경, 포트, 서비스, 아키텍처
+- [Deployment Guide](.claude/rules/deployment.md) — 배포 절차, 롤백, 모니터링
 
 ## Architecture
 
-- Language: Go 1.22+
+- Language: Go 1.25+
 - CLI framework: cobra (spf13/cobra)
-- DB: modernc.org/sqlite (pure Go, no CGo)
-- Crypto: golang.org/x/crypto (XChaCha20-Poly1305, Argon2id, HKDF)
+- API framework: labstack/echo v4
+- Local DB: modernc.org/sqlite (pure Go, no CGo)
+- Cloud DB: PostgreSQL 16 (RDS)
+- Crypto: golang.org/x/crypto (XChaCha20-Poly1305, Argon2id, HKDF, X25519)
 - Keychain: zalando/go-keyring (macOS Keychain, Linux libsecret, Windows Credential Vault)
 - Recovery: tyler-smith/go-bip39 (12-word BIP-39 mnemonic)
+- Storage: AWS S3 (SSE-S3) / MinIO (local)
+- Auth: ES256 JWT + GitHub/Google OAuth (PKCE)
+- Billing: LemonSqueezy (MoR)
+- Dashboard: Next.js 15 + Tailwind CSS v4 + TanStack Query v5
+- Infra: Terraform (AWS ECS Fargate, ALB, RDS, S3)
+- CI/CD: GitHub Actions (OIDC) → ECR → ECS, Vercel (frontend)
 - Build: goreleaser + Homebrew tap
 - Test: Go testing + stretchr/testify
 - Lint: golangci-lint
@@ -22,35 +35,54 @@ No server, no cloud dependency, no signup required for MVP.
 
 ```
 cmd/tene/              CLI entrypoint (main.go)
-internal/crypto/       Argon2id KDF, XChaCha20-Poly1305 encrypt/decrypt, key derivation
+cmd/server/            Cloud API server entrypoint
+internal/crypto/       Argon2id, XChaCha20-Poly1305, HKDF, X25519, team key wrapping
 internal/vault/        SQLite vault CRUD, schema, migrations
 internal/keychain/     OS keychain integration + file fallback
 internal/claudemd/     CLAUDE.md generation and merge
 internal/recovery/     BIP-39 mnemonic generation and master key recovery
-internal/cli/          Cobra command definitions (one file per command)
-apps/web/              Next.js landing page (independent npm project)
+internal/cli/          Cobra commands (login, push, pull, team, billing, etc.)
+internal/api/          Echo server, handlers (auth, vault, team, billing, device, audit)
+internal/api/middleware/ JWT auth, rate limit, CORS, security headers, RBAC
+internal/api/storage/  S3 client for vault blob storage
+internal/auth/         JWT + OAuth services
+internal/sync/         Sync Envelope, push/pull engine, conflict resolution, 3-way merge
+internal/billing/      LemonSqueezy integration
+internal/domain/       Domain models + sentinel errors
+internal/config/       CLI + Cloud config management
+apps/web/              Next.js landing page (tene.sh, Vercel)
+apps/dashboard/        Next.js dashboard (app.tene.sh, Vercel)
+infra/terraform/       AWS infrastructure (12 modules)
+migrations/            PostgreSQL migrations (7 tables)
+scripts/               dev.sh, sync-secrets.sh
 docs/                  PDCA documents (PM, Plan, Design, Analysis, Report)
 ```
 
 ## Development
 
 ```bash
+# Local dev (all services: DB + S3 + API + Dashboard + Landing)
+./scripts/dev.sh              # Start everything
+./scripts/dev.sh status       # Check status
+./scripts/dev.sh stop         # Stop everything
+
 # Build
-go build -o tene ./cmd/tene
+go build ./cmd/tene           # CLI
+go build ./cmd/server          # API server
 
 # Run tests
 go test ./...
 
-# Run tests with coverage
-go test -coverprofile=coverage.out ./...
-go tool cover -html=coverage.out
-
 # Lint
 golangci-lint run
 
-# Run specific package tests
-go test ./internal/crypto/...
-go test ./internal/vault/...
+# Secret management (dogfooding — tene manages its own secrets)
+tene list --env local          # Local dev secrets
+tene list --env prod           # Production secrets
+tene run --env local -- go run ./cmd/server  # Run with injected secrets
+
+# Sync secrets to AWS (for ECS deployment)
+tene run --env prod -- ./scripts/sync-secrets.sh
 ```
 
 ## Key Commands
@@ -69,18 +101,29 @@ go test ./internal/vault/...
 | `tene env [name]` | Switch environment (dev/staging/prod) |
 | `tene passwd` | Change master password + re-encrypt vault |
 | `tene recover` | Restore master password via 12-word recovery key |
-| `tene sync` | Fake Door -- shows cloud waitlist (not implemented) |
+| `tene push` | Encrypt vault with Sync Envelope and upload to cloud |
+| `tene pull` | Download and decrypt remote vault |
+| `tene sync` | Push + Pull combined (requires Pro plan) |
+| `tene login` | OAuth login to Tene Cloud (GitHub) |
+| `tene logout` | Sign out and revoke tokens |
+| `tene team create` | Create team + generate project key |
+| `tene team invite` | Invite member with X25519 key wrapping |
+| `tene team remove` | Remove member + trigger key rotation |
+| `tene team list` | List teams |
+| `tene billing` | View subscription status |
+| `tene billing upgrade` | Open LemonSqueezy checkout |
 
 ## Key Decisions
 
-- No server, no cloud dependency (MVP Phase 1)
-- XChaCha20-Poly1305 + Argon2id encryption (golang.org/x/crypto)
-- Claude Code only (no Cursor/Windsurf in MVP, Phase 2)
-- 12-word BIP-39 recovery key
-- modernc.org/sqlite (pure Go, no CGo) for cross-compilation
+- Zero-Knowledge: server never sees plaintext secrets (4-layer encryption)
+- XChaCha20-Poly1305 + Argon2id + HKDF + X25519 ECDH (golang.org/x/crypto)
+- Sync Envelope: L1 (secret values) + L2 (metadata) + L3 (TLS) + L4 (S3 SSE)
+- Team key sharing via X25519 ECDH (no RSA), key rotation on member removal
+- LemonSqueezy for billing (MoR, Korean individual account support)
+- modernc.org/sqlite for local vault, PostgreSQL for cloud metadata
 - goreleaser for multi-platform binaries + Homebrew tap
-- Fake Door: `tene sync` shows waitlist to validate cloud demand
-- `tene export --encrypted` for manual backup until cloud
+- Tene dogfooding: Tene manages its own production secrets
+- Git branch: main → prod auto-deploy, feature/* → PR → preview
 
 ## Coding Conventions
 
@@ -94,11 +137,13 @@ go test ./internal/vault/...
 ## Security Model
 
 - Master Password -> Argon2id KDF (64MB, 3 iterations) -> Master Key (256-bit)
-- Master Key -> HKDF -> Encryption Key (for XChaCha20-Poly1305)
+- Master Key -> HKDF -> Encryption Key, SyncKey, DeviceKey, AuthHash
 - Master Key cached in OS Keychain (go-keyring)
 - 192-bit random nonce per encryption, key name as AAD
 - Recovery: BIP-39 mnemonic -> Argon2id -> Recovery Key -> decrypt stored Master Key
-- Zero network communication in MVP
+- Cloud: Zero-Knowledge Sync Envelope (L2 wraps entire vault.db before upload)
+- Team: X25519 ECDH shared secret -> HKDF(projectID) -> wrap Project Key per member
+- Key rotation: member removal -> new PK -> re-wrap for remaining members
 
 ## Project Data
 
@@ -113,7 +158,18 @@ Global:
   ~/.tene/config.json  CLI settings, analytics
 ```
 
-## Landing Page (apps/web/)
+## Frontend Apps
 
-Separate Next.js project. Do not mix with Go CLI code.
-See `apps/web/CLAUDE.md` for frontend conventions.
+| App | Directory | Domain | Deployment |
+|-----|-----------|--------|------------|
+| Landing | `apps/web/` | `tene.sh` | Vercel |
+| Dashboard | `apps/dashboard/` | `app.tene.sh` | Vercel |
+
+Design system: dark-only (#0a0a0a), accent #00ff88, Geist Sans/Mono, Tailwind CSS v4.
+See `apps/web/CLAUDE.md` and `apps/dashboard/CLAUDE.md` for frontend conventions.
+
+## Cloud Infrastructure
+
+AWS account `507221376909` (monsa-sandbox), region `ap-northeast-2`.
+Terraform: `infra/terraform/environments/prod/`.
+See [.claude/rules/environments.md](.claude/rules/environments.md) for full details.

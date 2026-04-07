@@ -40,6 +40,7 @@ const tagStyles: Record<string, string> = {
   Problem: "border-red-500/30 bg-red-500/10 text-red-400",
   Solution: "border-accent/30 bg-accent/10 text-accent",
   "Coming Soon": "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
+  "New": "border-accent/30 bg-accent/10 text-accent",
 };
 
 export function Features() {
