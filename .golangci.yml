@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   timeout: 5m
   modules-download-mode: readonly
@@ -26,7 +28,7 @@ linters-settings:
         severity: warning
   gosec:
     excludes:
-      - G104  # unhandled errors (handled by errcheck)
+      - G104
   exhaustive:
     default-signifies-exhaustive: true
 
