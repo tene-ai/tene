@@ -10,6 +10,8 @@ resource "aws_iam_role" "ecs_task" {
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
+
+  tags = local.tags
 }
 
 resource "aws_iam_role_policy" "ecs_task_s3" {
@@ -52,6 +54,8 @@ resource "aws_iam_role" "ecs_execution" {
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
+
+  tags = local.tags
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_execution_base" {
@@ -88,6 +92,12 @@ data "aws_iam_openid_connect_provider" "github" {
 
 locals {
   oidc_provider_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.github[0].arn
+  tags = {
+    Name        = "${var.project}-${var.environment}-iam"
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
 }
 
 resource "aws_iam_role" "github_actions" {
@@ -105,6 +115,8 @@ resource "aws_iam_role" "github_actions" {
       }
     }]
   })
+
+  tags = local.tags
 }
 
 resource "aws_iam_role_policy" "github_actions_deploy" {
