@@ -13,6 +13,7 @@ AI agents auto-detect secrets via CLAUDE.md generation.
 - [Secret Management](.claude/rules/secrets.md) — tene 시크릿 주입, 환경별 설정, OAuth, CORS, CI/CD
 - [Environments & Infrastructure](.claude/rules/environments.md) — local/staging/prod 환경, 포트, 서비스, 네트워크
 - [Deployment Guide](.claude/rules/deployment.md) — 배포 절차, 롤백, 모니터링
+- [Git Workflow](.claude/rules/git-workflow.md) — 브랜치 전략, PR 규칙, 배포 전 체크리스트, Anti-patterns
 
 ## Architecture
 
