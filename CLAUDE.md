@@ -25,7 +25,7 @@ AI agents auto-detect secrets via CLAUDE.md generation.
 - Keychain: zalando/go-keyring (macOS Keychain, Linux libsecret, Windows Credential Vault)
 - Recovery: tyler-smith/go-bip39 (12-word BIP-39 mnemonic)
 - Storage: AWS S3 (SSE-S3) / MinIO (local)
-- Auth: ES256 JWT + GitHub/Google OAuth (PKCE)
+- Auth: HS256 JWT + GitHub/Google OAuth (PKCE)
 - Billing: LemonSqueezy (MoR)
 - Dashboard: Next.js 15 + Tailwind CSS v4 + TanStack Query v5
 - Infra: Terraform (AWS ECS Fargate, ALB, RDS, S3)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +13,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/zalando/go-keyring"
+
 	"github.com/tomo-kay/tene/internal/domain"
 )
 
@@ -57,24 +58,22 @@ func runLogin(cmd *cobra.Command, args []string) error {
 				return
 			}
 
-			// Read the tokens from query params (returned by our API after OAuth)
-			code := r.URL.Query().Get("code")
-			state := r.URL.Query().Get("state")
+			// Read tokens directly from query params (API redirects with tokens after OAuth)
+			accessToken := r.URL.Query().Get("access_token")
+			refreshToken := r.URL.Query().Get("refresh_token")
+			userID := r.URL.Query().Get("user_id")
+			plan := r.URL.Query().Get("plan")
 
-			if code == "" {
+			if accessToken == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				_, _ = fmt.Fprint(w, "Missing code parameter")
-				errCh <- fmt.Errorf("missing code in callback")
+				_, _ = fmt.Fprint(w, "Missing access_token parameter")
+				errCh <- fmt.Errorf("missing access_token in callback")
 				return
 			}
 
-			// Exchange code via our API
-			result, err := exchangeCodeViaAPI(r.Context(), apiURL, code, state)
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = fmt.Fprintf(w, "Login failed: %v", err)
-				errCh <- err
-				return
+			result := &loginResult{
+				User:   domain.User{ID: userID, Plan: plan},
+				Tokens: domain.TokenPair{AccessToken: accessToken, RefreshToken: refreshToken},
 			}
 
 			w.Header().Set("Content-Type", "text/html")
@@ -115,7 +114,13 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Signed in as %s (%s)\n", result.User.Name, result.User.Email)
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Plan: %s\n\n", result.User.Plan)
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		if result.User.Plan == "pro" {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Dashboard: https://app.tene.sh\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		} else {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Upgrade to Pro for cloud sync, team sharing, and dashboard.\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  → https://app.tene.sh/upgrade\n")
+		}
 	case err := <-errCh:
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " failed\n")
 		return fmt.Errorf("login: %w", err)
@@ -137,41 +142,6 @@ type loginResult struct {
 	Tokens domain.TokenPair `json:"tokens"`
 }
 
-func exchangeCodeViaAPI(ctx context.Context, apiURL, code, state string) (*loginResult, error) {
-	u, _ := url.Parse(apiURL + "/api/v1/auth/github/callback")
-	q := u.Query()
-	q.Set("code", code)
-	q.Set("state", state)
-	u.RawQuery = q.Encode()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("exchange code: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("exchange code: API returned %d", resp.StatusCode)
-	}
-
-	var apiResp struct {
-		OK   bool         `json:"ok"`
-		Data loginResult  `json:"data"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
-		return nil, fmt.Errorf("exchange code: decode: %w", err)
-	}
-	if !apiResp.OK {
-		return nil, fmt.Errorf("exchange code: API error")
-	}
-
-	return &apiResp.Data, nil
-}
-
 func openBrowser(url string) error {
 	switch runtime.GOOS {
 	case "darwin":
@@ -185,22 +155,84 @@ func openBrowser(url string) error {
 	}
 }
 
-// Token storage helpers — uses ~/.tene/auth.json
-// TODO: Use OS Keychain (go-keyring) for production
+// Token storage helpers
+// Uses OS Keychain (go-keyring) by default, falls back to ~/.tene/auth.json
+// when --no-keychain is set or keychain is unavailable.
+
+const (
+	cloudServiceName = "tene-cloud"
+	keyAccessToken   = "access_token"
+	keyRefreshToken  = "refresh_token"
+)
 
 func loadAuthToken() (string, error) {
-	return loadAuthField("access_token")
+	return loadAuthField(keyAccessToken)
 }
 
 func saveAuthToken(token string) error {
-	return saveAuthField("access_token", token)
+	return saveAuthField(keyAccessToken, token)
 }
 
 func saveRefreshToken(token string) error {
-	return saveAuthField("refresh_token", token)
+	return saveAuthField(keyRefreshToken, token)
 }
 
 func loadAuthField(field string) (string, error) {
+	if !flagNoKeychain {
+		// Try keychain first
+		val, err := keyring.Get(cloudServiceName, field)
+		if err == nil {
+			return val, nil
+		}
+		// Keychain error (not ErrNotFound) — fall through to file fallback
+
+		// Try file fallback and migrate to keychain if found
+		val, err = loadAuthFieldFromFile(field)
+		if err == nil && val != "" {
+			// Migrate to keychain
+			_ = keyring.Set(cloudServiceName, field, val)
+			// Also migrate the other field if present
+			otherField := keyRefreshToken
+			if field == keyRefreshToken {
+				otherField = keyAccessToken
+			}
+			if otherVal, err := loadAuthFieldFromFile(otherField); err == nil && otherVal != "" {
+				_ = keyring.Set(cloudServiceName, otherField, otherVal)
+			}
+			// Remove auth file after successful migration
+			_ = os.Remove(authFilePath())
+			return val, nil
+		}
+		return "", err
+	}
+
+	// --no-keychain: use file only
+	return loadAuthFieldFromFile(field)
+}
+
+func saveAuthField(field, value string) error {
+	if !flagNoKeychain {
+		if err := keyring.Set(cloudServiceName, field, value); err == nil {
+			return nil
+		}
+		// Keychain failed — fall through to file
+	}
+	return saveAuthFieldToFile(field, value)
+}
+
+func clearAuthTokens() error {
+	// Clear from keychain (ignore errors)
+	if !flagNoKeychain {
+		_ = keyring.Delete(cloudServiceName, keyAccessToken)
+		_ = keyring.Delete(cloudServiceName, keyRefreshToken)
+	}
+	// Also clear file if it exists
+	return clearAuthFile()
+}
+
+// --- File-based storage (fallback / legacy) ---
+
+func loadAuthFieldFromFile(field string) (string, error) {
 	data, err := readAuthFile()
 	if err != nil {
 		return "", err
@@ -208,7 +240,7 @@ func loadAuthField(field string) (string, error) {
 	return data[field], nil
 }
 
-func saveAuthField(field, value string) error {
+func saveAuthFieldToFile(field, value string) error {
 	data, _ := readAuthFile()
 	if data == nil {
 		data = make(map[string]string)
@@ -218,7 +250,11 @@ func saveAuthField(field, value string) error {
 }
 
 func clearAuthFile() error {
-	return writeAuthFile(map[string]string{})
+	path := authFilePath()
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
+	return os.Remove(path)
 }
 
 func readAuthFile() (map[string]string, error) {

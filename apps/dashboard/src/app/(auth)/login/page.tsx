@@ -1,17 +1,37 @@
-export default function LoginPage() {
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
+function LoginContent() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tene.sh";
+  const searchParams = useSearchParams();
+  const intent = searchParams.get("intent");
+  const error = searchParams.get("error");
+
+  const oauthUrl = intent
+    ? `${apiUrl}/api/v1/auth/github/authorize?redirect=dashboard&intent=${intent}`
+    : `${apiUrl}/api/v1/auth/github/authorize?redirect=dashboard`;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="font-mono font-bold text-3xl text-accent mb-2">tene</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Tene" width={48} height={48} className="rounded-xl mx-auto mb-3" />
+          <h1 className="font-mono font-bold text-3xl mb-2">tene</h1>
           <p className="text-muted text-sm">Sign in to your Tene Cloud dashboard</p>
         </div>
 
+        {error && (
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400 text-center">
+            {error === "exchange_failed" ? "Sign in failed. Please try again." : "An error occurred."}
+          </div>
+        )}
+
         <div className="space-y-3">
           <a
-            href={`${apiUrl}/api/v1/auth/github/authorize?redirect=dashboard`}
+            href={oauthUrl}
             className="flex items-center justify-center gap-3 w-full py-3 rounded-lg border border-border bg-surface text-sm font-medium transition-all hover:border-accent/30 hover:bg-surface-2 active:scale-[0.98]"
           >
             <svg viewBox="0 0 16 16" className="w-5 h-5 fill-current" aria-hidden>
@@ -28,5 +48,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-muted text-sm">Loading...</p></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

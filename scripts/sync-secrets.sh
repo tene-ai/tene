@@ -1,16 +1,20 @@
 #!/bin/bash
 # Sync secrets from Tene vault to AWS Secrets Manager
-# Usage: tene run --env prod -- ./scripts/sync-secrets.sh
+# Usage:
+#   tene run --env prod    -- ./scripts/sync-secrets.sh prod
+#   tene run --env staging -- ./scripts/sync-secrets.sh staging
 #
 # Must be run via 'tene run' so secrets are injected as env vars.
 # Tene is the source of truth; AWS Secrets Manager is the delivery mechanism for ECS.
 
 set -euo pipefail
 
+# Determine environment from argument or ENV variable
+TARGET_ENV="${1:-${ENV:-prod}}"
 AWS_PROFILE="${AWS_PROFILE:-monsa-sandbox}"
-SECRET_ID="tene/prod/api-secrets"
+SECRET_ID="tene/${TARGET_ENV}/api-secrets"
 
-echo "  Syncing Tene vault → AWS Secrets Manager ($SECRET_ID)..."
+echo "  Syncing Tene vault (${TARGET_ENV}) → AWS Secrets Manager ($SECRET_ID)..."
 
 SECRET_JSON=$(cat <<EOF
 {
@@ -30,6 +34,11 @@ aws secretsmanager put-secret-value \
   --profile "$AWS_PROFILE" \
   --output text --query "Name"
 
-echo "  ✓ Secrets synced from Tene → AWS Secrets Manager"
+echo "  ✓ Secrets synced from Tene (${TARGET_ENV}) → AWS Secrets Manager"
 echo ""
-echo "  To deploy: aws ecs update-service --cluster tene-prod-cluster --service tene-prod-api --force-new-deployment --profile $AWS_PROFILE"
+
+if [ "$TARGET_ENV" = "prod" ]; then
+  echo "  To deploy: aws ecs update-service --cluster tene-prod-cluster --service tene-prod-api --force-new-deployment --profile $AWS_PROFILE"
+elif [ "$TARGET_ENV" = "staging" ]; then
+  echo "  To deploy: aws ecs update-service --cluster tene-staging-cluster --service tene-staging-api --force-new-deployment --profile $AWS_PROFILE"
+fi

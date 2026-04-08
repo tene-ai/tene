@@ -67,7 +67,7 @@ Team: X25519 ECDH shared secret -> HKDF(projectID) -> wrap Project Key per membe
 - API: Go + Echo v4, PostgreSQL 16
 - Frontend: Next.js 15, Tailwind CSS v4
 - Infra: AWS ECS Fargate, RDS, S3, Terraform
-- Auth: ES256 JWT + GitHub OAuth (PKCE)
+- Auth: HS256 JWT + GitHub OAuth (PKCE)
 - Billing: LemonSqueezy (Merchant of Record)
 
 ## Links

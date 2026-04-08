@@ -34,7 +34,7 @@ func runLogout(cmd *cobra.Command, args []string) error {
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Warning: server signout failed (%v). Clearing local credentials anyway.\n", err)
 	}
 
-	if err := clearAuthFile(); err != nil {
+	if err := clearAuthTokens(); err != nil {
 		return fmt.Errorf("logout: clear credentials: %w", err)
 	}
 

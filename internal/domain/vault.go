@@ -40,6 +40,13 @@ type AuditLog struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// AuditFilter holds query parameters for listing audit logs.
+type AuditFilter struct {
+	Action string // filter by action (e.g. "push", "pull")
+	Limit  int    // max results (default 100, max 500)
+	Offset int    // pagination offset
+}
+
 // SyncState tracks the local sync state for a vault.
 type SyncState struct {
 	VaultID      string `json:"vault_id"`

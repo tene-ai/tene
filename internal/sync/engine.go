@@ -11,12 +11,15 @@ import (
 	"log/slog"
 	"math"
 	"math/rand/v2"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/tomo-kay/tene/internal/crypto"
+	"github.com/tomo-kay/tene/internal/domain"
+	"github.com/tomo-kay/tene/internal/vault"
 )
 
 // PushOptions configures a push operation.
@@ -72,6 +75,49 @@ func NewEngine() *Engine {
 	}
 }
 
+// ExtractKeyMetadata opens the local vault.db and extracts key name metadata
+// for all environments. This metadata is sent alongside the encrypted blob
+// so the dashboard can display key names without accessing values.
+func ExtractKeyMetadata(vaultDBPath string) *domain.VaultMetadataPayload {
+	v, err := vault.New(vaultDBPath)
+	if err != nil {
+		slog.Debug("sync.metadata: failed to open vault for metadata", "error", err)
+		return nil
+	}
+	defer func() { _ = v.Close() }()
+
+	envs, err := v.ListEnvironments()
+	if err != nil {
+		slog.Debug("sync.metadata: failed to list environments", "error", err)
+		return nil
+	}
+
+	payload := &domain.VaultMetadataPayload{
+		Keys: make(map[string][]domain.VaultKeyMeta),
+	}
+
+	for _, env := range envs {
+		payload.Environments = append(payload.Environments, env.Name)
+		secrets, err := v.ListSecrets(env.Name)
+		if err != nil {
+			continue
+		}
+		for _, s := range secrets {
+			payload.Keys[env.Name] = append(payload.Keys[env.Name], domain.VaultKeyMeta{
+				Name:      s.Name,
+				Version:   s.Version,
+				UpdatedAt: s.UpdatedAt,
+			})
+			payload.SecretCount++
+		}
+	}
+
+	if len(payload.Environments) == 0 {
+		return nil
+	}
+	return payload
+}
+
 // Push encrypts the local vault.db into a Sync Envelope and uploads it.
 func (e *Engine) Push(ctx context.Context, opts PushOptions) (*PushResult, error) {
 	// 1. Read vault.db
@@ -79,6 +125,9 @@ func (e *Engine) Push(ctx context.Context, opts PushOptions) (*PushResult, error
 	if err != nil {
 		return nil, fmt.Errorf("sync push: read vault: %w", err)
 	}
+
+	// 1b. Extract key metadata before encryption
+	metadata := ExtractKeyMetadata(opts.VaultDBPath)
 
 	// 2. Derive SyncKey
 	syncKey, err := DeriveSyncKey(opts.MasterKey)
@@ -101,7 +150,7 @@ func (e *Engine) Push(ctx context.Context, opts PushOptions) (*PushResult, error
 	var result *PushResult
 	err = e.withRetry(ctx, 3, func(ctx context.Context) error {
 		var pushErr error
-		result, pushErr = e.doPush(ctx, opts, envelope, hashHex)
+		result, pushErr = e.doPush(ctx, opts, envelope, hashHex, metadata)
 		return pushErr
 	})
 	if err != nil {
@@ -208,23 +257,57 @@ type pushAPIResponse struct {
 	Status  int    `json:"status"`
 }
 
-func (e *Engine) doPush(ctx context.Context, opts PushOptions, blob []byte, hash string) (*PushResult, error) {
-	url := opts.APIBaseURL + "/api/v1/vaults/" + opts.VaultID + "/push"
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, nil)
+func (e *Engine) doPush(ctx context.Context, opts PushOptions, blob []byte, hash string, metadata *domain.VaultMetadataPayload) (*PushResult, error) {
+	apiURL := opts.APIBaseURL + "/api/v1/vaults/" + opts.VaultID + "/push"
+
+	var body io.Reader
+	var contentType string
+
+	if metadata != nil {
+		// Multipart: blob + metadata
+		var buf bytes.Buffer
+		w := multipart.NewWriter(&buf)
+
+		blobPart, err := w.CreateFormFile("blob", "vault.enc")
+		if err != nil {
+			return nil, fmt.Errorf("sync: create blob part: %w", err)
+		}
+		if _, err := blobPart.Write(blob); err != nil {
+			return nil, fmt.Errorf("sync: write blob part: %w", err)
+		}
+
+		metaJSON, err := json.Marshal(metadata)
+		if err != nil {
+			return nil, fmt.Errorf("sync: marshal metadata: %w", err)
+		}
+		if err := w.WriteField("metadata", string(metaJSON)); err != nil {
+			return nil, fmt.Errorf("sync: write metadata field: %w", err)
+		}
+
+		if err := w.Close(); err != nil {
+			return nil, fmt.Errorf("sync: close multipart: %w", err)
+		}
+
+		body = &buf
+		contentType = w.FormDataContentType()
+	} else {
+		// Legacy: raw binary
+		body = bytes.NewReader(blob)
+		contentType = "application/octet-stream"
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("sync: create push request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+opts.AccessToken)
-	req.Header.Set("Content-Type", "application/octet-stream")
+	req.Header.Set("Content-Type", contentType)
 	if !opts.Force {
-		// Read local sync state for If-Match
 		state, _ := loadSyncState(opts.VaultDBPath)
 		if state != nil {
 			req.Header.Set("If-Match", fmt.Sprintf("%d", state.Version))
 		}
 	}
-	req.Body = io.NopCloser(bytes.NewReader(blob))
-	req.ContentLength = int64(len(blob))
 
 	resp, err := e.httpClient.Do(req)
 	if err != nil {

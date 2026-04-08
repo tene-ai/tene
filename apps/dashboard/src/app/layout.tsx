@@ -9,6 +9,10 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: "Tene Dashboard",
   description: "Manage your encrypted vaults, devices, and team",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

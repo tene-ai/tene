@@ -42,6 +42,11 @@ func runPull(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("not logged in. Run 'tene login' first")
 	}
 
+	// Pre-check plan from JWT (client-side, fail-fast)
+	if err := checkProPlan(token); err != nil {
+		return err
+	}
+
 	// Load local vault
 	app, err := loadApp()
 	if err != nil {
