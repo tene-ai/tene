@@ -112,7 +112,7 @@ func buildDatabaseURL() string {
 	name := envOr("DB_NAME", "tene")
 	user := envOr("DB_USERNAME", "tene_admin")
 	pass := os.Getenv("DB_PASSWORD")
-	sslmode := envOr("DB_SSLMODE", "disable")
+	sslmode := envOr("DB_SSLMODE", "require")
 	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, name, sslmode)
 }
 
