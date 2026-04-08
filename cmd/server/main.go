@@ -73,9 +73,14 @@ func main() {
 
 // runMigrations applies pending database migrations from the migrations/ directory.
 func runMigrations(databaseURL string) {
-	m, err := migrate.New("file://migrations", databaseURL)
+	m, err := migrate.New("file:///migrations", databaseURL)
 	if err != nil {
-		log.Fatalf("migration init: %v", err)
+		// Try relative path (local dev)
+		m, err = migrate.New("file://migrations", databaseURL)
+	}
+	if err != nil {
+		log.Printf("migration init: %v (skipping migrations)", err)
+		return
 	}
 	defer func() {
 		srcErr, dbErr := m.Close()
