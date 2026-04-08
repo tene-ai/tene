@@ -2,12 +2,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { StatCard } from "@/components/stat-card";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import { api } from "@/lib/api";
 
 export default function OverviewPage() {
+  const authReady = useAuthReady();
+
   const { data: vaults } = useQuery({
     queryKey: ["vaults"],
     queryFn: () => api.listVaults(),
+    enabled: authReady,
   });
 
   const vaultCount = vaults?.length ?? 0;

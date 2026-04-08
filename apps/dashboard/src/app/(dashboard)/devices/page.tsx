@@ -1,15 +1,18 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import { api } from "@/lib/api";
 import { DeviceCard, DeviceCardEmpty } from "@/components/device-card";
 
 export default function DevicesPage() {
+  const authReady = useAuthReady();
   const queryClient = useQueryClient();
 
   const { data: devices, isLoading } = useQuery({
     queryKey: ["devices"],
     queryFn: () => api.listDevices(),
+    enabled: authReady,
   });
 
   const deleteMutation = useMutation({

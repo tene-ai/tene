@@ -3,9 +3,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -23,14 +25,23 @@ func main() {
 		GitHubClientSecret: envOr("GITHUB_CLIENT_SECRET", ""),
 		CallbackBase:       envOr("CALLBACK_BASE", "http://127.0.0.1:8080"),
 		DashboardURL:       envOr("DASHBOARD_URL", "https://app.tene.sh"),
-		DatabaseURL:        envOr("DATABASE_URL", ""),
+		DatabaseURL:        buildDatabaseURL(),
+		S3BucketName:       envOr("S3_BUCKET", ""),
+		S3Region:           envOr("AWS_REGION", "ap-northeast-2"),
+		S3Endpoint:         envOr("S3_ENDPOINT", ""),
+		LemonAPIKey:        envOr("LEMON_API_KEY", ""),
+		LemonWebhookSecret: envOr("LEMON_WEBHOOK_SECRET", ""),
+		LemonStoreID:       envOr("LEMON_STORE_ID", ""),
+		LemonProVariantID:  envOr("LEMON_VARIANT_PRO", ""),
 		FreeRPM:            100,
 		ProRPM:             1000,
 	}
 
 	// Run database migrations if DATABASE_URL is set
 	if cfg.DatabaseURL != "" {
-		runMigrations(cfg.DatabaseURL)
+		// golang-migrate pgx/v5 driver requires "pgx5://" scheme
+		migrateURL := strings.Replace(cfg.DatabaseURL, "postgres://", "pgx5://", 1)
+		runMigrations(migrateURL)
 	}
 
 	e, cleanup, err := api.NewServer(cfg)
@@ -80,6 +91,24 @@ func runMigrations(databaseURL string) {
 		log.Fatalf("migration up: %v", err)
 	}
 	log.Println("database migrations applied")
+}
+
+// buildDatabaseURL returns DATABASE_URL if set, otherwise composes it from
+// individual DB_* environment variables (DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD).
+func buildDatabaseURL() string {
+	if v := os.Getenv("DATABASE_URL"); v != "" {
+		return v
+	}
+	host := os.Getenv("DB_HOST")
+	if host == "" {
+		return "" // no DB config at all → in-memory fallback
+	}
+	port := envOr("DB_PORT", "5432")
+	name := envOr("DB_NAME", "tene")
+	user := envOr("DB_USERNAME", "tene_admin")
+	pass := os.Getenv("DB_PASSWORD")
+	sslmode := envOr("DB_SSLMODE", "disable")
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, name, sslmode)
 }
 
 func envOr(key, fallback string) string {

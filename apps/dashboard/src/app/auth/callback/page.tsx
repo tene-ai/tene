@@ -26,15 +26,26 @@ function CallbackHandler() {
 
     api
       .exchangeAuthCode(code)
-      .then(({ access_token, refresh_token }) => {
+      .then(async ({ access_token, refresh_token }) => {
         // Set cookie so Next.js middleware can verify auth on server-side
         document.cookie = `tene_access_token=${access_token}; path=/; max-age=${15 * 60}; SameSite=Lax`;
         // Store in Zustand (persisted to localStorage)
         login(access_token, refresh_token);
 
-        // Redirect based on intent
+        // Fetch user profile to check plan
+        try {
+          const me = await api.getMe();
+          if (me.plan !== "pro") {
+            router.replace("/upgrade");
+            return;
+          }
+        } catch {
+          // If /me fails, middleware will handle plan check
+        }
+
+        // Pro user — redirect to dashboard
         if (intent === "upgrade") {
-          router.replace("/billing");
+          router.replace("/");
         } else {
           router.replace("/");
         }

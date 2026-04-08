@@ -2,14 +2,22 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { api } from "./api";
 
+interface UserProfile {
+  id: string;
+  plan: "free" | "pro";
+  email: string;
+  name: string;
+  avatar_url: string;
+}
+
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
-  user: { id: string; plan: string; email?: string } | null;
+  user: UserProfile | null;
   isAuthenticated: boolean;
   login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
-  setUser: (user: AuthState["user"]) => void;
+  setUser: (user: UserProfile) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -25,22 +33,28 @@ export const useAuthStore = create<AuthState>()(
         api.setRefreshToken(refreshToken);
         set({ accessToken, refreshToken, isAuthenticated: true });
 
-        // Wire up token refresh callback so api client can sync state
+        // Wire up token refresh callback
         api.onTokenRefresh = (newAccess, newRefresh) => {
           set({ accessToken: newAccess, refreshToken: newRefresh });
         };
 
-        // Wire up logout handler for expired sessions
+        // Wire up logout handler
         api.setLogoutHandler(() => {
           useAuthStore.getState().logout();
         });
 
-        // Fetch user info after login
+        // Fetch full user profile
         api.getMe().then((me) => {
-          set({ user: { id: me.user_id, plan: me.plan } });
-        }).catch(() => {
-          // Non-fatal: user info will be fetched on next page load
-        });
+          set({
+            user: {
+              id: me.user_id,
+              plan: me.plan,
+              email: me.email || "",
+              name: me.name || "",
+              avatar_url: me.avatar_url || "",
+            },
+          });
+        }).catch(() => {});
       },
 
       logout: () => {
@@ -67,7 +81,6 @@ export const useAuthStore = create<AuthState>()(
           api.setRefreshToken(state.refreshToken);
         }
         if (state?.isAuthenticated) {
-          // Re-wire callbacks after rehydration
           api.onTokenRefresh = (newAccess, newRefresh) => {
             useAuthStore.setState({ accessToken: newAccess, refreshToken: newRefresh });
           };

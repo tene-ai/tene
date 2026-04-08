@@ -46,10 +46,11 @@ type refreshEntry struct {
 	expiresAt time.Time
 }
 
-// AuthUserStore defines user lookup for the auth handler.
-// Optional: when nil, /auth/me returns JWT claims only.
+// AuthUserStore defines user operations for the auth handler.
+// Optional: when nil, /auth/me returns JWT claims only and users are not persisted.
 type AuthUserStore interface {
 	GetUserByID(ctx context.Context, id string) (*domain.User, error)
+	UpsertUser(ctx context.Context, u *domain.User) error
 }
 
 // AuthHandler handles OAuth and token endpoints.
@@ -165,8 +166,7 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 		return response.Err(c, domain.ErrInvalidOAuthCode)
 	}
 
-	// TODO: Upsert user in PostgreSQL when DB is connected
-	// For now, create a user object from GitHub data
+	// Create user object from GitHub data
 	user := &domain.User{
 		ID:           generateUserID(ghUser.ID),
 		Email:        ghUser.Email,
@@ -175,6 +175,16 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 		GitHubID:     ghUser.ID,
 		AvatarURL:    ghUser.AvatarURL,
 		Plan:         "free",
+	}
+
+	// Upsert user in PostgreSQL (if DB is connected)
+	if h.userStore != nil {
+		if err := h.userStore.UpsertUser(c.Request().Context(), user); err != nil {
+			slog.Error("auth.upsert_user.failed", "error", err, "github_id", ghUser.ID)
+			// Non-fatal: login still works with in-memory user data
+		} else {
+			slog.Info("auth.upsert_user.success", "user_id", user.ID, "plan", user.Plan)
+		}
 	}
 
 	// Generate tokens

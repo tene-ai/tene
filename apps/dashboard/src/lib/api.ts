@@ -180,7 +180,14 @@ class ApiClient {
   }
 
   getMe() {
-    return this.request<{ user_id: string; plan: string }>("/api/v1/auth/me");
+    return this.request<{ user_id: string; plan: "free" | "pro"; email: string; name: string; avatar_url: string }>("/api/v1/auth/me");
+  }
+
+  signout(refreshToken?: string) {
+    return this.request<{ message: string }>("/api/v1/auth/signout", {
+      method: "POST",
+      body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
+    });
   }
 
   // Vaults

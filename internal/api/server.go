@@ -31,6 +31,7 @@ type Config struct {
 	ProRPM             int
 	S3BucketName       string
 	S3Region           string
+	S3Endpoint         string // S3-compatible endpoint (e.g. MinIO); empty = AWS S3
 	LemonAPIKey        string
 	LemonWebhookSecret string
 	LemonStoreID       string
@@ -102,7 +103,7 @@ func NewServer(cfg Config) (*echo.Echo, func(), error) {
 	var s3Client *storage.S3Client
 	if cfg.S3BucketName != "" && cfg.S3Region != "" {
 		var s3Err error
-		s3Client, s3Err = storage.NewS3Client(context.Background(), cfg.S3BucketName, cfg.S3Region)
+		s3Client, s3Err = storage.NewS3Client(context.Background(), cfg.S3BucketName, cfg.S3Region, cfg.S3Endpoint)
 		if s3Err != nil {
 			e.Logger.Warnf("S3 client init failed (push/pull disabled): %v", s3Err)
 		}
@@ -160,6 +161,10 @@ func NewServer(cfg Config) (*echo.Echo, func(), error) {
 	corsOrigins := []string{"https://tene.sh", "https://app.tene.sh"}
 	if extra := os.Getenv("CORS_EXTRA_ORIGINS"); extra != "" {
 		corsOrigins = append(corsOrigins, strings.Split(extra, ",")...)
+	}
+	// Auto-add localhost origins when CALLBACK_BASE points to localhost (local dev)
+	if strings.Contains(cfg.CallbackBase, "localhost") || strings.Contains(cfg.CallbackBase, "127.0.0.1") {
+		corsOrigins = append(corsOrigins, "http://localhost:3000", "http://localhost:3001")
 	}
 	e.Use(echoMw.CORSWithConfig(echoMw.CORSConfig{
 		AllowOrigins: corsOrigins,

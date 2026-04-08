@@ -17,7 +17,9 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="font-mono font-bold text-3xl text-accent mb-2">tene</h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Tene" width={48} height={48} className="rounded-xl mx-auto mb-3" />
+          <h1 className="font-mono font-bold text-3xl mb-2">tene</h1>
           <p className="text-muted text-sm">Sign in to your Tene Cloud dashboard</p>
         </div>
 

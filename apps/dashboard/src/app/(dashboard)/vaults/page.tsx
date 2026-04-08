@@ -3,11 +3,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { VaultTable } from "@/components/vault-table";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 
 export default function VaultsPage() {
+  const authReady = useAuthReady();
   const { data: vaults, isLoading } = useQuery({
     queryKey: ["vaults"],
     queryFn: () => api.listVaults(),
+    enabled: authReady,
   });
 
   return (

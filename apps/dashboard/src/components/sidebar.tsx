@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { FolderKey, Users, ScrollText, Settings } from "lucide-react";
+import { UserMenu } from "./user-menu";
 
 const nav = [
-  { href: "/", label: "Overview", icon: "⌂" },
-  { href: "/vaults", label: "Vaults", icon: "◈" },
-  { href: "/devices", label: "Devices", icon: "⊞" },
-  { href: "/team", label: "Team", icon: "⊕" },
-  { href: "/audit", label: "Audit Log", icon: "☰" },
-  { href: "/billing", label: "Billing", icon: "◇" },
+  { href: "/", label: "Projects", icon: FolderKey },
+  { href: "/team", label: "Team", icon: Users },
+  { href: "/activity", label: "Activity", icon: ScrollText },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -20,13 +20,18 @@ export function Sidebar() {
     <aside aria-label="Main navigation" className="hidden lg:flex flex-col w-56 border-r border-border bg-surface h-screen sticky top-0">
       <div className="p-4 border-b border-border">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-accent font-mono font-bold text-lg">tene</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Tene" width={28} height={28} className="rounded-md" />
+          <span className="font-mono font-bold text-lg">tene</span>
           <span className="badge badge-pro text-[10px]">cloud</span>
         </Link>
       </div>
       <nav className="flex-1 p-3 space-y-1">
         {nav.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const active = item.href === "/"
+            ? pathname === "/"
+            : pathname.startsWith(item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
@@ -38,17 +43,14 @@ export function Sidebar() {
                   : "text-muted hover:text-foreground hover:bg-surface-2"
               )}
             >
-              <span className="font-mono text-xs w-4 text-center">{item.icon}</span>
+              <Icon size={16} />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-2 text-sm text-muted">
-          <span className="w-2 h-2 rounded-full bg-accent" />
-          Connected
-        </div>
+      <div className="p-3 border-t border-border">
+        <UserMenu />
       </div>
     </aside>
   );
@@ -59,8 +61,11 @@ export function MobileNav() {
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface border-t border-border flex justify-around py-2">
-      {nav.slice(0, 5).map((item) => {
-        const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+      {nav.map((item) => {
+        const active = item.href === "/"
+          ? pathname === "/"
+          : pathname.startsWith(item.href);
+        const Icon = item.icon;
         return (
           <Link
             key={item.href}
@@ -70,7 +75,7 @@ export function MobileNav() {
               active ? "text-accent" : "text-muted"
             )}
           >
-            <span className="font-mono">{item.icon}</span>
+            <Icon size={18} />
             <span>{item.label}</span>
           </Link>
         );

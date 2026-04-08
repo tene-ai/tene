@@ -2,16 +2,19 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import { InviteModal } from "@/components/invite-modal";
 import { api } from "@/lib/api";
 
 export default function TeamPage() {
+  const authReady = useAuthReady();
   const [inviteOpen, setInviteOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ["teams"],
     queryFn: () => api.listTeams(),
+    enabled: authReady,
   });
 
   const team = teams?.[0] ?? null;
@@ -19,7 +22,7 @@ export default function TeamPage() {
   const { data: members, isLoading: membersLoading } = useQuery({
     queryKey: ["team-members", team?.id],
     queryFn: () => api.listTeamMembers(team!.id),
-    enabled: !!team,
+    enabled: authReady && !!team,
   });
 
   const inviteMutation = useMutation({

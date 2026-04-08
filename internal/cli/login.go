@@ -114,7 +114,13 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Signed in as %s (%s)\n", result.User.Name, result.User.Email)
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Plan: %s\n\n", result.User.Plan)
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		if result.User.Plan == "pro" {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Dashboard: https://app.tene.sh\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		} else {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Upgrade to Pro for cloud sync, team sharing, and dashboard.\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  → https://app.tene.sh/upgrade\n")
+		}
 	case err := <-errCh:
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " failed\n")
 		return fmt.Errorf("login: %w", err)

@@ -3,6 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import { api } from "@/lib/api";
 
 interface VaultDetailPageProps {
@@ -17,10 +18,12 @@ function formatBytes(bytes: number): string {
 
 export default function VaultDetailPage({ params }: VaultDetailPageProps) {
   const { id } = use(params);
+  const authReady = useAuthReady();
 
   const { data: vault, isLoading } = useQuery({
     queryKey: ["vaults", id],
     queryFn: () => api.getVault(id),
+    enabled: authReady,
   });
 
   if (isLoading) {

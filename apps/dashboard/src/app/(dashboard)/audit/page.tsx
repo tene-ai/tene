@@ -2,11 +2,23 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuthReady } from "@/hooks/use-auth-ready";
 import { api } from "@/lib/api";
 
-const FILTERS = ["All", "push", "pull", "login", "delete", "create"] as const;
+const FILTERS = ["All", "vault.push", "vault.pull", "vault.create", "vault.delete", "auth.login", "auth.logout"] as const;
+
+const FILTER_LABELS: Record<string, string> = {
+  "All": "All",
+  "vault.push": "Push",
+  "vault.pull": "Pull",
+  "vault.create": "Create",
+  "vault.delete": "Delete",
+  "auth.login": "Login",
+  "auth.logout": "Logout",
+};
 
 export default function AuditPage() {
+  const authReady = useAuthReady();
   const [activeFilter, setActiveFilter] = useState<string>("All");
 
   const { data: logs, isLoading } = useQuery({
@@ -16,6 +28,7 @@ export default function AuditPage() {
         action: activeFilter === "All" ? undefined : activeFilter,
         limit: 50,
       }),
+    enabled: authReady,
   });
 
   return (
@@ -36,7 +49,7 @@ export default function AuditPage() {
                 : "border-border bg-surface text-muted hover:text-foreground"
             }`}
           >
-            {filter === "All" ? "All" : filter.charAt(0).toUpperCase() + filter.slice(1)}
+            {FILTER_LABELS[filter] || filter}
           </button>
         ))}
       </div>
@@ -94,14 +107,17 @@ export default function AuditPage() {
 
 function actionBadgeClass(action: string): string {
   switch (action) {
-    case "push":
+    case "vault.push":
       return "badge-active";
-    case "pull":
+    case "vault.pull":
       return "badge-free";
-    case "delete":
+    case "vault.delete":
       return "badge-danger";
-    case "login":
+    case "auth.login":
+    case "auth.logout":
       return "badge-pro";
+    case "vault.create":
+      return "badge-free";
     default:
       return "badge-free";
   }
