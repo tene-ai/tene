@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/tomo-kay/tene/internal/domain"
@@ -86,12 +87,12 @@ func (r *VaultKeyMetadataRepo) UpsertKeyMetadata(ctx context.Context, vaultID st
 		for _, k := range keys {
 			updatedAt := k.UpdatedAt
 			if updatedAt.IsZero() {
-				updatedAt = payload.Keys[env][0].UpdatedAt // fallback
+				updatedAt = time.Now()
 			}
 			_, err := tx.Exec(ctx,
 				`INSERT INTO vault_key_metadata (vault_id, environment, key_name, version, updated_at)
 				 VALUES ($1, $2, $3, $4, $5)`,
-				vaultID, env, k.Name, k.Version, k.UpdatedAt,
+				vaultID, env, k.Name, k.Version, updatedAt,
 			)
 			if err != nil {
 				return fmt.Errorf("vault_key_metadata: insert %s/%s: %w", env, k.Name, err)
