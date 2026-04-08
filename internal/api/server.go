@@ -164,6 +164,10 @@ func NewServer(cfg Config) (*echo.Echo, func(), error) {
 	e.Use(echoMw.BodyLimit("2M")) // Default body limit for most routes
 	// M-03: CORS origins from environment (no localhost in prod)
 	corsOrigins := []string{"https://tene.sh", "https://app.tene.sh"}
+	// Auto-add staging origins when CALLBACK_BASE points to staging
+	if strings.Contains(cfg.CallbackBase, "staging") {
+		corsOrigins = append(corsOrigins, "https://staging.tene.sh", "https://app-staging.tene.sh")
+	}
 	if extra := os.Getenv("CORS_EXTRA_ORIGINS"); extra != "" {
 		corsOrigins = append(corsOrigins, strings.Split(extra, ",")...)
 	}
