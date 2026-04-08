@@ -184,9 +184,7 @@ func loadAuthField(field string) (string, error) {
 		if err == nil {
 			return val, nil
 		}
-		if err != keyring.ErrNotFound {
-			// Keychain error — fall through to file fallback
-		}
+		// Keychain error (not ErrNotFound) — fall through to file fallback
 
 		// Try file fallback and migrate to keychain if found
 		val, err = loadAuthFieldFromFile(field)
