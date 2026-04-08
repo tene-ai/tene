@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -17,12 +18,23 @@ import (
 	"github.com/tomo-kay/tene/internal/domain"
 )
 
-const stateTTL = 5 * time.Minute
+const (
+	stateTTL   = 5 * time.Minute
+	authCodeTTL = 30 * time.Second
+)
 
 type stateEntry struct {
 	codeVerifier string
 	redirectTo   string // "dashboard", "cli:{port}", or empty (API-only)
 	expiresAt    time.Time
+}
+
+// authCodeEntry stores a one-time auth code for dashboard token exchange.
+type authCodeEntry struct {
+	accessToken  string
+	refreshToken string
+	expiresAt    time.Time
+	used         bool
 }
 
 // refreshEntry stores metadata for a refresh token.
@@ -34,14 +46,23 @@ type refreshEntry struct {
 	expiresAt time.Time
 }
 
+// AuthUserStore defines user operations for the auth handler.
+// Optional: when nil, /auth/me returns JWT claims only and users are not persisted.
+type AuthUserStore interface {
+	GetUserByID(ctx context.Context, id string) (*domain.User, error)
+	UpsertUser(ctx context.Context, u *domain.User) error
+}
+
 // AuthHandler handles OAuth and token endpoints.
 type AuthHandler struct {
 	oauth        *auth.OAuthService
 	jwt          *auth.JWTService
 	dashboardURL string // For post-login redirect (e.g. "https://app.tene.sh")
+	userStore    AuthUserStore // optional, nil for in-memory mode
 	mu           sync.RWMutex
-	states       map[string]stateEntry   // in-memory state store with TTL (replace with Redis in prod)
-	refresh      map[string]refreshEntry // in-memory refresh token store (replace with DB in prod)
+	states       map[string]stateEntry     // in-memory state store with TTL (replace with Redis in prod)
+	refresh      map[string]refreshEntry   // in-memory refresh token store (replace with DB in prod)
+	authCodes    map[string]authCodeEntry   // one-time auth codes for dashboard token exchange
 }
 
 // NewAuthHandler creates an auth handler.
@@ -52,9 +73,15 @@ func NewAuthHandler(oauth *auth.OAuthService, jwt *auth.JWTService, dashboardURL
 		dashboardURL: dashboardURL,
 		states:       make(map[string]stateEntry),
 		refresh:      make(map[string]refreshEntry),
+		authCodes:    make(map[string]authCodeEntry),
 	}
 	go h.cleanupLoop()
 	return h
+}
+
+// SetUserStore sets an optional user store for enriching /auth/me responses.
+func (h *AuthHandler) SetUserStore(store AuthUserStore) {
+	h.userStore = store
 }
 
 // cleanupLoop removes expired state and refresh entries every minute.
@@ -72,6 +99,11 @@ func (h *AuthHandler) cleanupLoop() {
 		for k, v := range h.refresh {
 			if now.After(v.expiresAt) {
 				delete(h.refresh, k)
+			}
+		}
+		for k, v := range h.authCodes {
+			if now.After(v.expiresAt) {
+				delete(h.authCodes, k)
 			}
 		}
 		h.mu.Unlock()
@@ -134,8 +166,7 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 		return response.Err(c, domain.ErrInvalidOAuthCode)
 	}
 
-	// TODO: Upsert user in PostgreSQL when DB is connected
-	// For now, create a user object from GitHub data
+	// Create user object from GitHub data
 	user := &domain.User{
 		ID:           generateUserID(ghUser.ID),
 		Email:        ghUser.Email,
@@ -144,6 +175,16 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 		GitHubID:     ghUser.ID,
 		AvatarURL:    ghUser.AvatarURL,
 		Plan:         "free",
+	}
+
+	// Upsert user in PostgreSQL (if DB is connected)
+	if h.userStore != nil {
+		if err := h.userStore.UpsertUser(c.Request().Context(), user); err != nil {
+			slog.Error("auth.upsert_user.failed", "error", err, "github_id", ghUser.ID)
+			// Non-fatal: login still works with in-memory user data
+		} else {
+			slog.Info("auth.upsert_user.success", "user_id", user.ID, "plan", user.Plan)
+		}
 	}
 
 	// Generate tokens
@@ -172,10 +213,20 @@ func (h *AuthHandler) GitHubCallback(c echo.Context) error {
 	// L-04: Security audit logging
 	slog.Info("auth.login.success", "user_id", user.ID, "provider", "github", "ip", c.RealIP())
 
-	// If request came from dashboard, redirect back with tokens
+	// If request came from dashboard, redirect back with a one-time auth code
 	if entry.redirectTo == "dashboard" && h.dashboardURL != "" {
-		redirectURL := fmt.Sprintf("%s/auth/callback?access_token=%s&refresh_token=%s",
-			h.dashboardURL, accessToken, refreshToken)
+		code, codeErr := generateAuthCode()
+		if codeErr != nil {
+			return response.Err(c, codeErr)
+		}
+		h.mu.Lock()
+		h.authCodes[code] = authCodeEntry{
+			accessToken:  accessToken,
+			refreshToken: refreshToken,
+			expiresAt:    time.Now().Add(authCodeTTL),
+		}
+		h.mu.Unlock()
+		redirectURL := fmt.Sprintf("%s/auth/callback?code=%s", h.dashboardURL, code)
 		return c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 	}
 
@@ -255,13 +306,30 @@ func (h *AuthHandler) RefreshToken(c echo.Context) error {
 }
 
 // Me returns the current authenticated user.
+// When a user store is available, returns full profile (email, name, avatar_url).
+// Falls back to JWT claims only when no user store is configured.
 func (h *AuthHandler) Me(c echo.Context) error {
 	claims := middleware.GetClaims(c)
 	if claims == nil {
 		return response.Err(c, domain.ErrUnauthorized)
 	}
 
-	// TODO: Fetch full user from DB
+	// Try to fetch full user from DB if user store is available
+	if h.userStore != nil {
+		user, err := h.userStore.GetUserByID(c.Request().Context(), claims.UserID)
+		if err == nil {
+			return response.OK(c, http.StatusOK, map[string]any{
+				"user_id":    user.ID,
+				"email":      user.Email,
+				"name":       user.Name,
+				"avatar_url": user.AvatarURL,
+				"plan":       user.Plan,
+			})
+		}
+		// Fall through to claims-only response on error
+		slog.Warn("auth.me.user_lookup_failed", "user_id", claims.UserID, "error", err)
+	}
+
 	return response.OK(c, http.StatusOK, map[string]string{
 		"user_id": claims.UserID,
 		"plan":    claims.Plan,
@@ -302,6 +370,48 @@ func generateUserID(githubID int64) string {
 
 func itoa(n int64) string {
 	return fmt.Sprintf("%d", n)
+}
+
+// Exchange exchanges a one-time auth code for tokens (dashboard flow).
+// POST /api/v1/auth/exchange {code} -> {access_token, refresh_token, expires_in}
+func (h *AuthHandler) Exchange(c echo.Context) error {
+	var req struct {
+		Code string `json:"code"`
+	}
+	if err := c.Bind(&req); err != nil || req.Code == "" {
+		return response.ErrMsg(c, http.StatusBadRequest, "BAD_REQUEST", "code required")
+	}
+
+	h.mu.Lock()
+	entry, ok := h.authCodes[req.Code]
+	if ok {
+		delete(h.authCodes, req.Code) // one-time use
+	}
+	h.mu.Unlock()
+
+	if !ok || entry.used {
+		return response.ErrMsg(c, http.StatusBadRequest, "INVALID_CODE", "invalid or expired auth code")
+	}
+	if time.Now().After(entry.expiresAt) {
+		return response.ErrMsg(c, http.StatusBadRequest, "INVALID_CODE", "auth code expired")
+	}
+
+	slog.Info("auth.exchange.success", "ip", c.RealIP())
+
+	return response.OK(c, http.StatusOK, domain.TokenPair{
+		AccessToken:  entry.accessToken,
+		RefreshToken: entry.refreshToken,
+		ExpiresIn:    int(auth.AccessTokenTTL.Seconds()),
+	})
+}
+
+// generateAuthCode creates a random auth code prefixed with "ac_".
+func generateAuthCode() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("generate auth code: %w", err)
+	}
+	return "ac_" + hex.EncodeToString(b), nil
 }
 
 // generateFamily creates a unique token family identifier (H-04).

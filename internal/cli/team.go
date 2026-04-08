@@ -112,6 +112,11 @@ func runTeamCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("not logged in. Run 'tene login' first")
 	}
 
+	// Pre-check plan from JWT (client-side, fail-fast)
+	if err := checkProPlan(token); err != nil {
+		return err
+	}
+
 	if slug == "" {
 		slug = slugify(name)
 	}
@@ -209,6 +214,11 @@ func runTeamInvite(cmd *cobra.Command, args []string) error {
 	token, err := loadAuthToken()
 	if err != nil || token == "" {
 		return fmt.Errorf("not logged in. Run 'tene login' first")
+	}
+
+	// Pre-check plan from JWT (client-side, fail-fast)
+	if err := checkProPlan(token); err != nil {
+		return err
 	}
 
 	// Load local project key and wrap for the invitee

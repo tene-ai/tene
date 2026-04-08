@@ -41,6 +41,11 @@ func runSync(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Pre-check plan from JWT (client-side, fail-fast)
+	if err := checkProPlan(token); err != nil {
+		return err
+	}
+
 	// Authenticated: run pull then push
 	if !flagQuiet {
 		_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  Syncing...")

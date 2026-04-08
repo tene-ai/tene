@@ -10,5 +10,9 @@ export const heroData = {
       label: "View on GitHub",
       href: "https://github.com/tomo-kay/tene",
     },
+    dashboard: {
+      label: "Dashboard",
+      href: "https://app.tene.sh",
+    },
   },
 };

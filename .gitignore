@@ -8,6 +8,7 @@ dist/
 .claude/agent-memory/
 .DS_Store
 .next/
+*.tsbuildinfo
 bin/
 
 # Build binaries (not source directories)

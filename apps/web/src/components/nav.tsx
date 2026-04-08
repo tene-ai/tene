@@ -46,6 +46,12 @@ export function Nav() {
             Pricing
           </a>
           <a
+            href="https://app.tene.sh"
+            className="transition-colors hover:text-accent font-medium"
+          >
+            Dashboard
+          </a>
+          <a
             href="https://github.com/tomo-kay/tene"
             target="_blank"
             rel="noopener noreferrer"

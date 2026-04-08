@@ -33,7 +33,7 @@ Infrastructure Layer (external libs only)
   └── internal/claudemd/      CLAUDE.md auto-generation (5 AI editors)
 
 Service Layer (business logic)
-  └── internal/auth/          OAuth (GitHub PKCE) + JWT (ES256, 15min/30day)
+  └── internal/auth/          OAuth (GitHub PKCE) + JWT (HS256, 15min/30day)
   └── internal/billing/       LemonSqueezy integration + HMAC webhooks
   └── internal/sync/          Push/pull engine, 3-way merge, Sync Envelope
 

@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/zalando/go-keyring"
+
 	"github.com/tomo-kay/tene/internal/domain"
 )
 
@@ -112,7 +114,13 @@ func runLogin(cmd *cobra.Command, args []string) error {
 
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  ✓ Signed in as %s (%s)\n", result.User.Name, result.User.Email)
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Plan: %s\n\n", result.User.Plan)
-		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		if result.User.Plan == "pro" {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Dashboard: https://app.tene.sh\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Run 'tene push' to sync your vault.\n")
+		} else {
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  Upgrade to Pro for cloud sync, team sharing, and dashboard.\n")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "  → https://app.tene.sh/upgrade\n")
+		}
 	case err := <-errCh:
 		_, _ = fmt.Fprintf(cmd.ErrOrStderr(), " failed\n")
 		return fmt.Errorf("login: %w", err)
@@ -147,22 +155,86 @@ func openBrowser(url string) error {
 	}
 }
 
-// Token storage helpers — uses ~/.tene/auth.json
-// TODO: Use OS Keychain (go-keyring) for production
+// Token storage helpers
+// Uses OS Keychain (go-keyring) by default, falls back to ~/.tene/auth.json
+// when --no-keychain is set or keychain is unavailable.
+
+const (
+	cloudServiceName = "tene-cloud"
+	keyAccessToken   = "access_token"
+	keyRefreshToken  = "refresh_token"
+)
 
 func loadAuthToken() (string, error) {
-	return loadAuthField("access_token")
+	return loadAuthField(keyAccessToken)
 }
 
 func saveAuthToken(token string) error {
-	return saveAuthField("access_token", token)
+	return saveAuthField(keyAccessToken, token)
 }
 
 func saveRefreshToken(token string) error {
-	return saveAuthField("refresh_token", token)
+	return saveAuthField(keyRefreshToken, token)
 }
 
 func loadAuthField(field string) (string, error) {
+	if !flagNoKeychain {
+		// Try keychain first
+		val, err := keyring.Get(cloudServiceName, field)
+		if err == nil {
+			return val, nil
+		}
+		if err != keyring.ErrNotFound {
+			// Keychain error — fall through to file fallback
+		}
+
+		// Try file fallback and migrate to keychain if found
+		val, err = loadAuthFieldFromFile(field)
+		if err == nil && val != "" {
+			// Migrate to keychain
+			_ = keyring.Set(cloudServiceName, field, val)
+			// Also migrate the other field if present
+			otherField := keyRefreshToken
+			if field == keyRefreshToken {
+				otherField = keyAccessToken
+			}
+			if otherVal, err := loadAuthFieldFromFile(otherField); err == nil && otherVal != "" {
+				_ = keyring.Set(cloudServiceName, otherField, otherVal)
+			}
+			// Remove auth file after successful migration
+			_ = os.Remove(authFilePath())
+			return val, nil
+		}
+		return "", err
+	}
+
+	// --no-keychain: use file only
+	return loadAuthFieldFromFile(field)
+}
+
+func saveAuthField(field, value string) error {
+	if !flagNoKeychain {
+		if err := keyring.Set(cloudServiceName, field, value); err == nil {
+			return nil
+		}
+		// Keychain failed — fall through to file
+	}
+	return saveAuthFieldToFile(field, value)
+}
+
+func clearAuthTokens() error {
+	// Clear from keychain (ignore errors)
+	if !flagNoKeychain {
+		_ = keyring.Delete(cloudServiceName, keyAccessToken)
+		_ = keyring.Delete(cloudServiceName, keyRefreshToken)
+	}
+	// Also clear file if it exists
+	return clearAuthFile()
+}
+
+// --- File-based storage (fallback / legacy) ---
+
+func loadAuthFieldFromFile(field string) (string, error) {
 	data, err := readAuthFile()
 	if err != nil {
 		return "", err
@@ -170,7 +242,7 @@ func loadAuthField(field string) (string, error) {
 	return data[field], nil
 }
 
-func saveAuthField(field, value string) error {
+func saveAuthFieldToFile(field, value string) error {
 	data, _ := readAuthFile()
 	if data == nil {
 		data = make(map[string]string)
@@ -180,7 +252,11 @@ func saveAuthField(field, value string) error {
 }
 
 func clearAuthFile() error {
-	return writeAuthFile(map[string]string{})
+	path := authFilePath()
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
+	return os.Remove(path)
 }
 
 func readAuthFile() (map[string]string, error) {

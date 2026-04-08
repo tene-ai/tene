@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"regexp"
@@ -27,6 +28,8 @@ type TeamStore interface {
 	ListMembers(teamID string) ([]domain.TeamMember, error)
 	IsMember(teamID, userID string) bool
 	IsAdmin(teamID, userID string) bool
+	SetRotationPending(teamID string) error
+	InvalidateWrappedKeys(teamID, excludeUserID string) error
 }
 
 // MemTeamStore is an in-memory TeamStore for development.
@@ -175,6 +178,33 @@ func (s *MemTeamStore) GetEnvPermissions(teamID, userID string) ([]string, error
 	return nil, domain.ErrNotTeamMember
 }
 
+// SetRotationPending marks a team as needing key rotation and increments the rotation version.
+func (s *MemTeamStore) SetRotationPending(teamID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	t, ok := s.teams[teamID]
+	if !ok {
+		return domain.ErrNotFound
+	}
+	t.RotationPending = true
+	t.RotationVersion++
+	return nil
+}
+
+// InvalidateWrappedKeys clears wrapped_project_key for all members except excludeUserID.
+// This forces remaining members to re-wrap on next sync.
+func (s *MemTeamStore) InvalidateWrappedKeys(teamID, excludeUserID string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	members := s.members[teamID]
+	for i := range members {
+		if members[i].UserID != excludeUserID {
+			members[i].WrappedProjectKey = nil
+		}
+	}
+	return nil
+}
+
 // IsAdmin checks if a user is an admin or owner of a team.
 func (s *MemTeamStore) IsAdmin(teamID, userID string) bool {
 	s.mu.RLock()
@@ -190,14 +220,25 @@ func (s *MemTeamStore) IsAdmin(teamID, userID string) bool {
 	return false
 }
 
+// UserLookup resolves user IDs to display info.
+type UserLookup interface {
+	GetUserByID(ctx context.Context, id string) (*domain.User, error)
+}
+
 // TeamHandler handles team CRUD and member management.
 type TeamHandler struct {
-	store TeamStore
+	store      TeamStore
+	userLookup UserLookup
 }
 
 // NewTeamHandler creates a team handler.
 func NewTeamHandler(store TeamStore) *TeamHandler {
 	return &TeamHandler{store: store}
+}
+
+// SetUserLookup wires the user lookup for enriched member responses.
+func (h *TeamHandler) SetUserLookup(ul UserLookup) {
+	h.userLookup = ul
 }
 
 // Create creates a new team. Requires Pro plan.
@@ -230,12 +271,13 @@ func (h *TeamHandler) Create(c echo.Context) error {
 		return response.Err(c, err)
 	}
 
-	// Auto-add owner as admin member
+	// Auto-add owner as admin member with full environment access
 	if err := h.store.AddMember(&domain.TeamMember{
-		TeamID:   team.ID,
-		UserID:   claims.UserID,
-		Role:     "admin",
-		JoinedAt: time.Now().UTC().Format(time.RFC3339),
+		TeamID:         team.ID,
+		UserID:         claims.UserID,
+		Role:           "admin",
+		EnvPermissions: []string{"*"},
+		JoinedAt:       time.Now().UTC().Format(time.RFC3339),
 	}); err != nil {
 		slog.Error("team.create.add_owner_failed", "team_id", team.ID, "error", err)
 		return response.ErrMsg(c, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to add owner to team")
@@ -275,9 +317,10 @@ func (h *TeamHandler) Invite(c echo.Context) error {
 	}
 
 	var req struct {
-		UserID            string `json:"user_id"`
-		Role              string `json:"role"`
-		WrappedProjectKey []byte `json:"wrapped_project_key"`
+		UserID            string   `json:"user_id"`
+		Role              string   `json:"role"`
+		EnvPermissions    []string `json:"env_permissions"`
+		WrappedProjectKey []byte   `json:"wrapped_project_key"`
 	}
 	if err := c.Bind(&req); err != nil || req.UserID == "" {
 		return response.ErrMsg(c, http.StatusBadRequest, "BAD_REQUEST", "user_id required")
@@ -288,11 +331,20 @@ func (h *TeamHandler) Invite(c echo.Context) error {
 	if req.Role != "admin" && req.Role != "member" {
 		return response.ErrMsg(c, http.StatusBadRequest, "BAD_REQUEST", "role must be admin or member")
 	}
+	// Default env permissions: admin gets all, member gets dev+staging
+	if len(req.EnvPermissions) == 0 {
+		if req.Role == "admin" {
+			req.EnvPermissions = []string{"*"}
+		} else {
+			req.EnvPermissions = []string{"dev", "staging"}
+		}
+	}
 
 	member := &domain.TeamMember{
 		TeamID:            teamID,
 		UserID:            req.UserID,
 		Role:              req.Role,
+		EnvPermissions:    req.EnvPermissions,
 		WrappedProjectKey: req.WrappedProjectKey,
 		JoinedAt:          time.Now().UTC().Format(time.RFC3339),
 	}
@@ -304,7 +356,13 @@ func (h *TeamHandler) Invite(c echo.Context) error {
 	return response.OK(c, http.StatusCreated, member)
 }
 
-// RemoveMember removes a member from a team (triggers key rotation).
+// RemoveMember removes a member from a team and triggers key rotation.
+//
+// Key rotation flow:
+//  1. Remove the member from the team
+//  2. Mark team as rotation_pending and increment rotation_version
+//  3. Invalidate all remaining members' wrapped_project_key
+//  4. Remaining members re-wrap with new PK on next pull/sync
 func (h *TeamHandler) RemoveMember(c echo.Context) error {
 	claims := middleware.GetClaims(c)
 	if claims == nil {
@@ -318,16 +376,77 @@ func (h *TeamHandler) RemoveMember(c echo.Context) error {
 		return response.Err(c, domain.ErrForbidden)
 	}
 
+	// 1. Remove the member
 	if err := h.store.RemoveMember(teamID, uid); err != nil {
 		return response.Err(c, err)
 	}
 
-	slog.Info("team.member_removed", "team_id", teamID, "user_id", uid, "by", claims.UserID)
+	// 2. Set rotation pending + increment version
+	if err := h.store.SetRotationPending(teamID); err != nil {
+		slog.Error("team.rotation_pending_failed", "team_id", teamID, "error", err)
+		// Member is already removed; rotation failure is non-fatal but logged
+	}
+
+	// 3. Invalidate all wrapped keys (admin who removed keeps theirs for re-wrapping)
+	if err := h.store.InvalidateWrappedKeys(teamID, claims.UserID); err != nil {
+		slog.Error("team.invalidate_keys_failed", "team_id", teamID, "error", err)
+	}
+
+	// Fetch updated team for rotation_version
+	team, _ := h.store.GetTeam(teamID)
+	var rotationVersion int64
+	if team != nil {
+		rotationVersion = team.RotationVersion
+	}
+
+	slog.Info("team.member_removed", "team_id", teamID, "user_id", uid, "by", claims.UserID,
+		"rotation_version", rotationVersion)
 	return response.OK(c, http.StatusOK, map[string]any{
 		"message":          "member removed",
 		"key_rotation":     true,
 		"rotation_pending": true,
+		"rotation_version": rotationVersion,
 	})
+}
+
+// ListMembers returns all members of a team, enriched with user profile info.
+func (h *TeamHandler) ListMembers(c echo.Context) error {
+	claims := middleware.GetClaims(c)
+	if claims == nil {
+		return response.Err(c, domain.ErrUnauthorized)
+	}
+
+	teamID := c.Param("id")
+	if !h.store.IsMember(teamID, claims.UserID) {
+		return response.Err(c, domain.ErrNotTeamMember)
+	}
+
+	members, err := h.store.ListMembers(teamID)
+	if err != nil {
+		return response.Err(c, err)
+	}
+
+	// Enrich with user profile info if user lookup is available
+	if h.userLookup != nil {
+		views := make([]domain.TeamMemberView, 0, len(members))
+		for _, m := range members {
+			v := domain.TeamMemberView{
+				TeamID:         m.TeamID,
+				UserID:         m.UserID,
+				Role:           m.Role,
+				EnvPermissions: m.EnvPermissions,
+				JoinedAt:       m.JoinedAt,
+			}
+			if user, err := h.userLookup.GetUserByID(c.Request().Context(), m.UserID); err == nil {
+				v.Name = user.Name
+				v.AvatarURL = user.AvatarURL
+			}
+			views = append(views, v)
+		}
+		return response.OK(c, http.StatusOK, views)
+	}
+
+	return response.OK(c, http.StatusOK, members)
 }
 
 // UpdateRole changes a member's role.

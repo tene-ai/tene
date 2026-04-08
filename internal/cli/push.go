@@ -45,6 +45,11 @@ func runPush(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("not logged in. Run 'tene login' first")
 	}
 
+	// Pre-check plan from JWT (client-side, fail-fast)
+	if err := checkProPlan(token); err != nil {
+		return err
+	}
+
 	// Load local vault
 	app, err := loadApp()
 	if err != nil {
@@ -109,8 +114,55 @@ func getOrCreateVaultID(projectDir, apiURL, token, projectName string) (string, 
 		}
 	}
 
-	// Create via API
-	return createVaultViaAPI(apiURL, token, projectName)
+	// Try to find existing vault by listing user's vaults
+	if id, err := findVaultByProject(apiURL, token, projectName); err == nil && id != "" {
+		_ = saveSyncState(statePath, id)
+		return id, nil
+	}
+
+	// Create new vault via API
+	id, err := createVaultViaAPI(apiURL, token, projectName)
+	if err != nil {
+		return "", err
+	}
+	_ = saveSyncState(statePath, id)
+	return id, nil
+}
+
+func findVaultByProject(apiURL, token, projectName string) (string, error) {
+	req, err := http.NewRequest(http.MethodGet, apiURL+"/api/v1/vaults", nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	var apiResp struct {
+		Data []struct {
+			ID          string `json:"id"`
+			ProjectName string `json:"project_name"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&apiResp); err != nil {
+		return "", err
+	}
+	for _, v := range apiResp.Data {
+		if v.ProjectName == projectName {
+			return v.ID, nil
+		}
+	}
+	return "", nil
+}
+
+func saveSyncState(path, vaultID string) error {
+	data, _ := json.Marshal(map[string]string{"vault_id": vaultID})
+	return os.WriteFile(path, data, 0600)
 }
 
 func createVaultViaAPI(apiURL, token, projectName string) (string, error) {

@@ -19,32 +19,46 @@ type S3Client struct {
 	client     *s3.Client
 	presigner  *s3.PresignClient
 	bucketName string
+	disableSSE bool // true for S3-compatible services (MinIO) without KMS
 }
 
 // NewS3Client creates a new S3 client for the given bucket.
-func NewS3Client(ctx context.Context, bucketName, region string) (*S3Client, error) {
+// If endpoint is non-empty, it connects to an S3-compatible service (e.g. MinIO).
+func NewS3Client(ctx context.Context, bucketName, region, endpoint string) (*S3Client, error) {
 	cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
 	if err != nil {
 		return nil, fmt.Errorf("storage: load aws config: %w", err)
 	}
 
-	client := s3.NewFromConfig(cfg)
+	var opts []func(*s3.Options)
+	if endpoint != "" {
+		opts = append(opts, func(o *s3.Options) {
+			o.BaseEndpoint = aws.String(endpoint)
+			o.UsePathStyle = true // MinIO requires path-style
+		})
+	}
+
+	client := s3.NewFromConfig(cfg, opts...)
 	return &S3Client{
 		client:     client,
 		presigner:  s3.NewPresignClient(client),
 		bucketName: bucketName,
+		disableSSE: endpoint != "", // MinIO doesn't support SSE without KMS
 	}, nil
 }
 
 // Upload stores an encrypted vault blob in S3.
 func (c *S3Client) Upload(ctx context.Context, key string, data []byte) error {
-	_, err := c.client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:               aws.String(c.bucketName),
-		Key:                  aws.String(key),
-		Body:                 bytes.NewReader(data),
-		ContentType:          aws.String("application/octet-stream"),
-		ServerSideEncryption: types.ServerSideEncryptionAes256, // L4: SSE-S3
-	})
+	input := &s3.PutObjectInput{
+		Bucket:      aws.String(c.bucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String("application/octet-stream"),
+	}
+	if !c.disableSSE {
+		input.ServerSideEncryption = types.ServerSideEncryptionAes256 // L4: SSE-S3
+	}
+	_, err := c.client.PutObject(ctx, input)
 	if err != nil {
 		return fmt.Errorf("storage: upload %s: %w", key, err)
 	}

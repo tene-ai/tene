@@ -3,6 +3,7 @@ package cli
 import (
 	"bufio"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -121,6 +122,30 @@ func apiErrMsg(code, message string, status int) string {
 		return fmt.Sprintf("%s (HTTP %d)", code, status)
 	}
 	return fmt.Sprintf("API error (HTTP %d)", status)
+}
+
+// checkProPlan decodes the JWT payload (without signature verification) and
+// returns an error if the plan claim is not "pro". If decoding fails, nil is
+// returned so the server can perform the authoritative check.
+func checkProPlan(token string) error {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil // cannot decode; let server decide
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil
+	}
+	var claims struct {
+		Plan string `json:"plan"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return nil
+	}
+	if claims.Plan != "" && claims.Plan != "pro" {
+		return fmt.Errorf("cloud sync requires a Pro plan ($5/month).\nUpgrade: tene billing upgrade")
+	}
+	return nil
 }
 
 func encodeBase64(b []byte) string {
