@@ -44,6 +44,7 @@ jobs:
           AWS_REGION: ${{ env.AWS_REGION }}
 
       - name: Update LATEST_VERSION
+        if: "!contains(github.ref_name, '-rc')"
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "$VERSION" > /tmp/LATEST_VERSION
