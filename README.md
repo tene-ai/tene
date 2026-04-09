@@ -1,10 +1,9 @@
-# Tene
+# Tene -- Encrypted Secret Manager for Developers
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)](https://go.dev)
 [![Version](https://img.shields.io/github/v/release/tomo-kay/tene?color=green)](https://github.com/tomo-kay/tene/releases)
 [![CI](https://github.com/tomo-kay/tene/actions/workflows/ci.yml/badge.svg)](https://github.com/tomo-kay/tene/actions/workflows/ci.yml)
-[![Author](https://img.shields.io/badge/Author-monsa-purple)](https://github.com/tomo-kay/tene)
 
 <p align="center">
   <img src="branding/OG_image.png" alt="Tene — Secret management that AI agents understand" width="800">
@@ -12,30 +11,32 @@
 
 **Your .env is not a secret. AI can read it.** | [Website](https://tene.sh) | [Releases](https://github.com/tomo-kay/tene/releases)
 
-Tene is a local-first, encrypted secret management CLI. It encrypts your secrets and injects them at runtime — so AI agents can use them without ever seeing the values.
+Tene is a local-first, encrypted secret management CLI. It encrypts your secrets and injects them at runtime -- so AI agents can use them without ever seeing the values.
+
+This is the **open-source CLI** (MIT license). Cloud features (sync, teams, billing) are available at [app.tene.sh](https://app.tene.sh) via a Pro subscription.
 
 ### Supported Platforms
 
 | Platform | Architecture | Status |
 |----------|-------------|:------:|
-| macOS | Apple Silicon (arm64) | ✓ |
-| macOS | Intel (amd64) | ✓ |
-| Linux | x86_64 (amd64) | ✓ |
-| Linux | ARM (arm64) | ✓ |
-| Windows | x86_64 (via WSL) | ✓ |
+| macOS | Apple Silicon (arm64) | supported |
+| macOS | Intel (amd64) | supported |
+| Linux | x86_64 (amd64) | supported |
+| Linux | ARM (arm64) | supported |
+| Windows | x86_64 (via WSL) | supported |
 
 ## Why Tene?
 
 ### .env files are not secrets
 
-Every AI coding agent — Claude Code, Cursor, Windsurf — reads your project files. That includes `.env`. Your API keys, database passwords, and tokens are sent to AI models as plaintext context.
+Every AI coding agent -- Claude Code, Cursor, Windsurf -- reads your project files. That includes `.env`. Your API keys, database passwords, and tokens are sent to AI models as plaintext context.
 
 ```
   .env (plaintext)              AI Agent
-  ┌──────────────────┐         ┌──────────────────────┐
-  │ STRIPE_KEY=sk_xx │────────>│ Reads all project     │
-  │ DB_PASS=s3cur3   │────────>│ files including .env  │
-  └──────────────────┘         └──────────────────────┘
+  +-----------------------+    +-----------------------+
+  | STRIPE_KEY=sk_xx      | -> | Reads all project     |
+  | DB_PASS=s3cur3        | -> | files including .env  |
+  +-----------------------+    +-----------------------+
 ```
 
 ### Tene keeps secrets from AI
@@ -44,17 +45,16 @@ Tene stores secrets in an encrypted SQLite vault. When you run `tene run -- clau
 
 ```
   .tene/vault.db (encrypted)    tene run -- claude
-  ┌──────────────────┐         ┌──────────────────────┐
-  │ ████████████████ │───X───> │ Secrets injected as   │
-  │ (XChaCha20-Poly) │         │ env vars at runtime   │
-  └──────────────────┘         │ AI sees: tene run     │
-                               │ AI knows: nothing     │
-                               └──────────────────────┘
+  +-----------------------+    +-----------------------+
+  | XChaCha20-Poly1305    | -> | Secrets injected as   |
+  | (encrypted)           |    | env vars at runtime   |
+  +-----------------------+    | AI sees: nothing      |
+                               +-----------------------+
 ```
 
-### Free locally. $1/mo for cloud.
+### Free locally. Cloud sync optional.
 
-Local CLI is free forever — unlimited secrets, XChaCha20-Poly1305 encryption, OS keychain integration. Cloud sync ($1/user/month) eliminates repeated `tene init` + `tene set` across projects and machines. (Coming soon)
+The CLI is free forever -- unlimited secrets, XChaCha20-Poly1305 encryption, OS keychain integration. Cloud sync and team sharing are available via [app.tene.sh](https://app.tene.sh) with a Pro plan.
 
 ## Install
 
@@ -101,16 +101,16 @@ sudo mv tene /usr/local/bin/
 ## Quick Start
 
 ```bash
-# 1. Initialize — creates encrypted vault + CLAUDE.md
+# 1. Initialize -- creates encrypted vault + CLAUDE.md
 $ tene init
 
   Welcome to Tene! Let's set up your local secret vault.
   Master Password: ********
   Confirm: ********
 
-  ✓ .tene/vault.db created (local encrypted vault)
-  ✓ Generated CLAUDE.md, .cursor/rules/tene.mdc, .windsurfrules, GEMINI.md, AGENTS.md
-  ✓ .tene/ added to .gitignore
+  .tene/vault.db created (local encrypted vault)
+  Generated CLAUDE.md, .cursor/rules/tene.mdc, .windsurfrules, GEMINI.md, AGENTS.md
+  .tene/ added to .gitignore
 
   Recovery Key (write this down and keep it safe!):
   +--------------------------------------------------+
@@ -127,8 +127,8 @@ $ tene set OPENAI_API_KEY sk-proj-xxxxx
 
 # 3. Run with secrets injected as environment variables
 $ tene run -- claude
-  ✓ 2 secrets injected as environment variables
-  ✓ Starting: claude
+  2 secrets injected as environment variables
+  Starting: claude
 
 # That's it. AI editors read the generated files and know how to use tene.
 ```
@@ -137,10 +137,10 @@ $ tene run -- claude
 
 ```
 Master Password
-  └─ Argon2id (64MB memory, 3 iterations)
-     └─ Master Key (256-bit) → OS Keychain
-        └─ XChaCha20-Poly1305 (192-bit nonce)
-           └─ SQLite vault (.tene/vault.db)
+  -- Argon2id (64MB memory, 3 iterations)
+     -- Master Key (256-bit) -> OS Keychain
+        -- XChaCha20-Poly1305 (192-bit nonce)
+           -- SQLite vault (.tene/vault.db)
 
 Network calls: none
 Server: none
@@ -166,9 +166,21 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 | `tene passwd` | Change master password, re-encrypt vault |
 | `tene recover` | Recover vault with 12-word recovery key |
 | `tene whoami` | Show current vault status |
-| `tene sync` | Cloud sync waitlist (coming soon) |
 | `tene version` | Print version number |
-| `tene update` | Update to latest version (or `tene update v0.2.0`) |
+| `tene update` | Update to latest version |
+
+### Cloud Commands (requires [app.tene.sh](https://app.tene.sh) account)
+
+| Command | Description |
+|---------|-------------|
+| `tene login` | OAuth login to Tene Cloud |
+| `tene push` | Encrypt and upload vault to cloud |
+| `tene pull` | Download and decrypt remote vault |
+| `tene sync` | Push + Pull combined (Pro plan) |
+| `tene team create` | Create team + generate project key |
+| `tene team invite` | Invite member with X25519 key wrapping |
+| `tene billing` | View subscription status |
+| `tene billing upgrade` | Open checkout page |
 
 ### Global Flags
 
@@ -184,15 +196,13 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 
 `tene init` auto-generates context files for all major AI editors:
 
-| AI Editor | Generated File | Format |
-|-----------|---------------|--------|
-| Claude Code | `CLAUDE.md` | Markdown |
-| Cursor | `.cursor/rules/tene.mdc` | MDC (frontmatter) |
-| Windsurf | `.windsurfrules` | Markdown |
-| Gemini / Jules | `GEMINI.md` | Markdown |
-| Codex / OpenAI | `AGENTS.md` | Markdown |
-
-Each file contains a complete guide: 10 commands, 7 rules, example workflows. The AI editor reads it and knows how to use tene automatically.
+| AI Editor | Generated File |
+|-----------|---------------|
+| Claude Code | `CLAUDE.md` |
+| Cursor | `.cursor/rules/tene.mdc` |
+| Windsurf | `.windsurfrules` |
+| Gemini / Jules | `GEMINI.md` |
+| Codex / OpenAI | `AGENTS.md` |
 
 ### AI Agent Usage
 
@@ -204,15 +214,11 @@ STRIPE_KEY=$(tene get STRIPE_KEY)
 
 # JSON output for programmatic parsing
 tene get STRIPE_KEY --json
-# → {"name":"STRIPE_KEY","value":"sk_test_xxx","environment":"default"}
+# -> {"name":"STRIPE_KEY","value":"sk_test_xxx","environment":"default"}
 
 # List all available secrets
 tene list --json
-# → {"ok":true,"count":3,"secrets":[...]}
-
-# JSON error output (for error handling)
-tene get NONEXISTENT --json
-# → {"ok":false,"error":"SECRET_NOT_FOUND","message":"..."}
+# -> {"ok":true,"count":3,"secrets":[...]}
 ```
 
 ### Detailed Command Usage
@@ -238,9 +244,6 @@ tene set DATABASE_URL postgres://prod-host/db --env prod
 ```bash
 # List environments
 tene env list
-#   * default (active, 3 secrets)
-#     staging (1 secret)
-#     prod (2 secrets)
 
 # Create a new environment
 tene env create staging
@@ -248,12 +251,7 @@ tene env create staging
 # Switch active environment
 tene env staging
 
-# Delete an environment
-tene env delete staging --force
-
-# Set/get in a specific environment without switching
-tene set API_KEY xxx --env prod
-tene get API_KEY --env prod
+# Run in a specific environment without switching
 tene run --env prod -- node server.js
 ```
 
@@ -268,29 +266,11 @@ tene init
 tene import backup.tene.enc --encrypted
 ```
 
-#### Change master password
-
-```bash
-tene passwd
-# Enter current password, set new password
-# All secrets are re-encrypted with new key
-# New 12-word recovery key is issued
-```
-
-#### Recover vault (forgot password)
-
-```bash
-tene recover
-# Enter 12-word recovery key
-# Set new master password
-# All secrets remain intact
-```
-
 ### Migrate from .env
 
 ```bash
 tene import .env
-# ✓ 5 secrets imported (encrypted)
+# 5 secrets imported (encrypted)
 # Tip: You can now delete .env and use tene run instead.
 ```
 
@@ -307,16 +287,15 @@ tene import .env
 - Generate context files for 5 AI editors (Claude Code, Cursor, Windsurf, Gemini, Codex)
 - Support multiple environments (dev, staging, prod)
 - Provide encrypted backup via `tene export --encrypted`
-- Memory zeroing — master keys cleared from memory after use
+- Memory zeroing -- master keys cleared from memory after use
 - Structured error codes (`--json` error responses for AI parsing)
 - Self-update via `tene update`
 
-### Doesn't (yet)
+### Cloud Features (via [app.tene.sh](https://app.tene.sh))
 
-- Check API key expiration dates
-- Auto-rotate secrets
-- Sync across devices (cloud sync is being validated)
-- Share secrets with team members
+- Sync vaults across devices with zero-knowledge encryption
+- Share secrets with team members via X25519 key wrapping
+- Billing and subscription management
 
 ## Comparison
 
@@ -326,13 +305,13 @@ tene import .env
 
 | | Tene | .env | Doppler | Vault | Infisical |
 |---|:---:|:---:|:---:|:---:|:---:|
-| Local-first | ✓ | ✓ | ✗ | ✗ | ✗ |
-| No server | ✓ | ✓ | ✗ | ✗ | ✗ |
-| Encrypted | ✓ | ✗ | ✓ | ✓ | ✓ |
-| AI auto-detect | ✓ | ✗ | ✗ | ✗ | ✗ |
-| No signup | ✓ | ✓ | ✗ | ✗ | ✗ |
-| 100% offline | ✓ | ✓ | ✗ | ✗ | ✗ |
-| Open source | ✓ | ✓ | ✗ | ✗ | ✓ |
+| Local-first | yes | yes | no | no | no |
+| No server | yes | yes | no | no | no |
+| Encrypted | yes | no | yes | yes | yes |
+| AI auto-detect | yes | no | no | no | no |
+| No signup | yes | yes | no | no | no |
+| 100% offline | yes | yes | no | no | no |
+| Open source | yes | yes | no | no | yes |
 | Price | Free | Free | $21/user/mo | $1,152+/mo | $6/user/mo |
 
 ## Security
@@ -360,20 +339,14 @@ steps:
   - run: tene run --no-keychain -- npm test
 ```
 
-```bash
-# Docker / CI script
-export TENE_MASTER_PASSWORD="your-password"
-tene get API_KEY --no-keychain --json
-```
-
 ## Built With
 
-- [Go](https://go.dev) — single binary, cross-platform
-- [cobra](https://github.com/spf13/cobra) — CLI framework
-- [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) — pure Go SQLite
-- [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) — XChaCha20-Poly1305, Argon2id, HKDF
-- [go-keyring](https://github.com/zalando/go-keyring) — OS keychain
-- [go-bip39](https://github.com/tyler-smith/go-bip39) — recovery key mnemonic
+- [Go](https://go.dev) -- single binary, cross-platform
+- [cobra](https://github.com/spf13/cobra) -- CLI framework
+- [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite) -- pure Go SQLite
+- [golang.org/x/crypto](https://pkg.go.dev/golang.org/x/crypto) -- XChaCha20-Poly1305, Argon2id, HKDF
+- [go-keyring](https://github.com/zalando/go-keyring) -- OS keychain
+- [go-bip39](https://github.com/tyler-smith/go-bip39) -- recovery key mnemonic
 
 ## Contributing
 

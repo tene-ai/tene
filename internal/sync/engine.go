@@ -17,8 +17,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/tomo-kay/tene/internal/crypto"
-	"github.com/tomo-kay/tene/internal/domain"
+	"github.com/tomo-kay/tene/pkg/crypto"
+	"github.com/tomo-kay/tene/pkg/domain"
 	"github.com/tomo-kay/tene/internal/vault"
 )
 

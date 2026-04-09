@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tomo-kay/tene/internal/claudemd"
 	"github.com/tomo-kay/tene/internal/config"
-	"github.com/tomo-kay/tene/internal/crypto"
+	"github.com/tomo-kay/tene/pkg/crypto"
 	"github.com/tomo-kay/tene/internal/keychain"
 	"github.com/tomo-kay/tene/internal/recovery"
 	"github.com/tomo-kay/tene/internal/vault"

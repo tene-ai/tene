@@ -1,4 +1,6 @@
 // Design Ref: §3.1 — Hero copy data separated from UI
+const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.tene.sh";
+
 export const heroData = {
   badge: "Open source \u00b7 Local-first \u00b7 Free",
   h1: "Your .env is not a secret.",
@@ -12,7 +14,7 @@ export const heroData = {
     },
     dashboard: {
       label: "Dashboard",
-      href: "https://app.tene.sh",
+      href: dashboardUrl,
     },
   },
 };

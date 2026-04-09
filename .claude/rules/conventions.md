@@ -51,7 +51,6 @@ return fmt.Errorf("no secrets found.")                   // trailing period
 - No global mutable state — pass via struct fields
 - CLI flags are the exception (Cobra convention)
 - HTTP clients: package-level singletons (`var cliHTTPClient`)
-- All handler deps injected via constructors
 
 ### Testing
 - Table-driven tests preferred
@@ -75,7 +74,7 @@ Config: `.golangci.yml` (version: "2")
 **CI**: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6`
 (Source-built with Go 1.25 — pre-built binaries use Go 1.24)
 
-## Frontend Conventions (Next.js 15)
+## Frontend Conventions (Landing — apps/web)
 
 ### Design System (Dark-only)
 ```css
@@ -87,8 +86,6 @@ Config: `.golangci.yml` (version: "2")
 --surface-2: #1e1e1e;
 --border: #2a2a2a;
 --muted: #888888;
---danger: #ff4444;         /* dashboard only */
---warning: #ffaa00;        /* dashboard only */
 ```
 
 ### Fonts
@@ -96,39 +93,7 @@ Config: `.golangci.yml` (version: "2")
 - Mono: Geist Mono
 - Fallback: Arial, Helvetica, sans-serif
 
-### Security Headers (both apps)
-```typescript
-// next.config.ts
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.tene.sh";
-// HSTS, X-Frame-Options: DENY, CSP (dynamic connect-src), Permissions-Policy
-```
-
-### Environment Variables
-```
-NEXT_PUBLIC_API_URL       API endpoint (default: https://api.tene.sh)
-NEXT_PUBLIC_DASHBOARD_URL Dashboard URL (local dev only)
-```
-
-### Dashboard Tech Stack
-- TanStack Query v5 — server state management
-- Zustand — auth state (access token)
-- Lucide React — icons
-- clsx — conditional classes
-
-### Component Patterns
-- Server Components by default (App Router)
-- Client Components only when needed (`"use client"`)
-- Semantic HTML with ARIA attributes
-- `<Link>` for internal navigation (not `<a>`)
-
 ## Git Conventions
-
-### Branch Strategy
-```
-main → prod auto-deploy (protected, PRs only)
-feature/* → PR → Vercel Preview + CI
-hotfix/* → PR → fast merge → main → deploy
-```
 
 ### Commit Messages
 ```
@@ -143,11 +108,8 @@ refactor: code restructure
 ### CI Pipeline (GitHub Actions)
 ```
 Push to main:
-  test (go test -race) + lint (golangci-lint v2) → deploy (Docker → ECR → ECS)
+  test (go test -race) + lint (golangci-lint v2)
 
 Tag v*:
-  GoReleaser → GitHub Releases (multi-platform binaries)
-
-Dashboard changes:
-  TypeScript check + build verification → Vercel auto-deploy
+  GoReleaser → S3 + GitHub Releases (multi-platform binaries)
 ```

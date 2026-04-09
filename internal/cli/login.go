@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zalando/go-keyring"
 
-	"github.com/tomo-kay/tene/internal/domain"
+	"github.com/tomo-kay/tene/pkg/domain"
 )
 
 func newLoginCmd() *cobra.Command {

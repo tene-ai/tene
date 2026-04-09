@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/internal/crypto"
+	"github.com/tomo-kay/tene/pkg/crypto"
 )
 
 var listCmd = &cobra.Command{

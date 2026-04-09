@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 
+const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.tene.sh";
+
 export function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -46,7 +48,7 @@ export function Nav() {
             Pricing
           </a>
           <a
-            href="https://app.tene.sh"
+            href={dashboardUrl}
             className="transition-colors hover:text-accent font-medium"
           >
             Dashboard

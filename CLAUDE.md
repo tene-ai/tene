@@ -1,92 +1,68 @@
-# Tene -- Agentic Secret Runtime
+# Tene -- CLI Secret Manager (Open Core)
 
 ## Overview
 
-Local-first encrypted secret management platform with Zero-Knowledge cloud sync.
-CLI (Go) + Cloud API (Go/Echo) + Dashboard (Next.js) + AWS infrastructure.
-AI agents auto-detect secrets via CLAUDE.md generation.
+Local-first encrypted secret management CLI with optional cloud sync.
+Open Core model: this public repo contains the CLI + shared packages (`pkg/`).
+The private `tene-cloud` repo imports `pkg/` for the API server and dashboard.
 
 ## Rules (detailed guides)
 
-- [Architecture & Clean Code](.claude/rules/architecture.md) — 클린 아키텍처, 패키지 의존성, API 라우트, 암호화 체계, DB 스키마
-- [Coding Conventions](.claude/rules/conventions.md) — Go/Frontend 코딩 규칙, 린팅, 디자인 시스템, Git 전략
-- [Secret Management](.claude/rules/secrets.md) — tene 시크릿 주입, 환경별 설정, OAuth, CORS, CI/CD
-- [Environments & Infrastructure](.claude/rules/environments.md) — local/staging/prod 환경, 포트, 서비스, 네트워크
-- [Deployment Guide](.claude/rules/deployment.md) — 배포 절차, 롤백, 모니터링
-- [Git Workflow](.claude/rules/git-workflow.md) — 브랜치 전략, PR 규칙, 배포 전 체크리스트, Anti-patterns
+- [Coding Conventions](.claude/rules/conventions.md) -- Go coding rules, linting, Git strategy
+- [Secret Management](.claude/rules/secrets.md) -- tene secret injection, environment config
+- [Git Workflow](.claude/rules/git-workflow.md) -- branch strategy, PR rules, anti-patterns
 
 ## Architecture
 
 - Language: Go 1.25+
 - CLI framework: cobra (spf13/cobra)
-- API framework: labstack/echo v4
 - Local DB: modernc.org/sqlite (pure Go, no CGo)
-- Cloud DB: PostgreSQL 16 (RDS)
 - Crypto: golang.org/x/crypto (XChaCha20-Poly1305, Argon2id, HKDF, X25519)
 - Keychain: zalando/go-keyring (macOS Keychain, Linux libsecret, Windows Credential Vault)
 - Recovery: tyler-smith/go-bip39 (12-word BIP-39 mnemonic)
-- Storage: AWS S3 (SSE-S3) / MinIO (local)
-- Auth: HS256 JWT + GitHub/Google OAuth (PKCE)
-- Billing: LemonSqueezy (MoR)
-- Dashboard: Next.js 15 + Tailwind CSS v4 + TanStack Query v5
-- Infra: Terraform (AWS ECS Fargate, ALB, RDS, S3)
-- CI/CD: GitHub Actions (OIDC) → ECR → ECS, Vercel (frontend)
 - Build: goreleaser + Homebrew tap
 - Test: Go testing + stretchr/testify
-- Lint: golangci-lint
+- Lint: golangci-lint v2
 
 ## Directory Structure
 
 ```
 cmd/tene/              CLI entrypoint (main.go)
-cmd/server/            Cloud API server entrypoint
-internal/crypto/       Argon2id, XChaCha20-Poly1305, HKDF, X25519, team key wrapping
+pkg/domain/            Domain models (User, Vault, Team, Device) -- shared with tene-cloud
+pkg/crypto/            XChaCha20-Poly1305, Argon2id, HKDF, X25519 -- shared with tene-cloud
+pkg/errors/            Sentinel errors and error codes -- shared with tene-cloud
+internal/cli/          Cobra commands (25+ commands)
 internal/vault/        SQLite vault CRUD, schema, migrations
 internal/keychain/     OS keychain integration + file fallback
-internal/claudemd/     CLAUDE.md generation and merge
-internal/recovery/     BIP-39 mnemonic generation and master key recovery
-internal/cli/          Cobra commands (login, push, pull, team, billing, etc.)
-internal/api/          Echo server, handlers (auth, vault, team, billing, device, audit)
-internal/api/middleware/ JWT auth, rate limit, CORS, security headers, RBAC
-internal/api/storage/  S3 client for vault blob storage
-internal/auth/         JWT + OAuth services
 internal/sync/         Sync Envelope, push/pull engine, conflict resolution, 3-way merge
-internal/billing/      LemonSqueezy integration
-internal/domain/       Domain models + sentinel errors
-internal/config/       CLI + Cloud config management
+internal/config/       CLI + global config management
+internal/recovery/     BIP-39 mnemonic generation and master key recovery
+internal/claudemd/     CLAUDE.md auto-generation (5 AI editors)
+internal/encfile/      Encrypted file format (header + ciphertext)
 apps/web/              Next.js landing page (tene.sh, Vercel)
-apps/dashboard/        Next.js dashboard (app.tene.sh, Vercel)
-infra/terraform/       AWS infrastructure (12 modules)
-migrations/            PostgreSQL migrations (7 tables)
-scripts/               dev.sh, sync-secrets.sh
-docs/                  PDCA documents (PM, Plan, Design, Analysis, Report)
 ```
+
+## Shared Packages (pkg/)
+
+Packages under `pkg/` are the public API of this module, imported by `github.com/tomo-kay/tene-cloud`:
+
+- `pkg/domain` -- Domain models and types
+- `pkg/crypto` -- Encryption, key derivation, key wrapping
+- `pkg/errors` -- Structured error codes with recovery hints
+
+**Do not break the public API of pkg/ without coordinating with tene-cloud.**
 
 ## Development
 
 ```bash
-# Local dev (all services: DB + S3 + API + Dashboard + Landing)
-./scripts/dev.sh              # Start everything
-./scripts/dev.sh status       # Check status
-./scripts/dev.sh stop         # Stop everything
-
 # Build
-go build ./cmd/tene           # CLI
-go build ./cmd/server          # API server
+go build ./cmd/tene
 
 # Run tests
 go test ./...
 
 # Lint
 golangci-lint run
-
-# Secret management (dogfooding — tene manages its own secrets)
-tene list --env local          # Local dev secrets
-tene list --env prod           # Production secrets
-tene run --env local -- go run ./cmd/server  # Run with injected secrets
-
-# Sync secrets to AWS (for ECS deployment)
-tene run --env prod -- ./scripts/sync-secrets.sh
 ```
 
 ## Key Commands
@@ -108,12 +84,11 @@ tene run --env prod -- ./scripts/sync-secrets.sh
 | `tene push` | Encrypt vault with Sync Envelope and upload to cloud |
 | `tene pull` | Download and decrypt remote vault |
 | `tene sync` | Push + Pull combined (requires Pro plan) |
-| `tene login` | OAuth login to Tene Cloud (GitHub) |
+| `tene login` | OAuth login to Tene Cloud |
 | `tene logout` | Sign out and revoke tokens |
 | `tene team create` | Create team + generate project key |
 | `tene team invite` | Invite member with X25519 key wrapping |
 | `tene team remove` | Remove member + trigger key rotation |
-| `tene team list` | List teams |
 | `tene billing` | View subscription status |
 | `tene billing upgrade` | Open LemonSqueezy checkout |
 
@@ -123,11 +98,9 @@ tene run --env prod -- ./scripts/sync-secrets.sh
 - XChaCha20-Poly1305 + Argon2id + HKDF + X25519 ECDH (golang.org/x/crypto)
 - Sync Envelope: L1 (secret values) + L2 (metadata) + L3 (TLS) + L4 (S3 SSE)
 - Team key sharing via X25519 ECDH (no RSA), key rotation on member removal
-- LemonSqueezy for billing (MoR, Korean individual account support)
-- modernc.org/sqlite for local vault, PostgreSQL for cloud metadata
+- modernc.org/sqlite for local vault (pure Go, no CGo)
 - goreleaser for multi-platform binaries + Homebrew tap
-- Tene dogfooding: Tene manages its own production secrets
-- Git branch: main → prod auto-deploy, feature/* → PR → preview
+- Git branch: main -> prod auto-deploy, feature/* -> PR -> preview
 
 ## Coding Conventions
 
@@ -137,6 +110,7 @@ tene run --env prod -- ./scripts/sync-secrets.sh
 - Table-driven tests preferred
 - No global state -- pass dependencies via struct fields
 - internal/ packages are not importable from outside the module
+- pkg/ packages are the shared public API -- maintain backward compatibility
 
 ## Security Model
 
@@ -147,7 +121,6 @@ tene run --env prod -- ./scripts/sync-secrets.sh
 - Recovery: BIP-39 mnemonic -> Argon2id -> Recovery Key -> decrypt stored Master Key
 - Cloud: Zero-Knowledge Sync Envelope (L2 wraps entire vault.db before upload)
 - Team: X25519 ECDH shared secret -> HKDF(projectID) -> wrap Project Key per member
-- Key rotation: member removal -> new PK -> re-wrap for remaining members
 
 ## Project Data
 
@@ -161,19 +134,3 @@ Per-project:
 Global:
   ~/.tene/config.json  CLI settings, analytics
 ```
-
-## Frontend Apps
-
-| App | Directory | Domain | Deployment |
-|-----|-----------|--------|------------|
-| Landing | `apps/web/` | `tene.sh` | Vercel |
-| Dashboard | `apps/dashboard/` | `app.tene.sh` | Vercel |
-
-Design system: dark-only (#0a0a0a), accent #00ff88, Geist Sans/Mono, Tailwind CSS v4.
-See `apps/web/CLAUDE.md` and `apps/dashboard/CLAUDE.md` for frontend conventions.
-
-## Cloud Infrastructure
-
-AWS account `507221376909` (monsa-sandbox), region `ap-northeast-2`.
-Terraform: `infra/terraform/environments/prod/`.
-See [.claude/rules/environments.md](.claude/rules/environments.md) for full details.
