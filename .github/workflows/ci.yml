@@ -2,17 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   pull_request:
-    branches: [main, staging]
-
-permissions:
-  contents: read
-  id-token: write  # OIDC for AWS
-
-env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPO: 507221376909.dkr.ecr.ap-northeast-2.amazonaws.com/tene-api
+    branches: [main]
 
 jobs:
   test:
@@ -25,7 +17,6 @@ jobs:
       - run: go mod download
       - run: go vet ./...
       - run: go test -race -coverprofile=coverage.out ./...
-      - run: go tool cover -func=coverage.out | tail -1
 
   lint:
     runs-on: ubuntu-latest
@@ -38,77 +29,3 @@ jobs:
         run: |
           go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
           golangci-lint run
-
-  deploy-prod:
-    runs-on: ubuntu-latest
-    needs: [test, lint]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-    env:
-      ECS_CLUSTER: tene-prod-cluster
-      ECS_SERVICE: tene-prod-api
-      TASK_FAMILY: tene-prod-api
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::507221376909:role/tene-prod-github-actions
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, push Docker image
-        run: |
-          IMAGE_TAG="${{ github.sha }}"
-          docker build --platform linux/amd64 -t $ECR_REPO:$IMAGE_TAG -f Dockerfile.server .
-          docker push $ECR_REPO:$IMAGE_TAG
-
-      - name: Deploy to ECS
-        run: |
-          IMAGE_TAG="${{ github.sha }}"
-          TASK_DEF=$(aws ecs describe-task-definition --task-definition $TASK_FAMILY --query taskDefinition)
-          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMG "$ECR_REPO:$IMAGE_TAG" \
-            '.containerDefinitions[0].image = $IMG | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
-          NEW_ARN=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEF" --query 'taskDefinition.taskDefinitionArn' --output text)
-          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $NEW_ARN --force-new-deployment
-          echo "Deployed $IMAGE_TAG to ECS (prod)"
-
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: [test, lint]
-    if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
-    environment: staging
-    env:
-      ECS_CLUSTER: tene-staging-cluster
-      ECS_SERVICE: tene-staging-api
-      TASK_FAMILY: tene-staging-api
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::507221376909:role/tene-staging-github-actions
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, push Docker image
-        run: |
-          IMAGE_TAG="${{ github.sha }}"
-          docker build --platform linux/amd64 -t $ECR_REPO:$IMAGE_TAG -f Dockerfile.server .
-          docker push $ECR_REPO:$IMAGE_TAG
-
-      - name: Deploy to ECS
-        run: |
-          IMAGE_TAG="${{ github.sha }}"
-          TASK_DEF=$(aws ecs describe-task-definition --task-definition $TASK_FAMILY --query taskDefinition)
-          NEW_TASK_DEF=$(echo $TASK_DEF | jq --arg IMG "$ECR_REPO:$IMAGE_TAG" \
-            '.containerDefinitions[0].image = $IMG | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)')
-          NEW_ARN=$(aws ecs register-task-definition --cli-input-json "$NEW_TASK_DEF" --query 'taskDefinition.taskDefinitionArn' --output text)
-          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $NEW_ARN --force-new-deployment
-          echo "Deployed $IMAGE_TAG to ECS (staging)"

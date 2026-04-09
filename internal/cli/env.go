@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	teneerr "github.com/tomo-kay/tene/internal/errors"
+	teneerr "github.com/tomo-kay/tene/pkg/errors"
 	"github.com/tomo-kay/tene/internal/vault"
 )
 

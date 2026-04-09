@@ -3,7 +3,7 @@ package recovery
 import (
 	"fmt"
 
-	"github.com/tomo-kay/tene/internal/crypto"
+	"github.com/tomo-kay/tene/pkg/crypto"
 )
 
 const (

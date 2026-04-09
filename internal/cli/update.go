@@ -2,17 +2,23 @@ package cli
 
 import (
 	"archive/tar"
+	"bufio"
 	"compress/gzip"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
+
+const releaseBaseURL = "https://tene-releases.s3.ap-northeast-2.amazonaws.com"
 
 var updateCmd = &cobra.Command{
 	Use:   "update [version]",
@@ -33,9 +39,10 @@ func init() {
 	updateCmd.Flags().BoolVar(&updateFlagCheck, "check", false, "Check for updates without installing")
 }
 
-type githubRelease struct {
-	TagName string `json:"tag_name"`
-	HTMLURL string `json:"html_url"`
+type releaseInfo struct {
+	Version     string
+	DownloadURL string
+	HTMLURL     string
 }
 
 func runUpdate(cmd *cobra.Command, args []string) error {
@@ -53,14 +60,15 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Fetch latest release from GitHub API
+	// Fetch latest release (S3 first, GitHub fallback)
 	latest, err := fetchLatestRelease()
 	if err != nil {
 		return fmt.Errorf("failed to check for updates: %w", err)
 	}
 
+	latestTag := "v" + latest.Version
 	if targetVersion == "" {
-		targetVersion = latest.TagName
+		targetVersion = latestTag
 	}
 
 	// Display current vs target
@@ -72,15 +80,14 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	if flagJSON {
 		return printJSON(map[string]any{
 			"currentVersion":  currentDisplay,
-			"latestVersion":   latest.TagName,
+			"latestVersion":   latestTag,
 			"targetVersion":   targetVersion,
-			"updateAvailable": currentDisplay != latest.TagName && currentDisplay != "vdev",
-			"releaseUrl":      latest.HTMLURL,
+			"updateAvailable": currentDisplay != latestTag && currentDisplay != "vdev",
 		})
 	}
 
 	fmt.Printf("  Current version: %s\n", currentDisplay)
-	fmt.Printf("  Latest version:  %s\n", latest.TagName)
+	fmt.Printf("  Latest version:  %s\n", latestTag)
 
 	if currentDisplay == targetVersion {
 		fmt.Println("\n  Already up to date.")
@@ -90,8 +97,8 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	fmt.Printf("  Target version:  %s\n", targetVersion)
 
 	if updateFlagCheck {
-		if currentDisplay != latest.TagName && currentDisplay != "vdev" {
-			fmt.Printf("\n  Update available! Run 'tene update' to install %s.\n", latest.TagName)
+		if currentDisplay != latestTag && currentDisplay != "vdev" {
+			fmt.Printf("\n  Update available! Run 'tene update' to install %s.\n", latestTag)
 		}
 		return nil
 	}
@@ -113,16 +120,30 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot determine binary path: %w", err)
 	}
 
-	// Download release binary from GitHub
+	// Download release binary from S3
 	versionNum := strings.TrimPrefix(targetVersion, "v")
 	assetName := fmt.Sprintf("tene_%s_%s_%s.tar.gz", versionNum, runtime.GOOS, runtime.GOARCH)
-	downloadURL := fmt.Sprintf("https://github.com/tomo-kay/tene/releases/download/%s/%s", targetVersion, assetName)
+	downloadURL := fmt.Sprintf("%s/v%s/%s", releaseBaseURL, versionNum, assetName)
 
 	fmt.Printf("\n  Downloading %s...\n", assetName)
 
-	tmpBin, err := downloadBinaryFromTarGz(downloadURL)
-	if err != nil {
+	// Download tar.gz to temp file
+	tmpArchive := filepath.Join(os.TempDir(), assetName)
+	if err := downloadFile(downloadURL, tmpArchive); err != nil {
 		return fmt.Errorf("download failed: %w", err)
+	}
+	defer func() { _ = os.Remove(tmpArchive) }()
+
+	// Verify checksum of the archive
+	checksumsURL := fmt.Sprintf("%s/v%s/checksums.txt", releaseBaseURL, versionNum)
+	if err := verifyChecksum(tmpArchive, checksumsURL, assetName); err != nil {
+		return fmt.Errorf("checksum verification failed: %w", err)
+	}
+
+	// Extract binary from archive
+	tmpBin, err := extractBinaryFromTarGz(tmpArchive)
+	if err != nil {
+		return fmt.Errorf("extraction failed: %w", err)
 	}
 	defer func() { _ = os.Remove(tmpBin) }()
 
@@ -138,19 +159,165 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// downloadBinaryFromTarGz downloads a .tar.gz release asset and extracts the tene binary to a temp file.
-func downloadBinaryFromTarGz(url string) (string, error) {
+// fetchLatestRelease tries S3 first, falls back to GitHub API.
+func fetchLatestRelease() (*releaseInfo, error) {
+	info, err := fetchFromS3()
+	if err == nil {
+		return info, nil
+	}
+
+	info, err = fetchFromGitHub()
+	if err != nil {
+		return nil, fmt.Errorf("cannot check for updates (try: curl -sSfL https://tene.sh/install.sh | sh): %w", err)
+	}
+	return info, nil
+}
+
+func fetchFromS3() (*releaseInfo, error) {
+	url := releaseBaseURL + "/LATEST_VERSION"
+
 	resp, err := http.Get(url) //nolint:gosec
 	if err != nil {
-		return "", fmt.Errorf("cannot download: %w", err)
+		return nil, fmt.Errorf("s3 version check failed: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("s3 returned HTTP %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read version: %w", err)
+	}
+
+	ver := strings.TrimSpace(string(body))
+	return &releaseInfo{
+		Version:     ver,
+		DownloadURL: fmt.Sprintf("%s/v%s/", releaseBaseURL, ver),
+	}, nil
+}
+
+type githubRelease struct {
+	TagName string `json:"tag_name"`
+	HTMLURL string `json:"html_url"`
+}
+
+func fetchFromGitHub() (*releaseInfo, error) {
+	url := "https://api.github.com/repos/tomo-kay/tene/releases/latest"
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("User-Agent", fmt.Sprintf("tene/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("cannot reach GitHub API: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("download returned HTTP %d (check version exists)", resp.StatusCode)
+		return nil, fmt.Errorf("GitHub API returned %d", resp.StatusCode)
 	}
 
-	gz, err := gzip.NewReader(resp.Body)
+	var release githubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	ver := strings.TrimPrefix(release.TagName, "v")
+	return &releaseInfo{
+		Version: ver,
+		HTMLURL: release.HTMLURL,
+	}, nil
+}
+
+// downloadFile downloads a URL to a local file path.
+func downloadFile(url, dest string) error {
+	resp, err := http.Get(url) //nolint:gosec
+	if err != nil {
+		return fmt.Errorf("cannot download: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download returned HTTP %d (check version exists)", resp.StatusCode)
+	}
+
+	out, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = out.Close() }()
+
+	if _, err := io.Copy(out, resp.Body); err != nil {
+		return err
+	}
+	return nil
+}
+
+// verifyChecksum downloads checksums.txt and verifies the SHA-256 of the archive file.
+func verifyChecksum(archivePath, checksumsURL, assetName string) error {
+	resp, err := http.Get(checksumsURL) //nolint:gosec
+	if err != nil {
+		return fmt.Errorf("cannot download checksums: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		// Checksum file not available — skip verification (backward compat)
+		return nil
+	}
+
+	var expected string
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, assetName) {
+			parts := strings.Fields(line)
+			if len(parts) >= 1 {
+				expected = parts[0]
+				break
+			}
+		}
+	}
+
+	if expected == "" {
+		// Asset not found in checksums — skip
+		return nil
+	}
+
+	f, err := os.Open(archivePath)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = f.Close() }()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return err
+	}
+	actual := hex.EncodeToString(h.Sum(nil))
+
+	if actual != expected {
+		return fmt.Errorf("expected %s, got %s", expected, actual)
+	}
+
+	return nil
+}
+
+// extractBinaryFromTarGz extracts the tene binary from a local .tar.gz file to a temp file.
+func extractBinaryFromTarGz(archivePath string) (string, error) {
+	f, err := os.Open(archivePath)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = f.Close() }()
+
+	gz, err := gzip.NewReader(f)
 	if err != nil {
 		return "", fmt.Errorf("invalid gzip: %w", err)
 	}
@@ -189,14 +356,12 @@ func downloadBinaryFromTarGz(url string) (string, error) {
 
 // replaceBinary atomically replaces the binary at dst with the one at src.
 func replaceBinary(dst, src string) error {
-	// Check write permission by opening for write
 	f, err := os.OpenFile(dst, os.O_WRONLY, 0)
 	if err != nil {
 		return fmt.Errorf("no write permission on %s (try with sudo)", dst)
 	}
 	_ = f.Close()
 
-	// Rename is atomic on same filesystem; fall back to copy if cross-device
 	if err := os.Rename(src, dst); err != nil {
 		return copyFile(src, dst)
 	}
@@ -221,32 +386,4 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	return os.Chmod(dst, 0755)
-}
-
-func fetchLatestRelease() (*githubRelease, error) {
-	url := "https://api.github.com/repos/tomo-kay/tene/releases/latest"
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("User-Agent", fmt.Sprintf("tene/%s (%s/%s)", version, runtime.GOOS, runtime.GOARCH))
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("cannot reach GitHub API: %w", err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("GitHub API returned %d", resp.StatusCode)
-	}
-
-	var release githubRelease
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &release, nil
 }

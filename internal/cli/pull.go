@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/internal/crypto"
+	"github.com/tomo-kay/tene/pkg/crypto"
 	"github.com/tomo-kay/tene/internal/sync"
 )
 

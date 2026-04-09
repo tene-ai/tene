@@ -7,7 +7,7 @@
 
 set -eu
 
-REPO="tomo-kay/tene"
+RELEASE_BASE="https://tene-releases.s3.ap-northeast-2.amazonaws.com"
 INSTALL_DIR="/usr/local/bin"
 BINARY="tene"
 
@@ -38,11 +38,9 @@ detect_arch() {
 
 get_latest_version() {
   if command -v curl > /dev/null 2>&1; then
-    curl -sSfL "https://api.github.com/repos/${REPO}/releases/latest" |
-      grep '"tag_name"' | sed 's/.*"tag_name": *"v\([^"]*\)".*/\1/'
+    curl -sSfL "${RELEASE_BASE}/LATEST_VERSION"
   elif command -v wget > /dev/null 2>&1; then
-    wget -qO- "https://api.github.com/repos/${REPO}/releases/latest" |
-      grep '"tag_name"' | sed 's/.*"tag_name": *"v\([^"]*\)".*/\1/'
+    wget -qO- "${RELEASE_BASE}/LATEST_VERSION"
   else
     error "curl or wget is required"
   fi
@@ -66,20 +64,35 @@ main() {
   version="$(get_latest_version)"
 
   if [ -z "$version" ]; then
-    error "Failed to fetch latest version from GitHub"
+    error "Failed to fetch latest version"
   fi
 
   info "  Version: v${version}"
   info "  Platform: ${os}/${arch}"
 
   filename="tene_${version}_${os}_${arch}.tar.gz"
-  url="https://github.com/${REPO}/releases/download/v${version}/${filename}"
+  url="${RELEASE_BASE}/v${version}/${filename}"
+  checksum_url="${RELEASE_BASE}/v${version}/checksums.txt"
 
   tmpdir="$(mktemp -d)"
   trap 'rm -rf "$tmpdir"' EXIT
 
   info "  Downloading ${filename}..."
   download "$url" "${tmpdir}/${filename}"
+  download "$checksum_url" "${tmpdir}/checksums.txt"
+
+  # SHA-256 checksum verification
+  if command -v sha256sum > /dev/null 2>&1; then
+    expected=$(grep "$filename" "${tmpdir}/checksums.txt" | awk '{print $1}')
+    actual=$(sha256sum "${tmpdir}/${filename}" | awk '{print $1}')
+  elif command -v shasum > /dev/null 2>&1; then
+    expected=$(grep "$filename" "${tmpdir}/checksums.txt" | awk '{print $1}')
+    actual=$(shasum -a 256 "${tmpdir}/${filename}" | awk '{print $1}')
+  fi
+
+  if [ -n "$expected" ] && [ "$expected" != "$actual" ]; then
+    error "Checksum verification failed (expected: ${expected}, got: ${actual})"
+  fi
 
   tar xzf "${tmpdir}/${filename}" -C "$tmpdir"
 

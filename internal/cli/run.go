@@ -7,8 +7,8 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/internal/crypto"
-	teneerr "github.com/tomo-kay/tene/internal/errors"
+	"github.com/tomo-kay/tene/pkg/crypto"
+	teneerr "github.com/tomo-kay/tene/pkg/errors"
 )
 
 var runCmd = &cobra.Command{
@@ -17,11 +17,11 @@ var runCmd = &cobra.Command{
 	Example: `  # Run with injected secrets
   tene run -- npm start
 
-  # Run Go server with local secrets
-  tene run --env local -- go run ./cmd/server
+  # Run with local environment secrets
+  tene run --env local -- go run ./main.go
 
   # Run with specific environment
-  tene run --env prod -- ./scripts/deploy.sh`,
+  tene run --env prod -- ./my-app`,
 	RunE: runRun,
 	// Note: We manually parse --env before "--" since DisableFlagParsing
 	// would prevent cobra from parsing it, and not disabling it would

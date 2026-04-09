@@ -62,3 +62,12 @@ release:
   draft: false
   prerelease: auto
   name_template: "v{{.Version}}"
+
+# S3 업로드
+blobs:
+  - provider: s3
+    bucket: tene-releases
+    region: ap-northeast-2
+    directory: "v{{.Version}}"
+    extra_files:
+      - glob: dist/checksums.txt
