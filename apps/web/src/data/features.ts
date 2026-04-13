@@ -43,10 +43,10 @@ export const features: Feature[] = [
     tag: null,
   },
   {
-    icon: "cloud",
-    title: "Cloud sync",
+    icon: "shield",
+    title: "AI agent rules",
     description:
-      "Push and pull your encrypted vault across devices. Zero-knowledge — the server never sees your secrets. $5/month.",
+      "tene init auto-generates context files for 5 AI editors — Claude Code, Cursor, Windsurf, Gemini, and Codex. AI knows how to use tene safely without configuration.",
     tag: "New",
   },
 ];

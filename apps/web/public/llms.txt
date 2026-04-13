@@ -2,22 +2,22 @@
 
 > Agentic Secret Runtime -- local-first encrypted secret management that AI agents understand.
 
-Tene encrypts secrets locally with XChaCha20-Poly1305 + Argon2id, generates CLAUDE.md for AI context, and syncs to the cloud with Zero-Knowledge encryption.
+Tene encrypts secrets locally with XChaCha20-Poly1305 + Argon2id and generates AI editor rules (CLAUDE.md, .cursor/rules, etc.) so agents can discover and use secrets without ever seeing plaintext values.
 
 ## Key Features
 
 - Local-first: secrets never leave your machine unencrypted
-- Zero-Knowledge cloud sync: 4-layer encryption (L1 values, L2 envelope, L3 TLS, L4 S3 SSE)
-- AI-native: auto-generates CLAUDE.md so AI agents discover secrets without seeing values
-- Team sharing: X25519 ECDH key wrapping for secure team collaboration
+- AI-native: auto-generates CLAUDE.md, .cursor/rules, .windsurfrules, AGENTS.md so AI agents discover secrets without seeing values
+- Runtime injection: `tene run -- CMD` injects secrets as env vars so plaintext never touches disk
 - Multi-environment: dev, staging, prod with isolated vaults
 - Recovery: BIP-39 12-word mnemonic for master key recovery
 - Cross-platform: macOS, Linux, Windows (amd64/arm64)
+- Free and open source: MIT license, no limits, no signup
 
 ## Quick Start
 
   curl -fsSL https://tene.sh/install.sh | sh
-  tene init              # Create vault + master password + recovery key + CLAUDE.md
+  tene init              # Create vault + master password + recovery key + AI editor rules
   tene set API_KEY sk_xxx  # Encrypt and store a secret
   tene run -- npm start  # Inject all secrets as env vars and run command
 
@@ -34,45 +34,30 @@ Key commands for agents:
 IMPORTANT: Never use `tene get <KEY>` in AI conversations -- plaintext values may leak into logs.
 Use `tene list` to verify secrets exist, and `tene run --` to inject them.
 
-## Cloud Features (Pro Plan)
+## AI Editor Rules
 
-  tene login         # OAuth login via GitHub
-  tene push          # Encrypt vault + upload to cloud (Sync Envelope)
-  tene pull          # Download + decrypt remote vault
-  tene sync          # Push + Pull combined
-  tene team create   # Create team with X25519 project key
-  tene team invite   # Invite member with wrapped project key
-  tene billing       # View subscription status
+`tene init` generates context files for multiple AI editors:
+  CLAUDE.md          # Claude Code (Anthropic)
+  .cursor/rules      # Cursor
+  .windsurfrules     # Windsurf (Codeium)
+  AGENTS.md          # Codex (OpenAI)
+  .gemini/rules      # Gemini
 
-## Dashboard
-
-Web dashboard at app.tene.sh for:
-- Vault management and sync status
-- Team member management and RBAC
-- Device registration (X25519 public keys)
-- Audit logs
-- Billing and subscription management
+These files teach AI agents to use `tene list` and `tene run` instead of reading .env files.
 
 ## Encryption Architecture
 
 Master Password -> Argon2id (64MB, 3 iter) -> Master Key (256-bit)
-Master Key -> HKDF-SHA256 -> Encryption Key, Sync Key, Device Key, Auth Hash
+Master Key -> HKDF-SHA256 -> Encryption Key
 Secrets encrypted with XChaCha20-Poly1305 (192-bit nonce, key name as AAD)
-Cloud sync: Sync Envelope wraps entire vault before upload (Zero-Knowledge)
-Team: X25519 ECDH shared secret -> HKDF(projectID) -> wrap Project Key per member
 
 ## Tech Stack
 
 - CLI: Go 1.25+, Cobra, modernc.org/sqlite
-- API: Go + Echo v4, PostgreSQL 16
-- Frontend: Next.js 15, Tailwind CSS v4
-- Infra: AWS ECS Fargate, RDS, S3, Terraform
-- Auth: HS256 JWT + GitHub OAuth (PKCE)
-- Billing: LemonSqueezy (Merchant of Record)
+- Landing: Next.js 15, Tailwind CSS v4
 
 ## Links
 
 - Website: https://tene.sh
-- Dashboard: https://app.tene.sh
 - GitHub: https://github.com/tomo-kay/tene
 - License: MIT

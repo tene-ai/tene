@@ -73,18 +73,21 @@ func init() {
 	rootCmd.AddCommand(envCmd)
 	rootCmd.AddCommand(passwdCmd)
 	rootCmd.AddCommand(recoverCmd)
-	rootCmd.AddCommand(newSyncCmd())
 	rootCmd.AddCommand(whoamiCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 
-	// Cloud commands
-	rootCmd.AddCommand(newLoginCmd())
-	rootCmd.AddCommand(newLogoutCmd())
-	rootCmd.AddCommand(newPushCmd())
-	rootCmd.AddCommand(newPullCmd())
-	rootCmd.AddCommand(newBillingCmd())
-	rootCmd.AddCommand(newTeamCmd())
+	// Cloud commands — removed from CLI while being redesigned.
+	// Code preserved in: login.go, logout.go, push.go, pull.go,
+	// sync_cmd.go, billing.go, team.go
+	// Re-enable by uncommenting:
+	// rootCmd.AddCommand(newLoginCmd())
+	// rootCmd.AddCommand(newLogoutCmd())
+	// rootCmd.AddCommand(newPushCmd())
+	// rootCmd.AddCommand(newPullCmd())
+	// rootCmd.AddCommand(newSyncCmd())
+	// rootCmd.AddCommand(newBillingCmd())
+	// rootCmd.AddCommand(newTeamCmd())
 }
 
 // Execute runs the root command.
