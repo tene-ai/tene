@@ -25,7 +25,7 @@ export const faqs: FAQ[] = [
   {
     question: "Is Tene free?",
     answer:
-      "Yes, Tene CLI is 100% free and open source under the MIT license. Local encrypted secret management has no limits. Cloud sync starts at $5/month for solo, $10/user/month for teams.",
+      "Yes, Tene is 100% free and open source under the MIT license. All local features — encryption, runtime injection, multi-environment, AI editor rules — are free forever with no limits.",
   },
   {
     question: "Which AI Agents does Tene support?",
@@ -38,8 +38,8 @@ export const faqs: FAQ[] = [
       "XChaCha20-Poly1305 for secret encryption with 192-bit random nonces. Argon2id (64MB memory, 3 iterations) for key derivation. Master key stored in your OS keychain. 12-word BIP-39 recovery key.",
   },
   {
-    question: "What is Cloud sync?",
+    question: "Will there be team features?",
     answer:
-      "Cloud sync (coming soon) lets you sync your encrypted vault across machines ($5/month solo) and share secrets with your team ($10/user/month). Zero-knowledge \u2014 the server never sees your secret values.",
+      "Team sync and collaboration features are being designed. The goal is encrypted team sync without a central server. Join the waitlist at tene.sh to get notified when it launches.",
   },
 ];

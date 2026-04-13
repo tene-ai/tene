@@ -1,0 +1,143 @@
+name: Auto Tag & Release
+
+on:
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: write
+  id-token: write  # OIDC for AWS S3 upload
+
+env:
+  AWS_REGION: ap-northeast-2
+  RELEASE_BUCKET: tene-releases
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Determine next version
+        id: version
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+
+          # Get latest stable tag and latest rc tag separately
+          LATEST_STABLE=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          LATEST_RC=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc[0-9]+$' | head -1)
+
+          echo "Latest stable: $LATEST_STABLE"
+          echo "Latest rc: $LATEST_RC"
+
+          if [ -z "$LATEST_STABLE" ]; then
+            LATEST_STABLE="v0.0.0"
+          fi
+
+          STABLE_VER="${LATEST_STABLE#v}"
+          IFS='.' read -r S_MAJOR S_MINOR S_PATCH <<< "$STABLE_VER"
+
+          if [ "$BRANCH" = "staging" ]; then
+            if [ -n "$LATEST_RC" ]; then
+              RC_VER="${LATEST_RC#v}"
+              RC_BASE="${RC_VER%-rc*}"
+              RC_NUM="${RC_VER##*-rc}"
+
+              IFS='.' read -r R_MAJOR R_MINOR R_PATCH <<< "$RC_BASE"
+
+              if [ "$R_MAJOR" -gt "$S_MAJOR" ] || \
+                 [ "$R_MAJOR" -eq "$S_MAJOR" -a "$R_MINOR" -gt "$S_MINOR" ] || \
+                 [ "$R_MAJOR" -eq "$S_MAJOR" -a "$R_MINOR" -eq "$S_MINOR" -a "$R_PATCH" -gt "$S_PATCH" ]; then
+                NEW_VERSION="v${RC_BASE}-rc$((RC_NUM + 1))"
+              else
+                NEW_VERSION="v${S_MAJOR}.${S_MINOR}.$((S_PATCH + 1))-rc1"
+              fi
+            else
+              NEW_VERSION="v${S_MAJOR}.${S_MINOR}.$((S_PATCH + 1))-rc1"
+            fi
+
+          elif [ "$BRANCH" = "main" ]; then
+            if [ -n "$LATEST_RC" ]; then
+              RC_VER="${LATEST_RC#v}"
+              RC_BASE="${RC_VER%-rc*}"
+              IFS='.' read -r R_MAJOR R_MINOR R_PATCH <<< "$RC_BASE"
+
+              if [ "$R_MAJOR" -gt "$S_MAJOR" ] || \
+                 [ "$R_MAJOR" -eq "$S_MAJOR" -a "$R_MINOR" -gt "$S_MINOR" ] || \
+                 [ "$R_MAJOR" -eq "$S_MAJOR" -a "$R_MINOR" -eq "$S_MINOR" -a "$R_PATCH" -gt "$S_PATCH" ]; then
+                NEW_VERSION="v${RC_BASE}"
+              else
+                NEW_VERSION="v${S_MAJOR}.${S_MINOR}.$((S_PATCH + 1))"
+              fi
+            else
+              NEW_VERSION="v${S_MAJOR}.${S_MINOR}.$((S_PATCH + 1))"
+            fi
+          fi
+
+          echo "New version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag (via GitHub API for Verified badge)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          SHA=$(git rev-parse HEAD)
+          # Create tag object via API (GitHub signs it automatically → Verified)
+          gh api repos/${{ github.repository }}/git/tags \
+            -f tag="$VERSION" \
+            -f message="Release $VERSION" \
+            -f object="$SHA" \
+            -f type="commit" > /dev/null
+          # Create tag reference
+          gh api repos/${{ github.repository }}/git/refs \
+            -f ref="refs/tags/$VERSION" \
+            -f sha="$SHA" > /dev/null
+          echo "Tag $VERSION created (Verified)"
+
+  goreleaser:
+    needs: auto-tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout at tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.auto-tag.outputs.version }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::507221376909:role/tene-prod-github-actions
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          GORELEASER_CURRENT_TAG: ${{ needs.auto-tag.outputs.version }}
+
+      - name: Update LATEST_VERSION (stable only)
+        if: "!contains(needs.auto-tag.outputs.version, '-rc')"
+        run: |
+          VERSION="${{ needs.auto-tag.outputs.version }}"
+          VERSION="${VERSION#v}"
+          echo "$VERSION" > /tmp/LATEST_VERSION
+          aws s3 cp /tmp/LATEST_VERSION s3://${{ env.RELEASE_BUCKET }}/LATEST_VERSION \
+            --content-type "text/plain" \
+            --cache-control "max-age=60"

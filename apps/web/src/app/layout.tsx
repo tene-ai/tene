@@ -119,7 +119,15 @@ const jsonLd = {
           name: "Is Tene free?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes, Tene CLI is 100% free and open source under the MIT license. Local encrypted secret management has no limits. Cloud sync for multi-machine access starts at $5/month, and team sharing at $10/user/month.",
+            text: "Yes, Tene is 100% free and open source under the MIT license. All local features — encryption, runtime injection, multi-environment, AI editor rules — are free forever with no limits.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Will there be team features?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Team sync and collaboration features are being designed. The goal is encrypted team sync without a central server. Join the waitlist at tene.sh to get notified when it launches.",
           },
         },
         {

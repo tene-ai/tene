@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.tene.sh";
 
 export function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,14 +43,8 @@ export function Nav() {
           <a href="#security" className="transition-colors hover:text-foreground">
             Security
           </a>
-          <a href="#pricing" className="transition-colors hover:text-foreground">
-            Pricing
-          </a>
-          <a
-            href={dashboardUrl}
-            className="transition-colors hover:text-accent font-medium"
-          >
-            Dashboard
+          <a href="#faq" className="transition-colors hover:text-foreground">
+            FAQ
           </a>
           <a
             href="https://github.com/tomo-kay/tene"
@@ -120,13 +113,6 @@ export function Nav() {
               className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
             >
               Security
-            </a>
-            <a
-              href="#pricing"
-              onClick={() => setMenuOpen(false)}
-              className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
-            >
-              Pricing
             </a>
             <a
               href="#faq"

@@ -3,19 +3,16 @@ import { CopyCommand } from "./copy-command";
 import { WaitlistForm } from "./waitlist-form";
 import { GlowCard } from "./glow-card";
 
-const dashboardUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "https://app.tene.sh";
-
 export function Pricing() {
   return (
     <section id="pricing" className="px-4 py-24 sm:px-6">
       <div className="mx-auto max-w-5xl">
         <h2 className="text-center text-3xl font-bold sm:text-4xl">
-          Free locally.{" "}
-          <span className="text-accent">Cloud when you need it.</span>
+          Free forever.{" "}
+          <span className="text-accent">No limits.</span>
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-center text-muted">
-          Local CLI is free forever. Pay only for cloud sync and team
-          features.
+          Local-first encrypted secrets with AI runtime injection. Open source, MIT license.
         </p>
 
         <div className="mt-16 mx-auto grid max-w-3xl gap-6 lg:grid-cols-2">
@@ -75,13 +72,8 @@ export function Pricing() {
                       className="w-full justify-center text-xs"
                     />
                   )}
-                  {tier.cta.action === "signup" && (
-                    <a
-                      href={`${dashboardUrl}/login?intent=upgrade`}
-                      className="block w-full rounded-lg bg-accent py-3 text-center text-sm font-medium text-background transition-colors hover:bg-accent-dim active:scale-[0.98]"
-                    >
-                      {tier.cta.label} &rarr;
-                    </a>
+                  {tier.cta.action === "waitlist" && (
+                    <WaitlistForm />
                   )}
                 </div>
               </div>
@@ -92,7 +84,8 @@ export function Pricing() {
         {/* CTA */}
         <div className="mx-auto mt-12 max-w-lg text-center">
           <p className="text-sm text-muted">
-            Questions? Check our <a href={dashboardUrl} className="text-accent hover:underline">dashboard</a> or run <code className="font-mono text-accent">tene billing</code> in your terminal.
+            Star us on GitHub to follow updates:{" "}
+            <a href="https://github.com/tomo-kay/tene" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">github.com/tomo-kay/tene</a>
           </p>
         </div>
       </div>

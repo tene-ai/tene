@@ -26,7 +26,7 @@ export default function Home() {
         <HowItWorks />
         <Security />
         <Comparison />
-        <Pricing />
+        {/* <Pricing /> */}
         <FAQ />
         <CTA />
       </main>

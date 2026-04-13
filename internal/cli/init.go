@@ -223,8 +223,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println("  Tip: No server needed. Your secrets stay on this device.")
 		fmt.Println("       AI agents will automatically use tene.")
 		fmt.Println()
-		fmt.Println("  Cloud: Sync across devices with Tene Cloud ($5/mo)")
-		fmt.Println("         Run: tene login")
+		fmt.Println("  Docs:  https://tene.sh")
 	} else {
 		fmt.Println("Created .tene/vault.db")
 		if len(agentFiles) > 0 {

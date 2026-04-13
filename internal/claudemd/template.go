@@ -35,8 +35,13 @@ Run ` + "`tene init`" + ` to create the vault, set a master password, generate a
 5. **If a secret is missing**, tell the user to run: ` + "`tene set <KEY> <VALUE>`" + `
 6. **Use ` + "`--json`" + ` flag** for programmatic parsing: ` + "`tene get KEY --json`" + ` returns ` + "`{\"name\":\"KEY\",\"value\":\"...\",\"environment\":\"...\"}`" + `
 7. **Environment isolation**: secrets are scoped per environment (default, dev, staging, prod). Use ` + "`--env <name>`" + ` to target a specific environment
-8. **Never run ` + "`tene get <KEY>`" + `** to inspect secret values — they may leak into AI conversation logs
-9. **Never run ` + "`tene export`" + `** — it outputs all plaintext secrets to stdout
+8. **Never run ` + "`tene get <KEY>`" + `** to inspect secret values — the plaintext value appears in stdout and enters the AI context window. Use ` + "`tene run -- <command>`" + ` instead.
+9. **Never run ` + "`tene export`" + `** — it outputs all plaintext secrets to stdout. If you need to check which secrets exist, use ` + "`tene list`" + ` (shows names only).
+10. **ALWAYS use ` + "`tene run -- <command>`" + `** to inject secrets into development commands. This is the primary workflow — secrets are injected as environment variables and never appear in stdout.
+11. **NEVER read or cat files in ` + "`.tene/`" + ` directory** — it contains the encrypted vault database. Even encrypted data should not enter AI context.
+12. **If you need a secret value for debugging**, tell the user: "Please check the value with ` + "`tene get KEY`" + ` in a separate terminal." Do not run it yourself.
+13. **NEVER pass secret values as command-line arguments** — use environment variables via ` + "`tene run --`" + ` instead. Command arguments appear in process listings and shell history.
+14. **Use ` + "`tene list`" + ` to check available secret names** — it only shows names, not values. This is safe to run in AI context.
 
 ## Available Environments
 
