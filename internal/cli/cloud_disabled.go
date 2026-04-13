@@ -9,7 +9,7 @@ import (
 
 const cloudDisabledMessage = `Cloud features are being redesigned.
 
-tene works 100%% locally — no cloud needed:
+tene works 100% locally — no cloud needed:
   tene init      Create encrypted vault
   tene set KEY   Store a secret (interactive, hidden input)
   tene run --    Inject secrets into any command
@@ -21,7 +21,7 @@ Follow updates: https://tene.sh
 // with a function that prints a "coming soon" message and exits cleanly.
 func wrapCloudCmd(cmd *cobra.Command) *cobra.Command {
 	disableRunE := func(cmd *cobra.Command, args []string) error {
-		fmt.Fprintf(os.Stderr, cloudDisabledMessage)
+		fmt.Fprint(os.Stderr, cloudDisabledMessage)
 		return nil
 	}
 

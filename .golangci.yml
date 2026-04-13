@@ -25,11 +25,9 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
-    # Cloud commands disabled but code preserved for future re-enablement
-    - path: internal/cli/(login|logout|push|pull|sync_cmd|team|billing|helpers)\.go
-      linters:
-        - unused
-    - path: internal/cli/root\.go
-      text: "envOrDefault"
+    # Cloud commands disabled but code preserved for future re-enablement.
+    # Multiple cloud files have unused functions/types since they are
+    # no longer registered in root.go. Suppress unused lint for cli package.
+    - path: internal/cli/
       linters:
         - unused
