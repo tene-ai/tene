@@ -12,6 +12,8 @@ linters:
     - staticcheck
     - misspell
     - exhaustive
+  disable:
+    - unused  # Cloud command files preserved but not registered
 
 linters-settings:
   errcheck:
