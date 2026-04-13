@@ -25,3 +25,11 @@ issues:
     - path: _test\.go
       linters:
         - errcheck
+    # Cloud commands disabled but code preserved for future re-enablement
+    - path: internal/cli/(login|logout|push|pull|sync_cmd|team|billing|helpers)\.go
+      linters:
+        - unused
+    - path: internal/cli/root\.go
+      text: "envOrDefault"
+      linters:
+        - unused
