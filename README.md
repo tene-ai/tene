@@ -6,10 +6,10 @@
 [![CI](https://github.com/tomo-kay/tene/actions/workflows/ci.yml/badge.svg)](https://github.com/tomo-kay/tene/actions/workflows/ci.yml)
 
 <p align="center">
-  <img src="branding/OG_image.png" alt="Tene — Secret management that AI agents understand" width="800">
+  <img src="examples/demo/the-full-story/the-full-story-demo.gif" alt="Tene — from .env danger to AI-safe vault in 70 seconds" width="800">
 </p>
 
-**Your .env is not a secret. AI can read it.** | [Website](https://tene.sh) | [Releases](https://github.com/tomo-kay/tene/releases)
+**Your .env is not a secret. AI can read it.** | [Website](https://tene.sh) | [Releases](https://github.com/tomo-kay/tene/releases) | [More demos ↓](#-more-demos)
 
 Tene is a local-first, encrypted secret management CLI. It encrypts your secrets and injects them at runtime -- so AI agents can use them without ever seeing the values.
 
@@ -52,6 +52,12 @@ Tene stores secrets in an encrypted SQLite vault. When you run `tene run -- clau
                                +-----------------------+
 ```
 
+**See it in action — Claude itself refuses to read the value:**
+
+<p align="center">
+  <img src="examples/demo/claude-refuses/claude-refuses-demo.gif" alt="Claude Code refusing to read a secret value" width="700">
+</p>
+
 ### Free locally. Cloud sync optional.
 
 The CLI is free forever -- unlimited secrets, XChaCha20-Poly1305 encryption, OS keychain integration. Cloud sync and team sharing are available via [app.tene.sh](https://app.tene.sh) with a Pro plan.
@@ -63,6 +69,10 @@ curl -sSfL https://tene.sh/install.sh | sh
 ```
 
 Auto-detects your OS and architecture, downloads the latest binary from GitHub Releases.
+
+<p align="center">
+  <img src="examples/demo/one-liner-setup/one-liner-setup-demo.gif" alt="From install to encrypted vault in 10 seconds" width="700">
+</p>
 
 ### Other methods
 
@@ -255,6 +265,10 @@ tene env staging
 tene run --env prod -- node server.js
 ```
 
+<p align="center">
+  <img src="examples/demo/multi-env/multi-env-demo.gif" alt="Same KEY, different value per environment" width="700">
+</p>
+
 #### Backup and restore
 
 ```bash
@@ -277,6 +291,69 @@ tene import .env
 <p align="center">
   <img src="branding/tene_core_point.png" alt="Tene Features" width="800">
 </p>
+
+## 📺 More Demos
+
+<details>
+<summary><b>Click to see 7 more workflow demos</b></summary>
+
+### Migrate from .env
+
+20-line `.env` file → encrypted vault in one command.
+
+<p align="center">
+  <img src="examples/demo/env-migration/env-migration-demo.gif" alt="Bulk import .env into encrypted vault" width="700">
+</p>
+
+### Delete .env, app still works
+
+The migration is complete — your `.env` file is gone, but your app runs identically.
+
+<p align="center">
+  <img src="examples/demo/dotenv-gone/dotenv-gone-demo.gif" alt=".env deleted, app still runs via tene run" width="700">
+</p>
+
+### AI runtime injection
+
+AI writes Node.js code that uses `process.env.STRIPE_KEY`. tene injects the value at runtime.
+
+<p align="center">
+  <img src="examples/demo/ai-injection/ai-injection-demo.gif" alt="AI writes code, tene injects secrets at runtime" width="700">
+</p>
+
+### Production workflow (Stripe + DB)
+
+Real production flow — Stripe and database secrets per environment.
+
+<p align="center">
+  <img src="examples/demo/production-flow/production-flow-demo.gif" alt="Production Stripe + DB workflow with tene" width="700">
+</p>
+
+### Vault tour — every command
+
+`init` → `set` → `list` → `whoami` → `delete` → `export`.
+
+<p align="center">
+  <img src="examples/demo/vault-tour/vault-tour-demo.gif" alt="Tour of every tene command" width="700">
+</p>
+
+### Recovery flow (lost master password)
+
+12-word BIP-39 mnemonic restores your vault.
+
+<p align="center">
+  <img src="examples/demo/recovery-flow/recovery-flow-demo.gif" alt="Recovery via 12-word mnemonic" width="700">
+</p>
+
+### Full feature tour (60s)
+
+All six core capabilities — install, set, environments, import, runtime, status.
+
+<p align="center">
+  <img src="examples/demo/full-tour/full-tour-demo.gif" alt="Full 60-second feature tour" width="700">
+</p>
+
+</details>
 
 ## What Tene Does / Doesn't Do
 
@@ -324,6 +401,10 @@ tene import .env
 - **Open source**: every line of crypto code is auditable
 
 Tene has no server. There is no database to breach, no API to exploit, no cloud to compromise. Your secrets exist only on your device.
+
+<p align="center">
+  <img src="examples/demo/security-proof/security-proof-demo.gif" alt="Vault is encrypted — open it yourself with hexdump" width="700">
+</p>
 
 ## CI/CD Usage
 
