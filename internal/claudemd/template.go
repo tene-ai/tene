@@ -61,6 +61,13 @@ tene run -- npm start          # Node.js
 tene run -- go run .           # Go
 tene run -- python main.py     # Python
 ` + "```" + `
+
+## Resources
+
+- Concise agent-readable summary: https://tene.sh/llms.txt
+- Extended reference (all commands, security model, FAQ): https://tene.sh/llms-full.txt
+- Repository: https://github.com/tomo-kay/tene
+- Website: https://tene.sh
 `
 
 // CursorMdcFrontmatter is the frontmatter for .mdc files used by Cursor.

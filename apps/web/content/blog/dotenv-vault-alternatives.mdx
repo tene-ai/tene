@@ -1,0 +1,173 @@
+---
+slug: dotenv-vault-alternatives
+title: "dotenv-vault is shutting down. Here's what to migrate to."
+description: "The dotenv-vault Pro tier was discontinued in February 2026. Here is a honest side-by-side of the migration options — Doppler, Infisical, HashiCorp Vault, and tene — and a one-command path off the old product."
+publishedAt: "2026-04-23"
+updatedAt: "2026-04-23"
+tags: ["devsecops", "security", "comparison", "tutorial"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/dotenv-vault-alternatives"
+faqs:
+  - question: "What exactly did dotenv-vault discontinue?"
+    answer: "The Pro tier that enabled encrypted team sync and the .env.vault committable file was discontinued in February 2026. The Free tier CLI still works for local use, but the team-collaboration story is gone."
+  - question: "Can I stay on dotenv-vault Free?"
+    answer: "Yes, if you only use it locally as an encrypted .env alternative for a single developer. But the main reason to use dotenv-vault was team sync, which is no longer offered."
+  - question: "Do I need to pay to migrate?"
+    answer: "No. tene is MIT licensed and free forever. Doppler and Infisical have free tiers. HashiCorp Vault OSS is source-available. Migration itself requires no payment."
+  - question: "Will my .env.vault file still work during migration?"
+    answer: "The Free-tier CLI can still 'dotenv-vault pull' a current .env. Do that first to extract your secrets, then import into the new tool."
+---
+
+## What happened
+
+In February 2026 the dotenv team announced that the Pro tier of
+`dotenv-vault` — the encrypted team-sync product that included the
+committable `.env.vault` file and `DOTENV_KEY`-based decryption — would
+be discontinued. The free tier CLI still works for local use, but the
+product that most teams actually adopted is gone.
+
+If your CI pipeline runs `dotenv-vault pull` or your app boots with
+`DOTENV_KEY`, you need a migration path.
+
+## What to migrate to — honest comparison
+
+| Dimension | tene | Doppler | Infisical | HashiCorp Vault |
+|-----------|------|---------|-----------|-----------------|
+| Hosting | Local-first CLI | Cloud SaaS | Cloud or self-hosted | Self-hosted (HA cluster) |
+| Pricing | Free (MIT) | $21/user/mo (Team) | Free + Pro $18/user/mo | Free OSS / $$$ Enterprise |
+| AI-editor safety | Generates CLAUDE.md / .cursor/rules etc. | No | No | No |
+| Team sync cost | $0 locally; Pro plan available | Included | Included | Self-run |
+| Signup required | No | Yes | Yes for cloud | No for OSS |
+| Complexity | Single Go binary | Cloud account + CLI | Server + DB or SaaS | HA cluster + unseal workflow |
+| Best fit | Individual devs + small teams + AI workflows | Teams wanting dashboard + RBAC | Mid teams wanting self-host option | Enterprise server-side dynamic secrets |
+
+If you were paying dotenv-vault Pro for *team sync specifically*, the
+closest feature match is **Doppler** or **Infisical**. If you were paying
+because `.env` felt unsafe, the closest intent match is **tene**.
+
+## One-command migration from dotenv-vault to tene
+
+<GifEmbed
+  src="/demo/env-migration-demo.gif"
+  alt="A 10-line .env with Stripe, OpenAI, Anthropic, AWS, Sentry, and Google client credentials being imported into a tene vault in one command."
+  caption="A real 10-secret .env migrated to an encrypted vault with tene import."
+/>
+
+This is the fastest path off dotenv-vault for individual developers.
+
+```bash
+# 1. Pull current secrets while Free-tier CLI still works
+dotenv-vault pull --no-cache
+
+# 2. Install tene
+curl -sSfL https://tene.sh/install.sh | sh
+
+# 3. Initialize a local encrypted vault
+tene init
+
+# 4. Import the pulled .env
+tene import .env
+
+# 5. Clean up plaintext
+rm .env .env.vault .env.me 2>/dev/null
+
+# 6. Run your app through tene
+tene run -- npm start
+```
+
+<Callout type="tip">
+Do not cancel your dotenv.org account immediately. Keep it as a read-only
+backup for a month. Revoke the tokens and deactivate only after you have
+confirmed every environment (dev, staging, prod, CI) works through tene.
+</Callout>
+
+## What changes in your code
+
+Almost nothing. Your application reads `process.env.STRIPE_KEY` before —
+it reads exactly the same variable after.
+
+What goes away:
+
+- `require('dotenv-vault')` or `dotenv-vault/config` imports
+- The `DOTENV_KEY` environment variable
+- The committed `.env.vault` file
+- The dotenv.org account (eventually)
+
+## CI migration
+
+Before (with dotenv-vault):
+
+```yaml
+env:
+  DOTENV_KEY: ${{ secrets.DOTENV_KEY_PRODUCTION }}
+steps:
+  - run: npm ci
+  - run: dotenv-vault pull --no-cache
+  - run: npm test
+```
+
+After (with tene):
+
+```yaml
+env:
+  TENE_MASTER_PASSWORD: ${{ secrets.TENE_MASTER_PASSWORD }}
+steps:
+  - run: npm ci
+  - run: tene run --no-keychain -- npm test
+```
+
+The `--no-keychain` flag tells tene to read the master password from the
+environment instead of prompting for it.
+
+## When Doppler is the right call instead
+
+Pick Doppler if:
+
+- You want a web dashboard for non-engineers (PMs, support) to read
+  values.
+- You need audit logs as part of a compliance program.
+- You are already paying for Doppler features beyond secret sync (k8s
+  operator, dynamic env variants, approval flows).
+
+Migration from dotenv-vault to Doppler is similar: `dotenv-vault pull`,
+then `doppler secrets upload`.
+
+## When Infisical is the right call instead
+
+Pick Infisical if:
+
+- You want a dashboard + RBAC like Doppler but with the option to
+  self-host.
+- You have an engineering team that already runs PostgreSQL + Docker.
+- You care about the MIT-licensed core (vs Doppler's proprietary SaaS).
+
+## When tene is the right call
+
+Pick tene if:
+
+- You are a solo developer or a small team.
+- Your actual pain is that AI coding agents read plaintext `.env`.
+- You do not want to pay $20+ per user per month.
+- You want zero infrastructure to operate.
+
+## What about the `.env.vault` file I committed?
+
+Remove it from your repository. tene's vault lives at `.tene/vault.db`
+and is `.gitignore`d by default (tene adds the entry during `tene init`).
+There is no equivalent of the committable `.env.vault` because there is
+no public design goal of sharing ciphertext via your code repo — if you
+need cross-machine sync, the Pro plan uses a dedicated end-to-end
+encrypted sync channel.
+
+## Summary
+
+- dotenv-vault Pro is gone as of Feb 2026. The Free CLI still works for
+  local use.
+- `dotenv-vault pull` → `tene import` is a one-command migration.
+- Your application code does not change.
+- Pick Doppler or Infisical if you specifically need a dashboard + RBAC.
+- Pick tene if you want zero infrastructure and AI-editor safety.
+
+Longer narrative on the AI-editor angle lives in our other article
+[Your .env is not a secret](/blog/ai-reads-env).
