@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { track } from "@/lib/track";
 
 
 export function Nav() {
@@ -34,22 +35,53 @@ export function Nav() {
 
         {/* Desktop links */}
         <div className="hidden items-center gap-6 text-sm text-muted sm:flex">
-          <a href="#features" className="transition-colors hover:text-foreground">
+          <a
+            href="/#features"
+            onClick={() => track("nav_click", { item: "features", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
             Features
           </a>
-          <a href="#how-it-works" className="transition-colors hover:text-foreground">
+          <a
+            href="/#how-it-works"
+            onClick={() => track("nav_click", { item: "how_it_works", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
             How it works
           </a>
-          <a href="#security" className="transition-colors hover:text-foreground">
+          <a
+            href="/#security"
+            onClick={() => track("nav_click", { item: "security", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
             Security
           </a>
-          <a href="#faq" className="transition-colors hover:text-foreground">
+          <a
+            href="/vs"
+            onClick={() => track("nav_click", { item: "compare", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
+            Compare
+          </a>
+          <a
+            href="/blog"
+            onClick={() => track("nav_click", { item: "blog", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
+            Blog
+          </a>
+          <a
+            href="/#faq"
+            onClick={() => track("nav_click", { item: "faq", device: "desktop" })}
+            className="transition-colors hover:text-foreground"
+          >
             FAQ
           </a>
           <a
             href="https://github.com/tomo-kay/tene"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track("github_click", { location: "nav" })}
             className="flex items-center gap-1.5 transition-colors hover:text-foreground"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -65,6 +97,7 @@ export function Nav() {
             href="https://github.com/tomo-kay/tene"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track("github_click", { location: "nav" })}
             className="text-muted transition-colors hover:text-foreground"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -94,29 +127,61 @@ export function Nav() {
         <div className="border-t border-border/60 bg-background/60 backdrop-blur-xl sm:hidden">
           <div className="flex flex-col gap-1 px-4 py-3">
             <a
-              href="#features"
-              onClick={() => setMenuOpen(false)}
+              href="/#features"
+              onClick={() => {
+                track("nav_click", { item: "features", device: "mobile" });
+                setMenuOpen(false);
+              }}
               className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
             >
               Features
             </a>
             <a
-              href="#how-it-works"
-              onClick={() => setMenuOpen(false)}
+              href="/#how-it-works"
+              onClick={() => {
+                track("nav_click", { item: "how_it_works", device: "mobile" });
+                setMenuOpen(false);
+              }}
               className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
             >
               How it works
             </a>
             <a
-              href="#security"
-              onClick={() => setMenuOpen(false)}
+              href="/#security"
+              onClick={() => {
+                track("nav_click", { item: "security", device: "mobile" });
+                setMenuOpen(false);
+              }}
               className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
             >
               Security
             </a>
             <a
-              href="#faq"
-              onClick={() => setMenuOpen(false)}
+              href="/vs"
+              onClick={() => {
+                track("nav_click", { item: "compare", device: "mobile" });
+                setMenuOpen(false);
+              }}
+              className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
+            >
+              Compare
+            </a>
+            <a
+              href="/blog"
+              onClick={() => {
+                track("nav_click", { item: "blog", device: "mobile" });
+                setMenuOpen(false);
+              }}
+              className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
+            >
+              Blog
+            </a>
+            <a
+              href="/#faq"
+              onClick={() => {
+                track("nav_click", { item: "faq", device: "mobile" });
+                setMenuOpen(false);
+              }}
               className="rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface hover:text-foreground"
             >
               FAQ

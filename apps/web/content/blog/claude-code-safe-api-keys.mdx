@@ -1,0 +1,175 @@
+---
+slug: claude-code-safe-api-keys
+title: "Claude Code + API keys: the safe workflow"
+description: "A practical pattern for using Claude Code with real API keys without leaking them into the context window. Covers CLAUDE.md auto-generation, 'tene run --' subshell, and concrete Stripe / OpenAI examples."
+publishedAt: "2026-04-23"
+updatedAt: "2026-04-23"
+tags: ["ai", "security", "tutorial", "vibe-coding"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/claude-code-safe-api-keys"
+faqs:
+  - question: "Does Claude Code really read .env?"
+    answer: "Yes, by default. Claude Code indexes project files to build context for reasoning. That includes .env unless you explicitly exclude it via the project's CLAUDE.md or similar mechanism."
+  - question: "What does 'tene init' change in my Claude Code project?"
+    answer: "It creates a CLAUDE.md at the project root that tells the agent to use 'tene run --' and 'tene list' instead of reading env files, and to avoid 'tene get KEY' in AI context since that prints plaintext to stdout."
+  - question: "Can I share the vault with a teammate using Claude Code?"
+    answer: "The free CLI is strictly local. For team sync there is an optional Pro plan that uses client-side encryption — the server only sees ciphertext. Each teammate gets the vault after 'tene pull' + master password verification."
+---
+
+## The pattern in one paragraph
+
+Run `tene init` once per project. It creates a local encrypted vault and
+generates a `CLAUDE.md` file that teaches Claude Code how to work with
+secrets. Launch Claude Code through `tene run -- claude` so the agent's
+subshell has the env vars but the plaintext never hits disk. Use
+`tene set` when you need a new secret, `tene list` when you want to see
+what is available, and never `tene get KEY` in Claude Code's terminal
+because that prints the value.
+
+<GifEmbed
+  src="/demo/claude-refuses-demo.gif"
+  alt="Claude Code is launched through tene run. The user asks Claude to read the STRIPE_KEY value. Claude declines: the rule file tells it to use tene list and tene run, not to print plaintext."
+  caption="Claude Code, launched through `tene run -- claude`, declines to print the STRIPE_KEY value. The CLAUDE.md rule makes the safe pattern the default."
+/>
+
+## Why the default Claude Code setup is unsafe
+
+Out of the box, Claude Code reads project files as part of its context.
+If your project has a `.env` at the root, the agent can read it, and the
+plaintext ends up in the model's context window. Every conversation with
+the agent — including tool_result blocks, session summaries, and
+auto-generated commit messages — potentially contains those values.
+
+You can tell a single session to avoid `.env`, but that instruction does
+not carry across sessions or machines. The fix has to be structural: the
+plaintext must not exist on disk.
+
+## Step-by-step safe setup
+
+### 1. Install tene and initialize a vault
+
+```bash
+curl -sSfL https://tene.sh/install.sh | sh
+cd my-project
+tene init
+```
+
+`tene init` prompts for a master password, derives a master key via
+Argon2id, and creates `.tene/vault.db` — an empty SQLite file encrypted
+with XChaCha20-Poly1305. It also appends `.tene/` to your `.gitignore`
+and creates a set of AI-editor rule files: `CLAUDE.md`, `.cursor/rules/tene.mdc`,
+`.windsurfrules`, `GEMINI.md`, `AGENTS.md`.
+
+Each rule file tells the local agent:
+
+- Never hardcode secrets in source.
+- Never create `.env` — use `tene run -- <command>` to inject them.
+- Prefer `tene list` over `tene get KEY` in AI context.
+- Access secrets via `process.env.KEY_NAME` in your code.
+
+### 2. Import existing secrets
+
+If you already have an `.env`:
+
+```bash
+tene import .env
+rm .env
+```
+
+`tene import` parses the file line by line and encrypts each value into
+the vault. The original plaintext file is no longer needed.
+
+### 3. Launch Claude Code through tene
+
+```bash
+tene run -- claude
+```
+
+This spawns a subshell, decrypts the vault in memory, sets every secret
+as an environment variable on the subshell, and then starts `claude`
+inside it. Your code inside the subshell can read `process.env.STRIPE_KEY`
+or `os.getenv("OPENAI_API_KEY")` exactly as before. The file on disk
+remains ciphertext.
+
+<Callout type="tip">
+Create an alias in your shell: `alias cc='tene run -- claude'`. From now
+on, whenever you launch Claude Code, secrets are injected automatically
+and Claude never sees the plaintext file.
+</Callout>
+
+### 4. Work normally
+
+Inside Claude Code, you can ask the agent to debug, run tests, refactor,
+whatever. When the agent's generated code needs a secret, it will use
+`process.env.*` just like your human-written code does. It will not see
+the raw values — only the fact that certain env vars exist.
+
+When you need to add a new secret, tell Claude Code something like:
+*"We need a new ANTHROPIC_API_KEY — can you remind me to store it in
+tene?"*. The agent will produce a command like:
+
+```bash
+tene set ANTHROPIC_API_KEY sk-ant-api03-xxxxx
+```
+
+You run that yourself. The agent never types the raw value.
+
+## Example: adding Stripe
+
+Before tene:
+
+```text
+1. Open .env in editor
+2. Paste STRIPE_KEY=sk_test_...
+3. Ask Claude Code to wire up a webhook handler
+4. Claude Code reads .env, plaintext goes into context
+```
+
+With tene:
+
+```bash
+tene set STRIPE_KEY sk_test_51Hxxxxx
+tene run -- claude
+# Inside Claude: "wire up a /webhooks/stripe handler"
+# Claude generates code using process.env.STRIPE_KEY
+# The actual value is injected at runtime; Claude never sees sk_test_51Hxxxxx
+```
+
+## Example: rotating OpenAI keys
+
+```bash
+# Old key is at OPENAI_API_KEY
+tene set OPENAI_API_KEY sk-proj-newvalue-xxxxx --overwrite
+
+# Restart whatever is running
+# No file edit, no commit, no Claude context pollution
+```
+
+## Common mistakes
+
+**Running `tene get OPENAI_API_KEY` inside Claude Code.** That prints the
+plaintext value to stdout, which Claude reads. The CLAUDE.md rule says
+don't do this — prefer `tene list` (names only) to check whether the key
+exists.
+
+**Committing `.tene/vault.db`.** Don't. `tene init` already adds it to
+`.gitignore`. The vault is meant to live on your machine, not in the
+repo.
+
+**Storing values in code comments "for reference".** Even redacted
+references leak in cleartext. Keep the vault the only source.
+
+**Using the same master password as your account password.** The master
+password is specifically for the vault. Treat it like a recovery phrase.
+
+## Summary
+
+- `tene init` + generated CLAUDE.md = structural rule that survives
+  across sessions.
+- `tene run -- claude` = the only launch command you need.
+- Claude Code works normally; it just never sees plaintext values.
+- Rotate by `tene set KEY new-value --overwrite`; no code changes.
+
+Deep dive on the threat model: [Your .env is not a secret](/blog/ai-reads-env).
+Moving from dotenv-vault: [dotenv-vault alternatives](/blog/dotenv-vault-alternatives).

@@ -1,0 +1,40 @@
+# tene
+
+> Local-first encrypted secret manager CLI for AI-safe developer workflows.
+
+## What tene is
+
+tene encrypts secrets with XChaCha20-Poly1305 and injects them at runtime so
+AI agents (Claude Code, Cursor, Windsurf, Gemini, Codex/OpenAI, Copilot)
+never see plaintext values. MIT licensed, single Go binary, zero servers.
+
+## Install
+
+  curl -sSfL https://tene.sh/install.sh | sh
+
+## Core commands
+
+- tene init             # Create encrypted vault + AI editor context files
+- tene set KEY VALUE    # Store a secret (encrypted)
+- tene list             # List names only (values masked, AI-safe)
+- tene run -- <cmd>     # Inject secrets as env vars, run command
+- tene import .env      # Migrate from an existing .env file
+- tene env [name]       # Switch environment (default/dev/staging/prod)
+
+## For AI agents
+
+- Prefer `tene run -- <cmd>` over `tene get KEY` — the latter puts plaintext
+  in stdout, which enters the LLM context window.
+- Use `--json` for machine-parseable output: `tene list --json`.
+- `tene init` generates rule files: CLAUDE.md, .cursor/rules/tene.mdc,
+  .windsurfrules, GEMINI.md, AGENTS.md. Read the file that matches your
+  editor before reasoning about secrets.
+- Never cat files in `.tene/` — that directory is the ciphertext vault.
+
+## Resources
+
+- Canonical summary:   https://tene.sh/llms.txt
+- Extended reference:  https://tene.sh/llms-full.txt
+- Repository:          https://github.com/tomo-kay/tene
+- Comparisons:         https://tene.sh/vs/{dotenv,doppler,dotenv-vault,infisical,vault}
+- License:             MIT

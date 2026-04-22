@@ -1,0 +1,217 @@
+---
+slug: migrate-env-60s
+title: "Migrating from .env to an encrypted vault in 60 seconds"
+description: "A hands-on tutorial: take an existing .env file, import it into an encrypted vault, and get your app running through runtime injection. No code changes needed."
+publishedAt: "2026-04-22"
+updatedAt: "2026-04-22"
+tags: ["tutorial", "devsecops", "cli"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/migrate-env-60s"
+faqs:
+  - question: "Do I need to change my application code?"
+    answer: "No. 'tene run -- <command>' sets the same environment variables your code already reads via process.env.*, os.Getenv, os.environ, etc. You typically remove the dotenv package import because it is no longer needed."
+  - question: "What if my .env has comments and blank lines?"
+    answer: "tene import handles standard .env syntax: KEY=VALUE lines, quoted values, and blank/comment lines that are ignored. It does not evaluate variable expansion — if you use VAR=${OTHER_VAR} style expansion, resolve those first."
+  - question: "Can I roll back?"
+    answer: "Yes. Run 'tene export' to print the vault contents in .env format, or 'tene export --file backup.env' to write to a file. You can always go back to plaintext if you need to."
+---
+
+## The goal
+
+Take this:
+
+```bash
+$ cat .env
+STRIPE_KEY=sk_test_51Hxxx
+OPENAI_API_KEY=sk-proj-xxx
+DATABASE_URL=postgres://dev:pw@localhost/myapp
+```
+
+Turn it into an encrypted vault, and run the app with the same env vars,
+without editing a single line of application code. Budget: 60 seconds.
+
+## Step 1 — install
+
+```bash
+curl -sSfL https://tene.sh/install.sh | sh
+```
+
+This downloads a single Go binary to `/usr/local/bin/tene`. No runtime
+dependencies.
+
+## Step 2 — initialize
+
+```bash
+cd my-project
+tene init
+```
+
+You will be prompted for a master password (twice). tene creates
+`.tene/vault.db` and prints a 12-word BIP-39 recovery mnemonic. Write
+the mnemonic down somewhere safe — if you ever lose the password, this
+is the only way back.
+
+Under the hood:
+
+- Master password → Argon2id (64 MB memory, 3 iterations) → 256-bit
+  master key.
+- Master key → HKDF-SHA256 → encryption key.
+- SQLite vault encrypted with XChaCha20-Poly1305 (192-bit nonces, secret
+  name as AAD).
+- Key cached in OS keychain (macOS Keychain, Linux libsecret, Windows
+  Credential Vault).
+
+`tene init` also generates AI-editor rule files (`CLAUDE.md`,
+`.cursor/rules/tene.mdc`, `.windsurfrules`, `GEMINI.md`, `AGENTS.md`) so
+every agent knows to use `tene run --` instead of reading env files.
+
+## Step 3 — import the .env
+
+```bash
+tene import .env
+```
+
+Output:
+
+```text
+3 secrets imported (encrypted, default)
+  • STRIPE_KEY
+  • OPENAI_API_KEY
+  • DATABASE_URL
+```
+
+Each KEY=VALUE line becomes an encrypted record. The values are not
+written in plaintext anywhere during or after the import — the import
+parses the file, encrypts each value in memory, writes ciphertext to the
+vault, and discards the plaintext.
+
+## Step 4 — delete the plaintext
+
+```bash
+rm .env
+```
+
+Yes, really. This is the whole point. The plaintext file is gone.
+
+If you commit your repo now, there is no env file to accidentally include.
+
+<GifEmbed
+  src="/demo/dotenv-gone-demo.gif"
+  alt="The .env file with plaintext STRIPE_KEY and DB_URL is imported into tene then deleted. ls -la shows no .env remaining; the app still runs through tene run because env vars are injected at runtime."
+  caption="Before: plaintext `.env`. After: encrypted vault + same env vars at runtime."
+/>
+
+## Step 5 — run your app
+
+```bash
+tene run -- npm start
+```
+
+`tene run` spawns a subshell, sets each vault secret as an environment
+variable on that subshell, and executes `npm start`. Your app reads
+`process.env.STRIPE_KEY`, `process.env.OPENAI_API_KEY`,
+`process.env.DATABASE_URL` exactly as before.
+
+Total elapsed time so far: about 45 seconds.
+
+## Verify it works
+
+```bash
+tene list
+```
+
+Output:
+
+```text
+Active environment: default
+3 secrets:
+  • STRIPE_KEY
+  • OPENAI_API_KEY
+  • DATABASE_URL
+```
+
+Values are masked. You could run `tene get STRIPE_KEY` to see the actual
+value, but inside an AI coding session prefer `tene list` — `tene get`
+prints plaintext to stdout which enters the LLM context window.
+
+## Different languages, same pattern
+
+tene is language-agnostic. It just sets env vars.
+
+**Node.js**:
+
+```bash
+tene run -- npm start         # or: tene run -- node app.js
+```
+
+**Go**:
+
+```bash
+tene run -- go run ./cmd/server
+```
+
+**Python**:
+
+```bash
+tene run -- python app.py
+```
+
+**Docker**:
+
+```bash
+tene run -- docker compose up
+```
+
+Your app code keeps using `process.env.KEY`, `os.Getenv("KEY")`,
+`os.environ["KEY"]`. Nothing changes inside the application.
+
+## Environments
+
+The default vault environment is `default`. For dev / staging / prod
+separation:
+
+```bash
+tene env create staging
+tene env create prod
+
+# Store a different DATABASE_URL per env
+tene set DATABASE_URL postgres://stag/app --env staging
+tene set DATABASE_URL postgres://prod/app --env prod
+
+# Run in a specific env without switching
+tene run --env prod -- node server.js
+```
+
+## CI
+
+Non-interactive environments (GitHub Actions, CircleCI, etc.):
+
+```yaml
+env:
+  TENE_MASTER_PASSWORD: ${{ secrets.TENE_MASTER_PASSWORD }}
+steps:
+  - run: tene run --no-keychain -- npm test
+```
+
+`--no-keychain` tells tene to read the password from the environment
+rather than the OS keychain. `TENE_MASTER_PASSWORD` needs to be the same
+password you used during `tene init` on the machine where you generated
+the vault.
+
+## Summary — the whole migration
+
+```bash
+# Total: ~60 seconds
+curl -sSfL https://tene.sh/install.sh | sh    # 15s
+tene init                                      # 15s (master password + mnemonic)
+tene import .env                               # 5s
+rm .env                                        # 1s
+tene run -- npm start                          # 5s startup
+```
+
+Your code did not change. Your build did not change. The plaintext is
+gone from disk. AI coding agents cannot read what is no longer there.
+
+Related: [Your .env is not a secret](/blog/ai-reads-env) —
+why this matters in the AI-agent era.

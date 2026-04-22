@@ -1,3 +1,5 @@
+import { TrackedGithubLink } from "./tracked-github-link";
+
 export function Security() {
   return (
     <section id="security" className="px-4 py-24 sm:px-6">
@@ -74,14 +76,13 @@ export function Security() {
               <p className="text-sm font-medium">Open source — verify it yourself</p>
               <p className="mt-1 text-sm text-muted">
                 Every line of encryption code is open source. Don&apos;t trust us — read the code.{" "}
-                <a
+                <TrackedGithubLink
                   href="https://github.com/tomo-kay/tene"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  location="security"
                   className="text-accent underline underline-offset-2 hover:text-accent-dim"
                 >
                   github.com/tomo-kay/tene
-                </a>
+                </TrackedGithubLink>
               </p>
             </div>
           </div>

@@ -1,0 +1,189 @@
+---
+slug: xchacha20-for-devs
+title: "XChaCha20-Poly1305 for developers: why it is the right choice for local secrets"
+description: "A practical explanation of XChaCha20-Poly1305 and why tene picked it over AES-GCM for a local-first secret vault. No PhD required."
+publishedAt: "2026-04-21"
+updatedAt: "2026-04-21"
+tags: ["security", "cryptography", "go", "architecture"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/xchacha20-for-devs"
+faqs:
+  - question: "Is XChaCha20-Poly1305 better than AES-GCM?"
+    answer: "For software-only implementations without AES-NI hardware acceleration, ChaCha20 is faster and has simpler constant-time code. For a local CLI vault running on a developer laptop, XChaCha20-Poly1305 is the pragmatic choice."
+  - question: "Why not just use libsodium?"
+    answer: "tene uses golang.org/x/crypto/chacha20poly1305 which is an audited standard-library-adjacent implementation in pure Go. libsodium would require CGo bindings, which complicates cross-compilation for a CLI meant to ship as a single static binary."
+  - question: "What does 'extended nonce' buy you?"
+    answer: "XChaCha20 has a 192-bit nonce versus ChaCha20's 96-bit nonce. With 192 bits you can generate random nonces safely even after hundreds of millions of encryptions — the birthday bound is essentially irrelevant. With 96 bits you have to be careful."
+---
+
+## The problem a local vault has to solve
+
+Store a value on disk such that:
+
+1. The value cannot be read without a secret (the master password).
+2. Nobody can tamper with the ciphertext without detection.
+3. The solution is cheap in CPU and code complexity.
+4. The binary is distributable as a single static file (important for
+   a CLI).
+
+That is essentially "authenticated encryption with a passphrase-derived
+key." There are three realistic modern choices:
+
+- **AES-256-GCM** — wide industry adoption, fast with AES-NI, tricky
+  constant-time without hardware.
+- **ChaCha20-Poly1305** — software-fast, simple to implement in
+  constant time, standardized in RFC 8439.
+- **XChaCha20-Poly1305** — ChaCha20 with an extended 192-bit nonce so
+  you can generate random nonces without worrying about collisions.
+
+tene picked **XChaCha20-Poly1305**.
+
+## Why not AES-GCM
+
+AES-GCM is excellent if you are running on a CPU with AES-NI hardware
+(every modern Intel, AMD, Apple Silicon). Without hardware acceleration,
+an AES software implementation is fiddly — constant-time AES in pure
+software requires table-lookup-free code or bit-slicing, and bugs here
+are subtle.
+
+For a Go binary that has to run anywhere (Linux on a Raspberry Pi,
+Windows on an older machine, Docker in minimal environments), we want an
+implementation that is correct and fast *regardless* of the hardware.
+
+ChaCha20's design is ARX (Add-Rotate-XOR) — the entire cipher runs on
+integer add, rotate, and XOR. There are no table lookups. Writing it in
+constant time is the straightforward thing to do.
+
+## Why X-ChaCha vs regular ChaCha
+
+Regular ChaCha20-Poly1305 has a 96-bit nonce (RFC 8439). If you generate
+nonces randomly, the birthday bound says you can safely encrypt
+approximately 2^48 messages before collision probability gets
+uncomfortable. For a developer vault that is a huge budget — but "safe
+if you think about nonces carefully" is exactly what we want to avoid.
+
+XChaCha20 extends the nonce to 192 bits by using the first 128 bits as
+input to a HChaCha20 key derivation. The result: generate a random 192-bit
+nonce per encryption and ignore collisions forever (the birthday bound is
+2^96 messages, which is "the heat death of the universe" territory).
+
+In tene's vault this matters because the vault is append-only in practice
+but the number of re-encryptions over a decade-long lifetime is not
+well-bounded.
+
+## The full crypto chain
+
+```text
+Master Password
+  ↓ Argon2id (64 MiB memory, 3 iterations, user-specific salt)
+Master Key (256 bits) ──→ cached in OS keychain
+  ↓ HKDF-SHA256
+Encryption Key (256 bits)
+  ↓ XChaCha20-Poly1305 (192-bit nonce, secret name as AAD)
+Ciphertext stored in SQLite vault
+```
+
+Each step is mandated by a published standard:
+
+- Argon2id: RFC 9106
+- HKDF: RFC 5869
+- XChaCha20-Poly1305: draft-irtf-cfrg-xchacha-03 (widely implemented)
+- SQLite: stable file format
+
+<GifEmbed
+  src="/demo/security-proof-demo.gif"
+  alt="Hexdump of .tene/vault.db shows only random-looking bytes. grep for the plaintext secret returns nothing. Only tene get API_KEY returns the value."
+  caption="Proof in hexdump: no plaintext inside `.tene/vault.db`. Only tene with the master key can read it back."
+/>
+
+## Why AAD matters
+
+The secret name is passed as Additional Authenticated Data (AAD) to the
+Poly1305 tag. That means if an attacker swaps ciphertext between two
+records — taking the ciphertext for STRIPE_KEY and putting it in the row
+labeled DATABASE_URL — decryption fails.
+
+Without AAD an attacker who can write to the vault file could confuse
+the application into using the wrong secret. With AAD this attack is a
+cryptographic forgery, which requires breaking Poly1305.
+
+## The code (simplified)
+
+Here is the core encrypt function from tene:
+
+```go
+import (
+    "crypto/rand"
+    "golang.org/x/crypto/chacha20poly1305"
+)
+
+func encrypt(key []byte, name string, plaintext []byte) (ciphertext []byte, err error) {
+    aead, err := chacha20poly1305.NewX(key)
+    if err != nil {
+        return nil, err
+    }
+    nonce := make([]byte, aead.NonceSize())
+    if _, err := rand.Read(nonce); err != nil {
+        return nil, err
+    }
+    // Prepend nonce to ciphertext so decrypt can recover it.
+    return aead.Seal(nonce, nonce, plaintext, []byte(name)), nil
+}
+```
+
+That is it. Nine lines. No rolling-your-own crypto, no padding oracles,
+no AES-NI branching. The `golang.org/x/crypto/chacha20poly1305` package
+is part of the standard-adjacent ecosystem and gets Go's regular crypto
+review.
+
+## What we do not do
+
+- **We do not roll our own KDF.** Argon2id is from `golang.org/x/crypto/argon2`.
+- **We do not store nonces separately.** They are prepended to the
+  ciphertext, which is the standard convention.
+- **We do not reuse keys.** Each environment has its own key derivation
+  via HKDF with a distinct info label.
+- **We do not invent "tweaks" or "modes".** Straight XChaCha20-Poly1305
+  as specified.
+
+## Performance on commodity hardware
+
+On an M2 MacBook Air:
+
+- Argon2id(64 MiB, 3 iter) derivation: ~120 ms one-time on `tene init`
+  or keychain miss.
+- XChaCha20-Poly1305 encrypt of a typical 64-byte secret: ~0.5 microseconds.
+- Vault read (SQLite + decrypt for 10 secrets): single-digit
+  milliseconds.
+
+For a CLI this is invisible. Most of the total latency in `tene run`
+comes from fork+exec of the child process, not from crypto.
+
+## What could go wrong
+
+The realistic risks are not crypto-algorithmic:
+
+1. **Weak master password** — mitigated by Argon2id's 64 MB memory cost.
+2. **Keychain compromise** — mitigated by the option to disable keychain
+   and re-enter the master password per invocation (`--no-keychain`).
+3. **Process memory dump** — acknowledged; any secret manager that
+   exposes env vars at runtime has this property. Memory zeroing after
+   use helps but does not eliminate.
+4. **Operator error** — running `tene get KEY` inside a logged shell or
+   AI session. Fixed by tooling (CLAUDE.md rules) not by crypto.
+
+## Summary
+
+For a local-first vault written in Go and shipped as a single static
+binary:
+
+- ChaCha20's ARX design beats AES in portable software.
+- XChaCha's 192-bit nonce eliminates the "never reuse a nonce" caveat.
+- Poly1305 provides authenticated encryption with a low-cost tag.
+- AAD tied to the secret name prevents ciphertext-swap attacks.
+- Every primitive comes from a published standard and an audited library.
+
+That is the answer to "why XChaCha20-Poly1305" in one page. The
+implementation lives in `pkg/crypto/` of the tene repo if you want to
+read the actual code.
