@@ -2,6 +2,7 @@ import { pricingTiers } from "@/data/pricing";
 import { CopyCommand } from "./copy-command";
 import { WaitlistForm } from "./waitlist-form";
 import { GlowCard } from "./glow-card";
+import { TrackedGithubLink } from "./tracked-github-link";
 
 export function Pricing() {
   return (
@@ -70,6 +71,7 @@ export function Pricing() {
                     <CopyCommand
                       command="curl -sSfL https://tene.sh/install.sh | sh"
                       className="w-full justify-center text-xs"
+                      source="pricing"
                     />
                   )}
                   {tier.cta.action === "waitlist" && (
@@ -85,7 +87,13 @@ export function Pricing() {
         <div className="mx-auto mt-12 max-w-lg text-center">
           <p className="text-sm text-muted">
             Star us on GitHub to follow updates:{" "}
-            <a href="https://github.com/tomo-kay/tene" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">github.com/tomo-kay/tene</a>
+            <TrackedGithubLink
+              href="https://github.com/tomo-kay/tene"
+              location="pricing"
+              className="text-accent hover:underline"
+            >
+              github.com/tomo-kay/tene
+            </TrackedGithubLink>
           </p>
         </div>
       </div>

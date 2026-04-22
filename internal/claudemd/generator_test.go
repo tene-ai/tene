@@ -79,6 +79,18 @@ func TestTemplate_URL(t *testing.T) {
 	}
 }
 
+func TestTemplate_LlmsTxtReferences(t *testing.T) {
+	// Generated rule files must point AI agents at the canonical llms.txt
+	// resources so agents that only load a project rule file (e.g. CLAUDE.md)
+	// can still discover the extended context.
+	if !strings.Contains(SecretsMdTemplate, "https://tene.sh/llms.txt") {
+		t.Error("template should reference https://tene.sh/llms.txt")
+	}
+	if !strings.Contains(SecretsMdTemplate, "https://tene.sh/llms-full.txt") {
+		t.Error("template should reference https://tene.sh/llms-full.txt")
+	}
+}
+
 func TestHasTeneSection(t *testing.T) {
 	gen := NewGenerator("")
 

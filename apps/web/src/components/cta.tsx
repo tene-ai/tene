@@ -1,4 +1,5 @@
 import { CopyCommand } from "./copy-command";
+import { TrackedGithubLink } from "./tracked-github-link";
 
 // Design Ref: §4.8 — "Stop using .env files" CTA
 export function CTA() {
@@ -14,21 +15,24 @@ export function CTA() {
         </p>
 
         <div className="mt-8 flex justify-center">
-          <CopyCommand command="curl -sSfL https://tene.sh/install.sh | sh" className="relative border-accent/30 text-xs sm:text-sm" />
+          <CopyCommand
+            command="curl -sSfL https://tene.sh/install.sh | sh"
+            className="relative border-accent/30 text-xs sm:text-sm"
+            source="cta"
+          />
         </div>
 
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <a
+          <TrackedGithubLink
             href="https://github.com/tomo-kay/tene"
-            target="_blank"
-            rel="noopener noreferrer"
+            location="cta"
             className="flex w-full items-center justify-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-6 py-3 text-sm font-medium text-accent transition-colors hover:bg-accent/20 sm:w-auto"
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12 24 5.37 18.63 0 12 0z" />
             </svg>
             View on GitHub
-          </a>
+          </TrackedGithubLink>
         </div>
       </div>
     </section>

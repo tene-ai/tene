@@ -1,21 +1,37 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { track } from "@/lib/track";
+
+type InstallSource = "hero" | "cta" | "vs_page" | "blog_post" | "pricing";
 
 export function CopyCommand({
   command,
   className = "",
+  source,
 }: {
   command: string;
   className?: string;
+  // Only instances representing the INSTALL command pass a source. Others
+  // (e.g. how-it-works step copies) omit it so the install_copy conversion
+  // metric is not polluted.
+  source?: InstallSource;
 }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    await navigator.clipboard.writeText(command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }, [command]);
+    // Fire analytics regardless of clipboard success — intent is the signal.
+    if (source) {
+      track("install_copy", { source });
+    }
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard may be unavailable (non-secure context, headless) — ignore.
+    }
+  }, [command, source]);
 
   return (
     <button

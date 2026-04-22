@@ -1,0 +1,146 @@
+---
+slug: ai-reads-env
+title: "Your .env is not a secret. AI can read it."
+description: "Plaintext .env files are a liability in the AI coding era. Here is why the AI-agent threat model changes the math, and what to replace .env with."
+publishedAt: "2026-04-23"
+updatedAt: "2026-04-23"
+tags: ["security", "ai", "devsecops"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/ai-reads-env"
+faqs:
+  - question: "Does .gitignore protect my .env from AI agents?"
+    answer: ".gitignore prevents Git from committing the file. It does nothing about the AI agent running on your machine — the agent reads the file from disk as part of the project context before any git boundary."
+  - question: "Which AI agents read .env?"
+    answer: "Every major coding assistant indexes project files as part of its context. Claude Code, Cursor, Windsurf, Gemini Code Assist, GitHub Copilot Chat, and Codex all read local files including .env unless explicitly excluded via an ignore file."
+  - question: "What should replace .env?"
+    answer: "Encrypt secrets at rest and inject them at runtime as environment variables. tene is one implementation — XChaCha20-Poly1305 vault plus 'tene run --' subshell. Your application code keeps reading process.env.* unchanged."
+---
+
+## The AI-agent threat model changes the math
+
+<GifEmbed
+  src="/demo/the-full-story-demo.gif"
+  alt="70-second demo: from a plaintext .env file that Claude reads to an encrypted tene vault where Claude only sees runtime-injected env vars."
+  caption="From .env liability to AI-safe vault in 70 seconds."
+/>
+
+`.env` was invented in 2012. The threat model of 2012 was a laptop someone
+might steal, a CI runner that might leak logs, and a GitHub repo that might
+accidentally get a plaintext commit. `.gitignore` was the fix.
+
+The threat model of 2026 is different. Every time you open Cursor and ask it
+to "figure out why the checkout flow is broken," the agent loads your project
+into its context window — README, `package.json`, your route handlers, your
+env file. Every file.
+
+That includes `.env`.
+
+<Callout type="warn">
+Your Stripe key, OpenAI token, and database URL are plaintext strings on disk.
+The AI agent reads them, tokenizes them, and they are now part of a
+transcript that may be stored, summarized, or transmitted. `.gitignore`
+does not stop this. The threat model has expanded to the runtime context
+window, and `.env` was never designed for that.
+</Callout>
+
+## What actually happens
+
+Run Cursor on a fresh project with an `.env` containing `STRIPE_KEY=sk_test_abc`.
+Ask the agent: *"show me how this app uses Stripe"*. It will happily include
+snippets of your env file in its reasoning, and — depending on which UI
+feature you use — paste the value into a tool_result block, a chat
+summary, or a suggestion.
+
+No one is being malicious. This is just what the tool does. The agent's
+job is to help you understand the codebase, and your `.env` is part of
+the codebase as far as the filesystem is concerned.
+
+## The three "fixes" that do not work
+
+**1. "I put `.env` in `.gitignore`."**
+
+That stops Git. It does not stop the AI agent reading from disk.
+
+**2. "I told the agent not to read env files."**
+
+You told *one instance* of one agent. The next session — or another
+developer's machine, or CI — has no such instruction. The rule is local
+to that context.
+
+**3. "I only keep test keys in `.env`."**
+
+This is the least bad, but it is not a fix. Test keys still leak into
+transcripts, shell history, and CI logs. And every team sooner or later
+has an engineer who drops a prod key in by accident.
+
+## The actual fix: runtime injection
+
+Stop storing plaintext secrets on disk. Store them encrypted, and inject
+them into the process environment only when a command runs.
+
+Concrete workflow with tene:
+
+```bash
+curl -sSfL https://tene.sh/install.sh | sh
+tene init
+tene import .env
+rm .env
+tene run -- npm start
+```
+
+`tene init` creates a local vault encrypted with XChaCha20-Poly1305. The
+master key is derived from your password via Argon2id and cached in the OS
+keychain.
+
+`tene run -- npm start` spawns a subshell, decrypts the vault in memory,
+sets each secret as an environment variable on that subshell, and executes
+`npm start`. The values exist only as ephemeral env vars on the child
+process. They are never written to disk as plaintext.
+
+<CopyCommand command="curl -sSfL https://tene.sh/install.sh | sh" />
+
+Your application code does not change. `process.env.STRIPE_KEY` keeps
+reading exactly the same value it used to read from `.env`. The only thing
+that changed is that `.env` no longer exists — and therefore the AI agent
+cannot read it.
+
+## Why this helps the AI-agent threat model specifically
+
+When Cursor or Claude Code indexes your project now, there is no
+plaintext to index. The SQLite vault file at `.tene/vault.db` is
+ciphertext. The agent cannot extract values from ciphertext. It can see
+that `tene run` is the entry point and — if you have generated the
+editor-specific rules via `tene init` — it has been told to call
+`tene run --` instead of reading env files.
+
+Put differently: you have moved the secret out of the context window and
+into the runtime. The agent knows about secrets the same way it knows
+about database connections — by their names and how to use them, not by
+their values.
+
+## What about CI?
+
+Same trick. Set `TENE_MASTER_PASSWORD` in your CI environment, run
+`tene run --no-keychain -- npm test`, and the job gets the same env vars
+it always had. The `--no-keychain` flag tells tene to read the master
+password from the environment rather than prompting for it.
+
+## What about teams?
+
+The CLI is local-first and free forever. For team sync, there is an
+optional Pro plan at `app.tene.sh` that uses client-side encryption — the
+server only ever sees ciphertext. If you want to self-host, the roadmap
+includes a reference server.
+
+## Summary
+
+- `.env` was designed for a pre-AI-agent world. In 2026 it is a liability.
+- `.gitignore` protects Git; it does not protect the LLM context window.
+- Encrypt secrets at rest; inject them as env vars at runtime; never write
+  plaintext to disk.
+- Your application code does not change. Your workflow gains one prefix:
+  `tene run -- <your-command>`.
+
+tene is one implementation. You can build your own. What matters is that
+you stop trusting `.env` with values an AI coding agent will read.

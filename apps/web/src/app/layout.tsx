@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { NoiseOverlay } from "@/components/noise-overlay";
 import "./globals.css";
 
@@ -197,6 +198,10 @@ export default function RootLayout({
         {children}
         <NoiseOverlay />
       </body>
+      {/* Google Analytics 4 via @next/third-parties. Managed async script
+          load, gtag() global, dataLayer[]. Measurement ID is injected via
+          the production property set up by the team. */}
+      <GoogleAnalytics gaId="G-9MRWMY6XBE" />
     </html>
   );
 }

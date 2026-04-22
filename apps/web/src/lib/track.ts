@@ -1,0 +1,58 @@
+// Design Ref: analytics-ga4-swap — Type-safe analytics event wrapper.
+// In production, forwards to GA4 via @next/third-parties `sendGAEvent`.
+// In dev/SSR, logs to console.debug so nothing hits analytics endpoints.
+import { sendGAEvent } from "@next/third-parties/google";
+
+type EventMap = {
+  // Site-wide conversions / navigation (legacy names kept stable).
+  install_copy: {
+    source: "hero" | "cta" | "vs_page" | "blog_post" | "pricing";
+  };
+  vs_card_click: { competitor: string };
+  github_click: {
+    location:
+      | "nav"
+      | "hero"
+      | "footer"
+      | "vs_page"
+      | "blog_post"
+      | "cta"
+      | "pricing"
+      | "security";
+  };
+  related_vs_click: { from: string; to: string };
+  // Which nav menu item was clicked — answers "어떤 메뉴" analysis question.
+  nav_click: {
+    item:
+      | "features"
+      | "how_it_works"
+      | "security"
+      | "compare"
+      | "blog"
+      | "faq";
+    device: "desktop" | "mobile";
+  };
+
+  // tech-blog Phase 2 (FR-32 ~ FR-37)
+  blog_copy_code: { slug: string; language: string };
+  blog_tag_filter: { tag: string; from: "index" | "post_header" | "card" };
+  blog_related_click: { fromSlug: string; toSlug: string };
+  blog_rss_click: { location: "footer" | "blog_header" };
+  blog_external_link: { slug: string; domain: string };
+  blog_read_complete: { slug: string; readingMinutes: number };
+  blog_share_click: { slug: string; channel: string };
+};
+
+export function track<E extends keyof EventMap>(
+  event: E,
+  payload: EventMap[E],
+): void {
+  if (typeof window === "undefined") return; // SSR safety
+  if (process.env.NODE_ENV !== "production") {
+    // eslint-disable-next-line no-console
+    console.debug("[analytics]", event, payload);
+    return;
+  }
+  // GA4 accepts an event name + a flat record of parameters.
+  sendGAEvent("event", event, payload as Record<string, unknown>);
+}

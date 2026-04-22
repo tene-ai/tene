@@ -1,3 +1,5 @@
+import { TrackedGithubLink } from "./tracked-github-link";
+
 export function Footer() {
   return (
     <footer className="border-t border-border px-4 py-8 sm:px-6">
@@ -13,22 +15,20 @@ export function Footer() {
           <span>Agentic Secret Runtime</span>
         </div>
         <div className="flex items-center gap-6 text-sm text-muted">
-          <a
+          <TrackedGithubLink
             href="https://github.com/tomo-kay/tene"
-            target="_blank"
-            rel="noopener noreferrer"
+            location="footer"
             className="transition-colors hover:text-foreground"
           >
             GitHub
-          </a>
-          <a
+          </TrackedGithubLink>
+          <TrackedGithubLink
             href="https://github.com/tomo-kay/tene/issues"
-            target="_blank"
-            rel="noopener noreferrer"
+            location="footer"
             className="transition-colors hover:text-foreground"
           >
             Issues
-          </a>
+          </TrackedGithubLink>
           <span className="text-border">MIT License</span>
         </div>
       </div>
