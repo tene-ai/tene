@@ -1,19 +1,42 @@
 # tene-cli skill — expected behavior tests
 
-Documented scenarios the skill should handle correctly. Each scenario is
-automated in two ways (run manually, not in CI):
+Documented scenarios the skill must handle correctly. Automated two ways
+(manual runs, not wired into CI):
 
-- `scripts/eval_tene_skill.py` — Python + Anthropic SDK; runs all 6 cases
-  against a live Claude model and scores via regex assertions. Run with:
-  `tene run -- python3 scripts/eval_tene_skill.py`
-- `evals/tene-skill.promptfoo.yaml` — same 6 cases in promptfoo format.
-  Run with: `tene run -- npx promptfoo@latest eval -c evals/tene-skill.promptfoo.yaml`
+**Behavioral eval (live Claude responses, scored via regex)**
 
-An offline self-test (`scripts/selftest_eval_assertions.py`) validates the
-regex matchers against 15 synthetic good/bad responses with no API cost.
+- `scripts/eval_tene_skill.py` runs all 6 cases.
+  - Default backend: Anthropic API (requires `ANTHROPIC_API_KEY` + console credit).
+    ```
+    tene run -- python3 scripts/eval_tene_skill.py
+    ```
+  - **No-API-key backend** via local Claude Code CLI:
+    ```
+    EVAL_BACKEND=cc python3 scripts/eval_tene_skill.py
+    ```
+- `evals/tene-skill.promptfoo.yaml` — same 6 cases as a promptfoo config
+  (API-only):
+  ```
+  tene run -- npx --yes promptfoo@latest eval -c evals/tene-skill.promptfoo.yaml
+  ```
 
-A reviewer can still walk through each scenario manually by pasting the
-**Input** into a Claude Code session that has this skill installed.
+**Assertion self-test (offline, no API cost)**
+
+- `scripts/selftest_eval_assertions.py` validates the regex matchers
+  against 19 synthetic good/bad fixtures.
+
+**Reproducibility**
+
+Negative assertions are scoped to fenced code blocks (```bash / sh / shell
+/ zsh / console) — what the model would EXECUTE — not prose. This avoids
+false positives when the model correctly refuses via phrases like
+"don't run `tene get`".
+
+**Latest result**: 6/6 passing across 3 consecutive runs via the `cc`
+backend (Claude Code CLI, default model). See `docs/03-report/` for detail.
+
+A reviewer can also walk through each scenario manually by pasting the
+**Input** into a Claude Code session with this skill installed.
 
 ## Test 1: List existing secrets safely
 
