@@ -1,0 +1,172 @@
+---
+slug: bkit-harness-engineering-vibe-coding
+title: "bkit + harness engineering: workflow beats model choice"
+description: "Why the workflow around Claude Code matters more than picking a bigger model. Harness engineering, bkit's PDCA, and L0–L4 trust-graduated automation."
+publishedAt: "2026-04-23"
+updatedAt: "2026-04-23"
+tags: ["vibe-coding", "ai", "architecture"]
+author: "tomo-kay"
+cover: "/blog/bkit-harness-engineering-vibe-coding/bkit-og.png"
+canonicalUrl: "https://tene.sh/blog/bkit-harness-engineering-vibe-coding"
+faqs:
+  - question: "Does the model choice not matter at all?"
+    answer: "It matters, but second-order. With a thin workflow around it, a better model just repeats the same mistakes faster. The leverage is in the loop: what context the model sees, how its output is evaluated, and what happens when it's wrong. bkit's gap-detector and auto-iterate close failure modes that a bigger model alone does not."
+  - question: "Can I get the same result from plain Claude Code, without bkit?"
+    answer: "Yes, if you are willing to hand-roll the workflow every session: write plan and design docs, review iterations, set your own guardrails. bkit encodes that discipline as a state machine and a set of agents so you do not have to rebuild it per project. It is the difference between a framework and a convention."
+  - question: "Is 'harness engineering' an established term?"
+    answer: "It became common in 2025 as multi-agent systems matured. The idea: LLM inference is a leaf, and the surrounding engineering — context curation, tool orchestration, state, guardrails, retry loops — is what determines real-world reliability. Prompt engineering is one piece inside a harness."
+---
+
+## The model churn trap
+
+Every week another flagship ships — Opus 4.8, GPT-5.1, a new Cursor mode —
+and the demo reels look revolutionary. Yet the code you push on Friday
+looks suspiciously similar to the code you pushed six months ago. The
+pattern I keep seeing in every vibe-coding session: developers upgrade
+the model, not the system around it. A better model inside a thin
+workflow just makes the same mistakes faster, with more confidence. The
+leverage is not where most people are looking.
+
+<GifEmbed
+  src="/blog/bkit-harness-engineering-vibe-coding/bkit-og.png"
+  alt="bkit wordmark with the tagline '하면 돼' — a Claude Code plugin that adds a methodology layer on top of the CC harness."
+  caption="bkit — '하면 돼' (just do it). Methodology layer for Claude Code."
+/>
+
+## What a harness actually is
+
+In the AI systems community, "harness engineering" names the layer
+between a raw model call and a useful system. Context curation, tool
+orchestration, state machines, guardrails, retry and iterate loops,
+audit trails — all of it. Prompt engineering tunes one request; harness
+engineering tunes the loop that request lives inside.
+
+Claude Code, Cursor, Codex — these are harnesses. They decide what goes
+into your context window, when to spawn subagents, which tools are
+available, how sessions persist. A raw API call to Claude 4.7 has none
+of that by default. When people complain that "the agent hallucinated
+my file paths," they are usually describing a harness failure, not a
+model failure.
+
+## Claude Code's built-in harness is the foundation
+
+Claude Code ships with real harness features. SubAgents for isolated
+parallel work. MCP servers for external tool integration. Hooks that
+fire on lifecycle events. Slash commands and skills for reusable
+prompts. Memory files persisted to disk. All of that was engineered.
+It is enough to feel the productivity jump from raw API usage.
+
+But three things are still missing by default:
+
+- **Methodology**: there is no enforced Plan / Design / Do / Check cycle.
+  You either keep one in your head, or you drift.
+- **Quality gates**: nothing checks "is the implementation within 90%
+  of the design doc?"
+- **Trust-graduated automation**: you get binary allow / deny, not a
+  sliding scale that matches your confidence in the agent.
+
+Here is a minimal `hooks.json` primitive — real, but assembled per
+project, per developer:
+
+```json
+{
+  "PreToolUse": [
+    { "match": "Bash:rm -rf*", "block": true }
+  ]
+}
+```
+
+That is harness engineering in its most raw form. Useful, but tiny.
+
+## bkit: a methodology layer on top of the harness
+
+[bkit](https://github.com/popup-studio-ai/bkit-claude-code) is a
+Claude Code plugin — 39 Skills, 36 Agents, 21 hook events, 128 lib
+modules — that treats the CC harness as its substrate and adds a
+methodology layer above it. It does not compete with Claude
+Code. It extends every extension point CC already exposes.
+
+The stack reads top-down, highest-level layer first:
+
+| Layer | Components | Role |
+|---|---|---|
+| **bkit** | PDCA · Quality gates · L0–L4 trust score | methodology |
+| **Claude Code** | SubAgents · MCP · Hooks · Skills | primitives |
+| **Claude API** | Inference + tools | model |
+
+The practical surface is a handful of slash commands that move one
+feature through a state machine — each transition guarded, not
+free-text:
+
+```bash
+/pdca pm user-auth         # requirements -> PRD
+/pdca plan user-auth       # plan doc with acceptance criteria
+/pdca design user-auth     # 3 architectural arcs; pick one
+/pdca do user-auth         # implementation guided by the design
+/pdca analyze user-auth    # gap-detector: design vs impl match-rate
+/pdca iterate user-auth    # auto-fix until match-rate >= 90%
+/pdca report user-auth     # completion doc with metrics
+```
+
+The `gap-detector` agent compares the design doc to the actual
+implementation diff and reports a match rate. Below 90%, `/pdca
+iterate` loops automatically, capped at five cycles. The model never
+changed. The workflow did.
+
+## Why this beats another model upgrade
+
+Three concrete pieces of evidence that the harness layer pays off
+more than picking a bigger model.
+
+**Evaluator-Optimizer on the same model.** The 90% match-rate loop
+calls the same underlying model twice — once to implement, once to
+critique against the design doc. In practice this closes gaps that a
+single Opus pass misses. You did not need a smarter model; you needed
+a second look.
+
+**Sentinels that watch upstream CC.** Two agents — `cc-version-researcher`
+and `bkit-impact-analyst` — track Claude Code releases and auto-assess
+whether anything in your workflow broke. When CC v2.1.64 closed four
+memory leaks in Agent Teams, bkit surfaced it without anyone reading
+release notes.
+
+**Automation you can graduate.** `/control level` moves the system
+from L0 (manual) through L4 (full auto) based on a trust score
+derived from track record. The same model behaves differently
+depending on what it has earned in your project:
+
+```bash
+/control status
+# Level: L2 (Semi-Auto)
+# Trust Score: 0.78 (23 PDCA cycles, 91% avg match-rate)
+# Routine transitions auto · key decisions gated
+```
+
+<Callout type="tip">
+The unlock is not "use bkit instead of writing prompts." It is: Claude
+Code gives you the primitives, bkit gives you the discipline, and they
+compose. Neither replaces the other — and neither gets replaced by a
+bigger model.
+</Callout>
+
+## Build your harness, not your prompt
+
+- The model is a leaf component. The workflow is the tree.
+- Claude Code's harness is the ground floor; bkit adds a methodology
+  layer on top, not an alternative to it.
+- A 90% match-rate gate plus auto-iterate works because it is
+  structural, not cleverer.
+- Trust-graduated automation (L0–L4) beats binary allow / deny once
+  you are running dozens of cycles a week.
+- The next model release does not fix your workflow. Your workflow
+  decides how much you can milk out of the next model.
+
+If you are vibe-coding every day, your real leverage is not the next
+flagship. It is how tight the harness is around whatever model you
+call. Tighten that, and each model upgrade starts compounding instead
+of evaporating.
+
+Related reading:
+- [bkit on GitHub (popup-studio-ai/bkit-claude-code)](https://github.com/popup-studio-ai/bkit-claude-code)
+- [Claude Code + API keys: the safe workflow](/blog/claude-code-safe-api-keys)
+- [Cursor secret management in 2026](/blog/cursor-secret-management-2026)
