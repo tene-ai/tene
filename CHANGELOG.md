@@ -28,9 +28,13 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `.github/copilot-instructions.md`, `.github/FUNDING.yml`.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` (GitHub Community Health 42% → 90%+).
 - GitHub Issue templates (bug + feature) and PR template.
-- Homebrew tap (`brew install tomo-kay/tene/tene` · pending first release cut).
-- Docker image on GHCR (`docker run ghcr.io/tomo-kay/tene` · pending first release cut).
-- Man pages + shell completions bundled in release archives (pending first release cut).
+- Homebrew tap live: `brew install tomo-kay/tene/tene` (macOS + Linux). Tap
+  repository: [`tomo-kay/homebrew-tene`](https://github.com/tomo-kay/homebrew-tene).
+  First formula is published on the v1.0.6 release (v1.0.5 missed the initial
+  publish because the tap repository did not exist yet — see "Fixed" below).
+- Docker image on GHCR: `docker run ghcr.io/tomo-kay/tene:latest` (multi-arch
+  amd64 + arm64). Published from v1.0.5 onward.
+- Man pages + shell completions bundled in release archives (from v1.0.5).
 - Landing `/cli` public route with the full CLI reference.
 - Visual breadcrumb on `/vs/*` and `/blog/*` pages.
 - Trust section on homepage with live GitHub badges + maintainer bio.
@@ -56,3 +60,10 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - `/vs/*` Schema.org `SoftwareApplication` node now conforms to spec.
+- `auto-tag.yml` workflow no longer skips the `LATEST_VERSION` S3 update when a
+  non-critical step inside GoReleaser fails (e.g. Homebrew formula publish
+  failing because the tap repo was missing). The update step now runs with
+  `if: always()` and guards against broken state by verifying the release
+  tarball exists on S3 before pointing `LATEST_VERSION` at it. Fixes the issue
+  where v1.0.5 binaries were uploaded successfully but `curl | sh` still
+  installed v1.0.4 because the pointer was never rewritten.

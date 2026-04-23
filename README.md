@@ -77,6 +77,34 @@ Auto-detects your OS and architecture, downloads the latest binary from GitHub R
 ### Other methods
 
 <details>
+<summary>With Homebrew (macOS + Linux)</summary>
+
+```bash
+brew install tomo-kay/tene/tene
+```
+
+Updates work as usual:
+
+```bash
+brew update && brew upgrade tene
+```
+
+Ships with shell completions (bash, zsh, fish) and the `tene(1)` man page.
+
+</details>
+
+<details>
+<summary>With Docker (GHCR)</summary>
+
+```bash
+docker run --rm ghcr.io/tomo-kay/tene:latest version
+```
+
+Multi-arch image (amd64 + arm64). Version-pinned tags: `v1`, `v1.0`, `v1.0.5`.
+
+</details>
+
+<details>
 <summary>With Go</summary>
 
 ```bash
