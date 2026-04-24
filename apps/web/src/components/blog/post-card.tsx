@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { GlowCard } from "@/components/glow-card";
-import { TagChip } from "@/components/blog/tag-chip";
+import { CategoryBadge } from "@/components/blog/category-badge";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -20,15 +20,18 @@ function formatDate(iso: string): string {
 }
 
 export function PostCard({ post }: Props) {
+  const visibleTags = post.tags.slice(0, 2);
+  const hiddenTagCount = post.tags.length - visibleTags.length;
+
   return (
     <GlowCard className="h-full rounded-lg border border-border bg-surface/80 backdrop-blur-sm transition-colors hover:border-accent/40">
       <Link href={`/blog/${post.slug}`} className="block h-full p-6">
-        <time
-          className="text-xs text-muted"
-          dateTime={post.publishedAt}
-        >
-          {formatDate(post.publishedAt)} · {post.readingMinutes} min read
-        </time>
+        <div className="flex flex-wrap items-center gap-2">
+          <CategoryBadge category={post.category} />
+          <time className="text-xs text-muted" dateTime={post.publishedAt}>
+            {formatDate(post.publishedAt)} · {post.readingMinutes} min read
+          </time>
+        </div>
         <h3 className="mt-3 text-lg font-semibold leading-tight">
           {post.title}
         </h3>
@@ -36,8 +39,8 @@ export function PostCard({ post }: Props) {
           {post.description}
         </p>
         {post.tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {post.tags.slice(0, 3).map((tag) => (
+          <div className="mt-4 flex flex-wrap items-center gap-1.5">
+            {visibleTags.map((tag) => (
               <span
                 key={tag}
                 className="inline-flex items-center gap-0.5 rounded-full border border-border/60 px-2 py-0.5 text-xs text-muted"
@@ -46,6 +49,9 @@ export function PostCard({ post }: Props) {
                 {tag}
               </span>
             ))}
+            {hiddenTagCount > 0 && (
+              <span className="text-xs text-muted">+{hiddenTagCount} more</span>
+            )}
           </div>
         )}
       </Link>

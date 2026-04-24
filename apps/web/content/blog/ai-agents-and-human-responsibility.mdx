@@ -1,0 +1,314 @@
+---
+slug: ai-agents-and-human-responsibility
+title: "AI agents, human responsibility, and the harness in between"
+description: "Chatbots got good. Agents did not — not because the models aren't smart, but because the system around them isn't. Roles, responsibility, and why PDCA + L0–L4 control beats another model upgrade."
+publishedAt: "2026-04-24"
+updatedAt: "2026-04-24"
+category: philosophy
+tags: ["bkit", "workflow", "harness-engineering", "founder-story"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/ai-agents-and-human-responsibility"
+faqs:
+  - question: "If 90% of Anthropic's code is AI-written, why are they still hiring engineers?"
+    answer: "Because execution and accountability are separate jobs. AI handles the coding, testing, and debugging; humans decide what to build, why, for whom, and sign off when it's done. As AI takes over more execution, human time shifts from typing to judging — and judging is the part that carries legal, product, and customer-facing responsibility. The job title survives; the daily activity changes."
+  - question: "Is 'fully autonomous AI agent' a realistic goal for my product?"
+    answer: "Not in 2026. Every AI team shipping at scale — Anthropic, Cursor, GitHub — runs with graduated automation: routine steps auto-approved, high-stakes decisions gated through a human. The gain is not 'zero humans' but 'humans only at the decisions that actually need a human.' Binary thinking (manual vs fully auto) is the most common failure mode."
+  - question: "How does bkit's L0–L4 automation level differ from a config flag?"
+    answer: "A config flag is static — you turn it on, it stays on. L0–L4 is earned. Escalating from L2 to L3 requires a Trust Score derived from your project's actual track record (match rate, destructive-op count, interrupt frequency). The system graduates trust per project, not per user or per model, and a cooldown prevents a lucky streak from unlocking autonomy prematurely. It's closer to a pilot's flight-hour certification than a toggle."
+---
+
+## Chatbots are solved. Agents are not.
+
+A book I read recently put the difference cleanly:
+
+> A chatbot answers questions. An agent pursues goals.
+
+Most organizations already have chatbots. They work well enough.
+What they do not have — and what every roadmap pretends to have —
+is an agent: something that starts with an intent, makes decisions,
+executes, recovers from its own mistakes, and hands back a result a
+human can trust enough to sign off on.
+
+The gap between "AI that speaks well" and "AI that finishes work" is
+enormous. It's also, I think, where the next ten years of building
+happens. This piece is my attempt to draw the map of that gap — what
+changes about roles, what stays the same about responsibility, and
+why the harness around the model matters more than the model itself.
+
+## The structure is the bottleneck, not the model
+
+The most common conversation about AI in 2026 is still:
+
+- GPT-5 vs Claude 4.7 vs Gemini
+- Which model is smarter on benchmark X
+- Which one you should pick
+
+In practice, almost nobody running AI in production is blocked on
+model quality anymore. What they *are* blocked on, every single day:
+
+- The context is a mess, so the output drifts.
+- The intermediate state is lost, so the agent restarts from zero.
+- No one can tell why the model made the decision it made.
+- When something fails, recovery is manual and painful.
+
+None of those are model problems. They are **system** problems. They
+belong to the harness around the model, not to the model itself.
+Prompt engineering optimizes a single turn. Context engineering,
+workflow design, state management, and guardrails optimize the loop.
+That loop is where real systems live.
+
+The same book separates three architectural patterns that are too
+often conflated:
+
+- **RAG** is about *what information goes in* — retrieve the right
+  chunks and inject them.
+- **Workflow** is about *fixing the sequence* — step 1 always runs
+  before step 2, period.
+- **Agent** is about *choosing the next action* — given a goal and a
+  state, the model picks a move.
+
+Most teams today call something an "agent" when it's really a
+workflow with one model call in it. That's fine, sometimes — a fixed
+workflow is easier to debug — but it's worth being precise about what
+you're actually running.
+
+## More memory, not more knowledge
+
+The single best line I've read about agent design recently:
+
+> A good agent is not a system that knows more. It's a system that
+> remembers more appropriately.
+
+This is the correction to the "just stuff more into the context
+window" school. Bigger context does not mean better output; past a
+certain size, it usually means *worse* output. The right question is
+not "how much can I include" but "what is relevant *right now*?"
+
+That's what context engineering is. When, to which call, in which
+format, and at what scope — you inject exactly the information that
+moves the current decision forward. Everything else is noise. This is
+the difference between a senior engineer who knows what to look up
+when and a junior who Googles everything mid-sentence.
+
+## The two failure modes of automation
+
+Automation in AI has two popular endpoints, and both are broken.
+
+- **"The AI handles everything."** Things go wrong. The blast radius
+  is enormous. The organization has no idea what actually happened
+  until the bill or the incident.
+- **"A human must approve every step."** The agent becomes a slow,
+  expensive notification system. Humans spend all day clicking
+  approve on routine transitions. Nobody benefits.
+
+The middle path is obvious in hindsight: **graduated automation**.
+Automate the boring transitions, gate the meaningful decisions. Which
+is easy to say and hard to structure. It requires deciding, for each
+kind of decision, where it sits on the boring-to-meaningful
+continuum, and then keeping the policy consistent as the system grows.
+
+This is the problem bkit's `/control level 0` through `level 4`
+exists to solve. L0 is every-action-approved (first-run mode). L1 is
+suggestions plus mandatory checkpoints. L2 — the default — is
+routine-transitions-auto, key-decisions-gated. L3 is most-steps-auto,
+only-destructive-ops-gated. L4 is full autonomy.
+
+The graduation between levels isn't a config toggle. It's tied to a
+**Trust Score** derived from track record in the actual project:
+completed cycles, average match rate against the design doc,
+destructive-op count, interrupt frequency. Escalating to the next
+level comes with a cooldown. A lucky streak does not unlock autonomy;
+sustained reliability does. The structure is closer to a pilot's
+flight-hours certification than a dev-mode switch.
+
+## Humans are approvers, not reviewers
+
+The common framing is "human-in-the-loop" — the human sits in the
+middle of the pipeline and checks the AI's work. I think this
+undersells what's actually needed.
+
+In an organization, the human isn't a reviewer at a checkpoint. The
+human is the one who **defines the intent, approves the result, and
+carries the consequences**. Take any of those three away and you get:
+
+- Intent without human: an agent that solves the wrong problem beautifully.
+- Approval without human: automation nobody is accountable for.
+- Consequence without human: the system is a toy.
+
+The honest role split in 2026 looks closer to this:
+
+- **AI**: execution, verification, optimization. Does the work.
+- **Human**: intent, judgment, responsibility. Owns the outcome.
+
+The cleanest phrasing I've found:
+
+> AI can have a job. It cannot have a title. Because a title implies
+> accountability, and accountability doesn't delegate to a process.
+
+## The PDCA loop as the shape of an agent
+
+A useful shift is to stop describing agents as
+"autonomous-thing-that-does-tasks" and start describing them as
+**running an operating loop**:
+
+1. Read the current state.
+2. Choose the next action.
+3. Execute it.
+4. Evaluate the outcome.
+5. Update the plan.
+
+Which is, approximately, PDCA — Plan, Do, Check, Act. Or more
+precisely for software:
+
+- **Plan**: turn requirements into acceptance criteria
+- **Design**: commit to an approach
+- **Do**: implement it
+- **Check**: measure the result against the design
+- **Act**: iterate or ship
+
+Every serious AI-assisted development flow I've seen in production
+maps to this, even when nobody calls it PDCA. `bkit`'s `/pdca pm →
+plan → design → do → analyze → iterate → report` is one explicit
+encoding of it; Anthropic's internal Claude Code workflow is another.
+The word "PDCA" isn't the point. The point is that **agents need a
+state machine**, and a state machine means every output is tied to a
+phase, a spec, and a comparison.
+
+The benefit of making the loop explicit is *auditability*. When the
+agent does something surprising, you can walk backward: which plan
+phase did this come out of, what spec was it written against, what
+did the check return, why did the iterate pass? Without an explicit
+loop, every surprise is a mystery. With it, every surprise is an
+entry in a state machine log.
+
+## Data point: where AI-native organizations actually are
+
+If you want to calibrate how fast this is moving, look at the
+organizations that use AI on themselves most aggressively.
+
+**Anthropic.** Dario Amodei has said publicly that ~90% of code
+across most teams is now written by Claude. Boris Cherny, who leads
+Claude Code, has described writing *100%* of his own recent code with
+AI and running multiple Claude sessions in parallel. Claude Code
+itself is reportedly ~90% Claude-written.
+
+**Y Combinator.** YC partners have reported some portfolio companies
+hitting 95% AI-generated code. The interesting detail is not the
+percentage; it's the implication for headcount. A seed-stage startup
+that would have needed 5 engineers now needs 2, but those 2 are doing
+radically different work than engineers did in 2022.
+
+**OpenAI.** Sam Altman's framing — "the future of AI depends on good
+governance" — isn't just a PR line. Governance in this context means
+concrete questions: what data can the AI access, what decisions can
+it make unsupervised, who owns the output. These are *organizational*
+questions dressed in technical clothing.
+
+Three different companies, one consistent pattern: **AI takes more
+and more of the execution; the humans left do more specification and
+more approval.**
+
+## What happens to the org chart
+
+The observable shift in these companies, and increasingly in the
+startups watching them, is not "engineers get replaced." It's
+subtler:
+
+- **Execution roles shrink.** Not to zero — the work still happens,
+  it's just that one person running five AI sessions produces the
+  throughput of a former team.
+- **Manager roles compress.** A significant chunk of manager work is
+  translation — turning an executive ask into a plan, turning an
+  engineer's update into a dashboard, reviewing docs, maintaining
+  timelines. AI does a lot of that now.
+- **Executive / owner roles expand.** Someone still has to decide
+  what to build, prioritize between competing directions, deal with
+  customers, and answer when something blows up. None of that
+  delegates to an AI because none of it is an execution task.
+
+A sketch of the 2030-ish shape:
+
+```
+Board          — AI governance, data policy, risk
+  ↓
+C-level        — system architect, not resource allocator
+  ↓
+Executive      — decision + accountability
+  ↓
+Expert + AI    — execution at scale
+```
+
+The thing to notice: **the org chart is flatter, but the
+accountability chart is taller**. Fewer people are in the chain of
+command, and each person in the chain owns more of the outcome. AI
+expands what one expert can do; it does not expand who the
+responsibility lands on.
+
+## Why bkit exists
+
+I'll be direct: the design of `bkit` is a reaction to the pattern
+above.
+
+If the problem isn't "the model isn't smart enough" but "the system
+around the model isn't disciplined enough," then the answer isn't a
+better model. The answer is:
+
+1. An **explicit state machine** so every step has a phase, a spec,
+   and a measurable outcome.
+2. **Graduated automation** so humans are gated on the decisions that
+   need them, and nowhere else.
+3. A **match-rate loop** that makes "is the implementation faithful
+   to the design?" a measurable quantity, not a vibes-based review.
+
+That's what `/pdca pm → design → do → analyze → iterate → report` is
+— a state machine with acceptance criteria at every phase. That's
+what `gap-detector` + 90% match-rate threshold is — the system
+refuses to ship until implementation and design agree. That's what
+the L0–L4 levels plus Trust Score are — graduated automation earned
+per project, reversible in one command.
+
+None of it makes the model smarter. All of it makes the *outcome*
+more reliable, more auditable, and — the part that matters for
+accountability — more defensible when a human has to sign off.
+
+## The thing AI won't replace
+
+I started writing `tene` — the open-source CLI that injects secrets
+into AI agents without letting them see the plaintext — because of a
+concrete fear: my own API keys leaking into a chat log. I kept
+building `bkit` on top for a more philosophical reason: I don't
+actually believe AI is going to replace the act of *deciding*. It
+might replace most of the typing, most of the debugging, most of the
+writing up. But the sentence "we are shipping this" still has to be
+said by a person who can still be fired for saying it.
+
+The harness matters because that sentence is only credible if the
+system underneath it is legible. If you can't explain why the AI made
+the decision it made, you can't stand behind its output. If you
+can't stand behind it, you shouldn't have shipped it. And if nobody
+is willing to stand behind it, you didn't actually ship — you
+demoed.
+
+Demos run on applause. Products run on accountability. The difference
+is the loop.
+
+## Takeaways
+
+- Chatbots are solved. Agents are a structural problem, not a model
+  problem. Upgrading the model does not fix a weak harness.
+- The honest role split: **AI executes, verifies, optimizes. Humans
+  intend, judge, and are accountable.**
+- The two failure modes — full-auto and nothing-auto — are both
+  broken. Graduated automation (L0–L4) is the middle path.
+- A good agent is a **state machine + match-rate loop**, not a
+  cleverer prompt. PDCA is one explicit encoding.
+- The org chart flattens while the accountability chart gets taller.
+  AI is spreadable; responsibility is not.
+- The next three years aren't about building bigger models. They're
+  about building systems a human can still sign off on.
+
+Related reading:
+- [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)
+- [bkit: PDCA methodology for Claude Code](/blog/bkit-pdca-for-claude-code)
+- [Why I stopped using Doppler](/blog/doppler-alternative-journey)

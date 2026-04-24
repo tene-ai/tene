@@ -4,6 +4,7 @@ import { Comparison } from "@/components/comparison";
 import { HowItWorks } from "@/components/how-it-works";
 import { Security } from "@/components/security";
 import { Trust } from "@/components/trust";
+import { BlogPreview } from "@/components/blog-preview";
 import { CTA } from "@/components/cta";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
@@ -28,6 +29,7 @@ export default function Home() {
         <Trust />
         <Comparison />
         {/* <Pricing /> */}
+        <BlogPreview />
         <FAQ />
         <CTA />
       </main>

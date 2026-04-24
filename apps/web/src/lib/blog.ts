@@ -1,9 +1,18 @@
 // Design Ref: §2.2 T2-1 — Blog post registry. Reads from content/blog/*.mdx at
 // build time. No DB, no CMS — git is the source of truth. Plan D2, C-01.
+// Category+Tag taxonomy: docs/02-design/features/blog-categories-and-tooling.design.md
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import readingTimeLib from "reading-time";
+import {
+  CATEGORY_VOCABULARY,
+  isValidCategory,
+  isValidTag,
+  getCategoryLabel,
+  type CategoryKey,
+  type TagKey,
+} from "./tags";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "blog");
 
@@ -13,7 +22,8 @@ export type BlogPostFrontmatter = {
   description: string;
   publishedAt: string; // ISO 8601 (YYYY-MM-DD OK)
   updatedAt?: string;
-  tags: string[];
+  category: CategoryKey; // REQUIRED. See taxonomy design doc.
+  tags: TagKey[];
   author?: string; // default: "tomo-kay"
   cover?: string;
   canonicalUrl?: string; // default: https://tene.sh/blog/{slug}
@@ -51,13 +61,41 @@ function loadPost(slug: string): LoadedPost | null {
   const { data, content } = matter(raw);
   const rt = readingTimeLib(content);
 
+  // Category: required. Build fails fast if missing or invalid — stops a
+  // silently-wrong post from shipping to production.
+  const rawCategory = data.category as string | undefined;
+  if (!rawCategory) {
+    throw new Error(
+      `[blog] ${slug}.mdx: frontmatter 'category' is required. ` +
+        `Allowed: ${Object.keys(CATEGORY_VOCABULARY).join(", ")}`,
+    );
+  }
+  if (!isValidCategory(rawCategory)) {
+    throw new Error(
+      `[blog] ${slug}.mdx: invalid category '${rawCategory}'. ` +
+        `Allowed: ${Object.keys(CATEGORY_VOCABULARY).join(", ")}`,
+    );
+  }
+
+  // Tags: filter to valid vocabulary; warn in build log on unknowns.
+  const rawTags = (data.tags as string[]) ?? [];
+  const tags: TagKey[] = [];
+  for (const t of rawTags) {
+    if (isValidTag(t)) {
+      tags.push(t);
+    } else if (process.env.NODE_ENV !== "production") {
+      console.warn(`[blog] ${slug}.mdx: unknown tag '${t}' ignored`);
+    }
+  }
+
   const meta: BlogPostMeta = {
     slug: (data.slug as string) ?? slug,
     title: data.title as string,
     description: data.description as string,
     publishedAt: data.publishedAt as string,
     updatedAt: data.updatedAt as string | undefined,
-    tags: (data.tags as string[]) ?? [],
+    category: rawCategory,
+    tags,
     author: (data.author as string) ?? "tomo-kay",
     cover: data.cover as string | undefined,
     canonicalUrl:
@@ -130,5 +168,31 @@ export function getAllTags(): Array<{ tag: string; count: number }> {
 }
 
 export function getPostsByTag(tag: string): BlogPostMeta[] {
+  if (!isValidTag(tag)) return [];
   return getAllPosts().filter((p) => p.tags.includes(tag));
+}
+
+// ---------------------------------------------------------------------------
+// Categories — returns all 4 even with count=0 (empty categories remain
+// visible in navigation so readers see the full taxonomy).
+// ---------------------------------------------------------------------------
+export function getAllCategories(): Array<{
+  category: CategoryKey;
+  count: number;
+  label: string;
+}> {
+  const counts = new Map<string, number>();
+  for (const post of getAllPosts()) {
+    counts.set(post.category, (counts.get(post.category) ?? 0) + 1);
+  }
+  return (Object.keys(CATEGORY_VOCABULARY) as CategoryKey[]).map((cat) => ({
+    category: cat,
+    count: counts.get(cat) ?? 0,
+    label: getCategoryLabel(cat),
+  }));
+}
+
+export function getPostsByCategory(cat: string): BlogPostMeta[] {
+  if (!isValidCategory(cat)) return [];
+  return getAllPosts().filter((p) => p.category === cat);
 }

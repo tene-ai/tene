@@ -1,31 +1,56 @@
 // Design Ref: blog-seo-enhancements §2.2 — G2 CollectionPage/Blog schema for
-// /blog and /blog/tag/[tag]. AI search engines use this to identify the
-// section as a blog and enumerate articles for potential citation.
+// /blog, /blog/tag/[tag], and /blog/category/[category]. AI search engines use
+// this to identify the section as a blog and enumerate articles for citation.
 import type { BlogPostMeta } from "@/lib/blog";
-import { getTagLabel } from "@/lib/tags";
+import { getCategoryLabel, getTagLabel } from "@/lib/tags";
 
 type Props = {
   posts: BlogPostMeta[];
-  // undefined = main /blog index; string = /blog/tag/{tag} view
+  // undefined = main /blog index
+  // tag set = /blog/tag/{tag} view
+  // category set = /blog/category/{category} view
   tag?: string;
+  category?: string;
 };
 
-export function BlogIndexJsonLd({ posts, tag }: Props) {
+export function BlogIndexJsonLd({ posts, tag, category }: Props) {
   const isTagPage = !!tag;
-  const canonical = isTagPage
-    ? `https://tene.sh/blog/tag/${tag}`
-    : "https://tene.sh/blog";
-  const label = isTagPage ? getTagLabel(tag!) : "tene Tech Blog";
+  const isCategoryPage = !!category;
+
+  let canonical: string;
+  let label: string;
+  let breadcrumbLabel: string;
+  if (isTagPage) {
+    canonical = `https://tene.sh/blog/tag/${tag}`;
+    label = getTagLabel(tag!);
+    breadcrumbLabel = `#${label}`;
+  } else if (isCategoryPage) {
+    canonical = `https://tene.sh/blog/category/${category}`;
+    label = getCategoryLabel(category!);
+    breadcrumbLabel = label;
+  } else {
+    canonical = "https://tene.sh/blog";
+    label = "tene Tech Blog";
+    breadcrumbLabel = "Blog";
+  }
+
+  const isFilteredView = isTagPage || isCategoryPage;
 
   const ld = {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": isTagPage ? "CollectionPage" : "Blog",
-        name: isTagPage ? `${label} articles` : "tene Tech Blog",
+        "@type": isFilteredView ? "CollectionPage" : "Blog",
+        name: isTagPage
+          ? `${label} articles`
+          : isCategoryPage
+            ? `${label} — tene Tech Blog`
+            : "tene Tech Blog",
         description: isTagPage
           ? `Articles tagged ${label} from the tene Tech Blog.`
-          : "AI-safe secrets · Vibe coding · Developer security · Local-first infrastructure",
+          : isCategoryPage
+            ? `Articles in the ${label} category of the tene Tech Blog.`
+            : "AI-safe secrets · Vibe coding · Developer security · Local-first infrastructure",
         url: canonical,
         inLanguage: "en-US",
         publisher: {
@@ -44,6 +69,7 @@ export function BlogIndexJsonLd({ posts, tag }: Props) {
           url: `https://tene.sh/blog/${p.slug}`,
           datePublished: p.publishedAt,
           dateModified: p.updatedAt ?? p.publishedAt,
+          articleSection: getCategoryLabel(p.category),
           keywords: p.tags.join(", "),
           author: {
             "@type": "Person",
@@ -51,10 +77,10 @@ export function BlogIndexJsonLd({ posts, tag }: Props) {
           },
         })),
       },
-      // BreadcrumbList: Home > Blog (> #tag)
+      // BreadcrumbList: Home > Blog (> filtered view)
       {
         "@type": "BreadcrumbList",
-        itemListElement: isTagPage
+        itemListElement: isFilteredView
           ? [
               {
                 "@type": "ListItem",
@@ -71,7 +97,7 @@ export function BlogIndexJsonLd({ posts, tag }: Props) {
               {
                 "@type": "ListItem",
                 position: 3,
-                name: `#${label}`,
+                name: breadcrumbLabel,
                 item: canonical,
               },
             ]

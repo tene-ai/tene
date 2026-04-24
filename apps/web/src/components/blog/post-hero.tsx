@@ -1,4 +1,5 @@
 import { TagChip } from "@/components/blog/tag-chip";
+import { CategoryBadge } from "@/components/blog/category-badge";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -26,6 +27,7 @@ export function PostHero({ meta }: Props) {
     <header className="px-4 pt-4 pb-8 sm:px-6">
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <CategoryBadge category={meta.category} asLink />
           <time dateTime={meta.publishedAt}>{formatDate(meta.publishedAt)}</time>
           <span aria-hidden="true">·</span>
           <span>{meta.readingMinutes} min read</span>

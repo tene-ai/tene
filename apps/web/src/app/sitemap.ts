@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 import { comparisons } from "@/data/comparisons";
-import { getAllPosts, getAllTags } from "@/lib/blog";
+import { getAllCategories, getAllPosts, getAllTags } from "@/lib/blog";
 
 // Next.js generates /sitemap.xml from this file at build time (force-static
 // route). Includes the home page, the /vs index, every /vs/{slug} page, and
-// the /blog + /blog/{slug} + /blog/tag/{tag} + /blog/rss.xml.
-// Submit to Google Search Console via "Add sitemap".
+// the /blog + /blog/{slug} + /blog/tag/{tag} + /blog/category/{cat} +
+// /blog/rss.xml. Submit to Google Search Console via "Add sitemap".
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://tene.sh";
   const lastModified = new Date().toISOString();
@@ -31,6 +31,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "monthly",
     priority: 0.5,
   }));
+
+  // 4 category hub pages — always present, even with 0 posts (empty
+  // categories render a "Coming soon" placeholder for taxonomy discovery).
+  const blogCategoryUrls: MetadataRoute.Sitemap = getAllCategories().map(
+    ({ category }) => ({
+      url: `${base}/blog/category/${category}`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }),
+  );
 
   return [
     {
@@ -65,6 +76,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     ...blogPostUrls,
+    ...blogCategoryUrls,
     ...blogTagUrls,
   ];
 }

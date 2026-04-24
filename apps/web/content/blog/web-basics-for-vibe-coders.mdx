@@ -1,0 +1,343 @@
+---
+slug: web-basics-for-vibe-coders
+title: "Web basics for vibe coders: from localhost to production"
+description: "AI wrote your code. Now how do you ship it to the internet? A plain-language tour of client/server, frontend/backend, database, deployment, and the security gap most AI tutorials skip."
+publishedAt: "2026-04-24"
+updatedAt: "2026-04-24"
+category: engineering
+tags: ["architecture", "tutorial", "security", "tene"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/web-basics-for-vibe-coders"
+faqs:
+  - question: "I built an app with AI. Why can't my friends use it?"
+    answer: "Your app is running on localhost — a loopback address that only resolves on your own machine. 'Shipping' means running that code on a server that's reachable from the public internet at a stable URL. Vercel, Fly.io, Railway, and AWS all solve this in different ways; the one-click options are fine to start."
+  - question: "Do I really need a backend? My app only has a few pages."
+    answer: "No, not always. If your pages are purely static content (marketing site, blog, portfolio), a frontend on Vercel is enough. You need a backend the moment you store data per user, call a paid API that must keep its key secret, or process payments. The moment you have an API key that must not leak, you also inherit the secret-management problem."
+  - question: "Can my AI agent see my .env file while coding?"
+    answer: "Yes, by default. Claude Code, Cursor, Windsurf, and similar tools index project files to build context — .env at the project root is included unless explicitly excluded. This is the biggest security gap in the vibe-coder workflow, and the reason tene exists."
+---
+
+## The moment AI finishes your app
+
+You open a chat window. You describe a todo app. Twenty minutes later
+you have working code on your laptop. You click, it works, you click
+again, it works. And then you hit the wall every vibe coder hits:
+
+**"How do my friends actually use this?"**
+
+The demo lives at `http://localhost:3000`. That address resolves to
+*your laptop, only*. Close the tab, kill the process, turn off the
+Wi-Fi — it's gone. To make the app live on the real internet you need
+to understand a handful of concepts that AI tutorials usually skip over.
+This guide walks you through them in plain language, in the rough order
+you'll actually encounter them, and flags one security trap most
+step-by-step tutorials get wrong.
+
+## The whole stack as one restaurant
+
+A web service is a restaurant. Keep that in your head and everything
+below slots into place:
+
+| Restaurant | Web service | Role |
+|---|---|---|
+| Customer | Browser / mobile app | Uses the service |
+| Front of house | **Frontend** | What the customer sees and touches |
+| Kitchen | **Backend** | Where actual work happens |
+| Fridge / pantry | **Database** | Stores structured data |
+| Wine cellar | **File storage** | Stores big items (images, videos) |
+| Road to the restaurant | **Network + HTTPS** | How the customer arrives safely |
+| Rented building | **Infrastructure** | Server, power, water — the substrate |
+| Opening the doors | **Deployment** | Making it reachable by anyone |
+
+The words in bold each map to a separate topic below. The analogy will
+stop being useful eventually — physical restaurants don't have
+copy-paste-able APIs — but it's a good scaffold for the first month.
+
+## Client and server
+
+The **client** is whoever makes the request. "Please give me the todo
+list page." That's usually a browser, sometimes a mobile app, rarely a
+terminal. One client, one person, one request at a time.
+
+The **server** is the machine that answers. It's a computer, always
+on, somewhere on the internet, waiting to be asked. One server, many
+clients at once — potentially millions.
+
+When you type `tene.sh` into your browser and hit enter:
+
+1. Your browser (client) asks the server at `tene.sh` for a page
+2. The server builds a response and sends it back
+3. Your browser paints it on screen
+
+That single round-trip, repeated a million times a day, is the whole
+web.
+
+## Frontend and backend
+
+These are two halves of what *you* write. The division is about
+audience more than technology.
+
+**Frontend** is every pixel the user sees. Buttons, layout, colors,
+animations, the text of the error message when they typo their email.
+It runs inside the user's browser. The main languages are HTML, CSS,
+JavaScript, and one of the JavaScript frameworks — React, Vue, or
+Svelte — plus a meta-framework on top, usually Next.js or Nuxt.
+
+**Backend** is everything the user *doesn't* see. Checking the
+password is right. Calculating the monthly invoice. Writing the row to
+the database. Sending the email. It runs on a server you control, not
+in the user's browser. Languages range widely — Node.js, Go, Python,
+Ruby — but the patterns are similar.
+
+The split matters because **the browser is hostile territory**. Any
+code you put in the frontend, any API key you ship to the browser,
+any database query you "temporarily" run from client-side code — a
+curious user can see all of it in 10 seconds with Chrome DevTools.
+Anything sensitive belongs on the backend.
+
+## The database
+
+If the backend is the kitchen, the database is the fridge. It's where
+data lives between requests.
+
+A **relational database** (SQL) stores data in tables, like a very
+fast spreadsheet that never corrupts and handles a million users at
+once. Columns have types. Relationships between tables are explicit.
+PostgreSQL, MySQL, and SQLite are the three names you'll hear most.
+
+A **document database** (NoSQL) stores data in flexible, nested
+documents — closer to JSON than to Excel. MongoDB is the famous one;
+DynamoDB and Firestore are the cloud-native equivalents.
+
+For a first app, pick SQLite or PostgreSQL. They're well-documented,
+cheap, boring in the good way, and AI coding assistants produce
+correct SQL for them out of the box. Exotic databases are a choice
+for version 2.
+
+## File storage
+
+Databases are bad at big files. A 40 KB profile is fine to store in a
+user row; a 4 MB profile photo is not. Binary files (images, videos,
+PDFs) go into **object storage**, separate from the database.
+
+AWS S3 is the original. Cloudflare R2, Backblaze B2, Google Cloud
+Storage, Azure Blob Storage — all the same idea: you get a bucket,
+you upload files to paths inside it, you get back URLs. Your backend
+saves the URL in the database; the user's browser fetches the file
+directly from the storage service.
+
+A critical detail for later: every one of these services requires an
+**access key** to write to your bucket. That key must never end up in
+the frontend. Never. This is where secrets management starts to
+matter.
+
+## Network and HTTPS
+
+HTTP is the protocol of the web. Browser asks, server replies, in
+plain text over the internet. The problem: anything in plain text can
+be read by anyone in the middle — your Wi-Fi router, your ISP, any
+malicious network along the way.
+
+HTTPS is HTTP wrapped in encryption. The `S` is for Secure. When your
+browser shows the padlock icon, you're on HTTPS. The encryption is
+cryptographically strong (TLS 1.3, usually) and, for the purposes of
+someone sniffing the Wi-Fi, unreadable.
+
+Two rules for 2026:
+
+1. **Everything is HTTPS**. Browsers now warn users about non-HTTPS
+   sites. Search engines penalize them. There is no excuse; Let's
+   Encrypt provides free certificates, and every deploy platform
+   (Vercel, Netlify, Fly, Railway) turns on HTTPS automatically.
+2. **The URL encryption doesn't protect the secret on your server**.
+   Anyone who breaks into your server reads your secrets directly,
+   TLS or not. HTTPS protects the wire, not the fridge.
+
+You also need a **domain name** — the human-readable address. A
+**DNS** record translates `tene.sh` into an IP address like
+`76.76.21.21`. Registrars (Namecheap, Cloudflare, Porkbun) sell
+domains by the year; DNS is usually handled by your deploy platform
+or Cloudflare.
+
+## Where the HTML comes from: CSR vs SSR
+
+One frontend detail that confuses newcomers. There are two ways to
+build the HTML the browser sees:
+
+- **CSR (Client-Side Rendering)**: Server ships a mostly-empty HTML
+  plus a big JavaScript bundle. Browser runs the JS, which builds the
+  page in memory. Fast to navigate between pages; slow on first load;
+  bad for SEO unless you add more machinery.
+- **SSR (Server-Side Rendering)**: Server builds the HTML ahead of
+  time and ships it complete. Browser paints it immediately. Fast
+  first load; good SEO; slightly more server work per request.
+
+Next.js and Nuxt default to a **hybrid**: SSR for the first page
+load, CSR for subsequent navigation. That's usually what you want.
+For a pure marketing site or blog, static generation (SSG — pre-build
+all pages to files) is even faster.
+
+## Infrastructure
+
+Everything above is code. **Infrastructure** is the hardware and
+configuration that runs it. You rarely touch it directly anymore, but
+it's what you're paying for.
+
+The modern default is **cloud infrastructure**: you don't buy
+servers, you rent capacity from AWS, Google Cloud, or Azure. Even
+better, you use a **platform** on top of the cloud — Vercel, Netlify,
+Fly.io, Railway — that hides the infrastructure almost entirely.
+You push code; the platform figures out where to run it.
+
+For a first deploy, use a platform. The moment you're doing something
+very custom (running a specific database engine, GPU workloads, or
+multi-region failover), you drop down to the cloud directly. Most
+apps never need to.
+
+## Deployment
+
+Deployment is the act of taking code from your laptop and making it
+live on the internet. The modern flow looks like this:
+
+1. You write code locally, commit it to **Git** (version control).
+2. You push the commits to **GitHub** (or GitLab, or similar).
+3. Your deploy platform is watching your GitHub repository.
+4. It sees a new commit, runs a **build** (compiles, bundles, minifies),
+   and copies the output to its servers.
+5. It swaps your new version in, users seamlessly start hitting the
+   new code.
+
+Three environments are common:
+
+- **Development**: your laptop. Breaks allowed.
+- **Staging**: a copy of production that your team can test against
+  before shipping. Breaks occasionally.
+- **Production**: the real one. Real users, real money, no breaks.
+
+A healthy deploy workflow: push to a branch → automatic staging
+deploy → eyeball it → merge to `main` → automatic production deploy.
+
+## The Vercel shortcut
+
+Vercel is worth a separate mention because it turns the whole deploy
+chapter into three clicks. Push your code to GitHub, connect the repo
+to Vercel, merge to `main` — live on the internet, HTTPS included,
+global CDN included.
+
+For Next.js / React apps, it's the path of least resistance. For more
+complex backends (long-running servers, GPU workloads, big database
+migrations), Vercel is the wrong answer and Fly.io or Railway or a
+proper AWS setup are better. Use the tool that fits the shape of your
+app, not the most-hyped one.
+
+## The security gap every vibe coder hits
+
+Here is the paragraph most "deploy your first app" tutorials omit.
+
+Your app almost certainly reads environment variables from a `.env`
+file: `STRIPE_KEY=sk_live_...`, `OPENAI_API_KEY=sk-...`,
+`DATABASE_URL=postgres://...`. That file sits at the root of your
+project, in plaintext.
+
+Three things then happen that tutorials don't warn you about:
+
+1. **Your AI coding assistant reads it.** Claude Code, Cursor,
+   Windsurf, Copilot — all of them index project files as context.
+   `.env` is a file in the project; it gets included. Your API keys
+   end up inside the model's context window on every request, and
+   sometimes in conversation logs.
+2. **You accidentally commit it.** One `git add .` at 2 a.m., a
+   misread `.gitignore`, a forgotten path — the keys are now on
+   GitHub. GitHub's secret scanner catches most but not all.
+3. **You paste the key somewhere while debugging.** A Discord
+   channel, a Stack Overflow question, a screenshot in a
+   presentation. It takes one slip.
+
+Any one of the three is enough for an attacker to start billing your
+credit card against your OpenAI account.
+
+**The structural fix** is to never let the plaintext `.env` exist on
+disk in the first place. Encrypt the secrets at rest, decrypt them in
+memory only, and pass them to your app via environment variables at
+runtime. That's the pattern
+[tene](https://github.com/tomo-kay/tene) implements:
+
+```bash
+# 1. Install once
+curl -sSfL https://tene.sh/install.sh | sh
+
+# 2. Import your existing .env, then delete the plaintext
+tene import .env
+rm .env
+
+# 3. Run your app — secrets injected as env vars at runtime
+tene run -- npm start
+```
+
+Your code continues to read `process.env.STRIPE_KEY` exactly as
+before. The difference: the key never sits on disk in plaintext, the
+AI agent can't index it, an accidental `git add` can't leak it. For
+the full threat model, see
+[*Your .env is not a secret. AI can read it.*](/blog/ai-reads-env).
+
+## The sensible first stack for a vibe coder in 2026
+
+If you're building your first real app, not a tutorial exercise, here
+is the defensible path:
+
+- **Frontend framework**: Next.js. Huge ecosystem, best AI support.
+- **Database**: Postgres via Supabase or Neon. Free tier, managed
+  backups, scales far enough.
+- **File storage**: Supabase Storage if already on Supabase; Cloudflare
+  R2 if you want zero egress fees.
+- **Auth**: Clerk or Auth.js (NextAuth). Don't roll your own.
+- **Deploy**: Vercel for the frontend. The managed database lives on
+  Supabase / Neon's side.
+- **Secret management**: [tene](https://github.com/tomo-kay/tene) for
+  local dev (keeps keys out of your AI agent's context) + Vercel's
+  environment-variable UI for production.
+- **Domain**: Cloudflare. Cheap, fast DNS, free HTTPS on top.
+
+That stack gets you to ten paying customers without reorganizing.
+Past that, you'll know what's breaking because you'll feel it.
+
+## What "production-ready" actually means
+
+A last piece of framing. When people say an app is
+"production-ready," they usually mean it handles these five things
+without the founder being paged:
+
+1. **Availability**: survives individual server failures
+2. **Observability**: when something breaks, you can tell *what*
+3. **Security**: secrets stay secret, users stay isolated from each
+   other
+4. **Cost**: the bill doesn't surprise you at 3 a.m.
+5. **Recoverability**: if the database melts, you can restore
+
+Vibe coding excels at getting to the demo. The gap between demo and
+production is learning each of those five. The good news: every one
+has platform-level answers in 2026. The better news: learning them
+once applies to every future project.
+
+## Summary — the shortest usable mental model
+
+- **Client / server**: one asks, one answers. Always.
+- **Frontend / backend**: seen / unseen halves of your app. Hostile
+  browser, trusted server.
+- **Database / file storage**: structured data vs big blobs. Different
+  tools.
+- **HTTPS**: encryption on the wire. Always. Free.
+- **CSR / SSR**: where HTML gets built. Next.js does both.
+- **Infrastructure**: the hardware you rent. Use a platform, not raw
+  cloud, until you can't.
+- **Deployment**: git push, wait, URL updates. Vercel, Fly, Railway,
+  or raw cloud.
+- **Secrets**: the one thing tutorials lie about. Keep them off disk
+  and out of the AI agent's context from day one — that's what
+  [tene](https://github.com/tomo-kay/tene) is for.
+
+Related reading:
+- [Your .env is not a secret. AI can read it.](/blog/ai-reads-env)
+- [Migrating from .env to an encrypted vault in 60 seconds](/blog/migrate-env-60s)
+- [Claude Code + API keys: the safe workflow](/blog/claude-code-safe-api-keys)

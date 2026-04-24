@@ -35,7 +35,18 @@ type EventMap = {
 
   // tech-blog Phase 2 (FR-32 ~ FR-37)
   blog_copy_code: { slug: string; language: string };
-  blog_tag_filter: { tag: string; from: "index" | "post_header" | "card" };
+  // blog-categories-and-tooling — tag filter now fires from the multi-select
+  // filter widget too, and sometimes without a specific tag (clear all).
+  blog_tag_filter: {
+    tag?: string;
+    action?: "add" | "remove" | "clear_all";
+    from: "index" | "post_header" | "card" | "filter";
+  };
+  // blog-categories-and-tooling — category pill click on /blog index.
+  blog_category_filter: {
+    category: string;
+    from: "index" | "active";
+  };
   blog_related_click: { fromSlug: string; toSlug: string };
   blog_rss_click: { location: "footer" | "blog_header" };
   blog_external_link: { slug: string; domain: string };
