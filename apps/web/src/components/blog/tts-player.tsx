@@ -3,11 +3,15 @@
 // Design Ref: docs/02-design/features/blog-tts.design.md §2.2
 // Orchestrator: glues useTTS + useScrollSync + useVoices + prefs
 // together, owns the chunks ref and the analytics event emission.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TTSControls } from "@/components/blog/tts-controls";
 import { extractChunks, type TTSChunk } from "@/lib/tts/chunks";
 import { loadPrefs, savePrefs } from "@/lib/tts/prefs";
-import { pickBestVoice, useVoices } from "@/lib/tts/voices";
+import {
+  getNaturalVoices,
+  pickBestVoice,
+  useVoices,
+} from "@/lib/tts/voices";
 import { useTTS } from "@/lib/tts/use-tts";
 import { useScrollSync } from "@/lib/tts/use-scroll-sync";
 import { track } from "@/lib/track";
@@ -21,7 +25,10 @@ type Props = {
 const ARTICLE_SELECTOR = "article.min-w-0";
 
 export function TTSPlayer({ slug, readingMinutes, onClose }: Props) {
-  const voices = useVoices();
+  const allVoices = useVoices();
+  // Curated natural voices only — 3M/3F target, excludes macOS novelty
+  // (Bells, Cellos, Zarvox, etc.) + compact/premium name duplicates.
+  const voices = useMemo(() => getNaturalVoices(allVoices, "en"), [allVoices]);
   const chunksRef = useRef<TTSChunk[] | null>(null);
   const [chunkCount, setChunkCount] = useState(0);
 
@@ -31,8 +38,9 @@ export function TTSPlayer({ slug, readingMinutes, onClose }: Props) {
   );
   const [rate, setRate] = useState<number>(initialPrefs.rate);
 
-  // Pick best voice from live voice list + saved preference
-  const voice = pickBestVoice(voices, selectedVoiceURI, "en");
+  // Pick best voice from full list (incl. legacy saved URI) + saved pref.
+  // pickBestVoice prefers the curated natural set for fresh selections.
+  const voice = pickBestVoice(allVoices, selectedVoiceURI, "en");
 
   // Once voices load and we haven't committed a selection yet, sync the
   // UI dropdown to the chosen voice.
