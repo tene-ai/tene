@@ -1,9 +1,7 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { InteractiveGrid } from "@/components/interactive-grid";
-import { PostCard } from "@/components/blog/post-card";
 import { RssLink } from "@/components/blog/rss-link";
 import { CategoryPills } from "@/components/blog/category-pills";
 import { TagFilter } from "@/components/blog/tag-filter";
@@ -103,14 +101,7 @@ export default function BlogIndex() {
 
         {tags.length > 0 && (
           <section className="px-4 pb-8 sm:px-6">
-            {/* useSearchParams suspense boundary (Next.js 15 requirement). */}
-            <Suspense
-              fallback={
-                <div className="mx-auto h-12 max-w-4xl rounded-lg border border-border/50 bg-surface/30" />
-              }
-            >
-              <TagFilter allTags={tags} />
-            </Suspense>
+            <TagFilter allTags={tags} />
           </section>
         )}
 
@@ -120,19 +111,7 @@ export default function BlogIndex() {
               No articles published yet. Check back soon.
             </div>
           ) : (
-            <Suspense
-              fallback={
-                <ul className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
-                  {postsForClient.map((post) => (
-                    <li key={post.slug}>
-                      <PostCard post={post} />
-                    </li>
-                  ))}
-                </ul>
-              }
-            >
-              <BlogIndexClient posts={postsForClient} />
-            </Suspense>
+            <BlogIndexClient posts={postsForClient} />
           )}
         </section>
       </main>
