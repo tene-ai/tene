@@ -137,3 +137,40 @@ pre.shiki .line,
 pre[class*="language-"] .line {
   background: transparent !important;
 }
+
+/* ─────────────────────────────────────────────
+ * TTS — article auto-scroll + active paragraph highlight.
+ * Design Ref: docs/02-design/features/blog-tts.design.md §6
+ *
+ * scroll-margin-top keeps scrollIntoView() from hiding the target
+ * behind the fixed nav (~56px) if we ever fall back to block:'start'.
+ * The active paragraph gets a subtle tint + accent-colored left border
+ * while being read.
+ * ───────────────────────────────────────────── */
+article p,
+article h2,
+article h3,
+article h4,
+article h5,
+article li,
+article blockquote {
+  scroll-margin-top: 80px;
+}
+
+/* Class selector (not data attribute) because Tailwind v4's data-*
+ * attribute cascade integration was unexpectedly swallowing
+ * padding/border-color/background overrides on element types that the
+ * framework's base layer already pre-styles (h2, p, li).
+ * Hard-coded accent hex (#00ff88 = --accent) so the rule remains in a
+ * simple cascade bucket rather than interacting with CSS variable /
+ * @property plumbing. */
+article .tts-active,
+article [data-tts-active="true"] {
+  background-color: rgba(0, 255, 136, 0.12) !important;
+  border-left-width: 3px !important;
+  border-left-style: solid !important;
+  border-left-color: #00ff88 !important;
+  padding-left: 0.75rem !important;
+  margin-left: -0.875rem;
+  border-radius: 0 2px 2px 0;
+}

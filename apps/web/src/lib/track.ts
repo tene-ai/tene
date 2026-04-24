@@ -52,6 +52,19 @@ type EventMap = {
   blog_external_link: { slug: string; domain: string };
   blog_read_complete: { slug: string; readingMinutes: number };
   blog_share_click: { slug: string; channel: string };
+  // blog-tts — Web Speech API based article TTS player.
+  blog_tts_play: {
+    slug: string;
+    readingMinutes: number;
+    voice?: string;
+    rate?: number;
+  };
+  blog_tts_pause: { slug: string; percentRead: number };
+  blog_tts_resume: { slug: string; percentRead: number };
+  blog_tts_stop: { slug: string; percentRead: number };
+  blog_tts_complete: { slug: string; readingMinutes: number };
+  blog_tts_rate_change: { slug: string; rate: number };
+  blog_tts_voice_change: { slug: string; voiceName: string };
 };
 
 export function track<E extends keyof EventMap>(
