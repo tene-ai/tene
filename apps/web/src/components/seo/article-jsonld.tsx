@@ -1,7 +1,7 @@
 // Design Ref: blog-seo-enhancements §2.1 — BlogPosting + BreadcrumbList in a
 // single @graph. Adds articleSection (G4) and author.sameAs (G5) alongside
 // the breadcrumb trail (G1).
-import { getTagLabel } from "@/lib/tags";
+import { getCategoryLabel } from "@/lib/tags";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -10,7 +10,6 @@ type Props = {
 
 export function BlogPostingJsonLd({ meta }: Props) {
   const canonical = meta.canonicalUrl!;
-  const primaryTag = meta.tags[0];
 
   const ld = {
     "@context": "https://schema.org",
@@ -21,8 +20,10 @@ export function BlogPostingJsonLd({ meta }: Props) {
         description: meta.description,
         datePublished: meta.publishedAt,
         dateModified: meta.updatedAt ?? meta.publishedAt,
-        // G4 — articleSection uses the first tag's display label
-        ...(primaryTag ? { articleSection: getTagLabel(primaryTag) } : {}),
+        // G4 — articleSection maps to the post's category (taxonomy change
+        // 2026-04-24: previously used first tag; category is now the
+        // primary navigation axis and a better Schema.org match).
+        articleSection: getCategoryLabel(meta.category),
         author: {
           "@type": "Person",
           name: meta.author ?? "tomo-kay",
