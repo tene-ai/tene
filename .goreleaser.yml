@@ -86,40 +86,58 @@ release:
   prerelease: auto
   name_template: "v{{.Version}}"
 
-# Homebrew tap — publishes Formula/tene.rb to tomo-kay/homebrew-tene on each
-# stable release. Users then run: brew install tomo-kay/tene/tene
-brews:
-  - name: tene
-    homepage: "https://tene.sh"
-    description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
-    license: "MIT"
-    repository:
-      owner: tomo-kay
-      name: homebrew-tene
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    directory: Formula
-    commit_author:
-      name: goreleaserbot
-      email: bot@tene.sh
-    commit_msg_template: "chore(tap): bump tene to {{ .Tag }}"
-    skip_upload: auto
-    install: |
-      bin.install "tene"
-      bash_completion.install "completions/tene.bash" => "tene"
-      zsh_completion.install "completions/_tene"
-      fish_completion.install "completions/tene.fish"
-      man1.install "manpages/tene.1"
-    test: |
-      system "#{bin}/tene", "version"
-    caveats: |
-      Get started:
-        tene init
-
-      Documentation:
-        https://github.com/tomo-kay/tene#readme
-
-      For AI agents using this project:
-        https://tene.sh/llms.txt
+# Homebrew tap — currently disabled (2026-04-24).
+#
+# Publishing to a Homebrew tap requires:
+#   1. A public GitHub repo `tomo-kay/homebrew-tene` to exist.
+#   2. A fine-grained PAT with `Contents: Read/Write` on that repo,
+#      stored as the `HOMEBREW_TAP_GITHUB_TOKEN` secret on this repo
+#      (tomo-kay/tene).
+#
+# Neither is set up yet, and three consecutive stable releases
+# (v1.0.5, v1.0.6, v1.0.7) failed on this block with a 401 that
+# skipped the downstream `Update LATEST_VERSION` step and left
+# install.sh pointing at a stale version.
+#
+# To re-enable:
+#   1. gh repo create tomo-kay/homebrew-tene --public --license MIT --add-readme
+#   2. Create a fine-grained PAT (Contents: Read/Write on the tap repo),
+#      then: gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo tomo-kay/tene
+#   3. Uncomment the block below and keep `skip_upload: false` so stable
+#      releases always publish the formula.
+#
+# brews:
+#   - name: tene
+#     homepage: "https://tene.sh"
+#     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
+#     license: "MIT"
+#     repository:
+#       owner: tomo-kay
+#       name: homebrew-tene
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     directory: Formula
+#     commit_author:
+#       name: goreleaserbot
+#       email: bot@tene.sh
+#     commit_msg_template: "chore(tap): bump tene to {{ .Tag }}"
+#     skip_upload: false
+#     install: |
+#       bin.install "tene"
+#       bash_completion.install "completions/tene.bash" => "tene"
+#       zsh_completion.install "completions/_tene"
+#       fish_completion.install "completions/tene.fish"
+#       man1.install "manpages/tene.1"
+#     test: |
+#       system "#{bin}/tene", "version"
+#     caveats: |
+#       Get started:
+#         tene init
+#
+#       Documentation:
+#         https://github.com/tomo-kay/tene#readme
+#
+#       For AI agents using this project:
+#         https://tene.sh/llms.txt
 
 # Docker images published to GitHub Container Registry (GHCR).
 # Multi-arch via docker_manifests below.

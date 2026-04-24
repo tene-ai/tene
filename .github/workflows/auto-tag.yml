@@ -148,11 +148,28 @@ jobs:
           GORELEASER_CURRENT_TAG: ${{ needs.auto-tag.outputs.version }}
 
       - name: Update LATEST_VERSION (stable only)
-        if: "!contains(needs.auto-tag.outputs.version, '-rc')"
+        # Runs even when GoReleaser exited non-zero on a non-critical step
+        # (e.g. Homebrew formula push hitting 401 when the tap repo is
+        # absent). Safeguard: refuse to flip the pointer unless the
+        # darwin/arm64 tarball for this version actually exists on S3 —
+        # that single artifact proves the `blobs:` publishing stage
+        # completed and the install.sh chain is serviceable.
+        #
+        # Prior to 2026-04-24 this step did not have `if: always()` and
+        # three consecutive stable releases (v1.0.5, v1.0.6, v1.0.7)
+        # required a manual S3 hotfix because the step was skipped after
+        # the Homebrew step failed.
+        if: always() && !contains(needs.auto-tag.outputs.version, '-rc')
         run: |
           VERSION="${{ needs.auto-tag.outputs.version }}"
           VERSION="${VERSION#v}"
+          TARBALL="s3://${{ env.RELEASE_BUCKET }}/v${VERSION}/tene_${VERSION}_darwin_arm64.tar.gz"
+          if ! aws s3 ls "$TARBALL" > /dev/null 2>&1; then
+            echo "::error::Refusing to update LATEST_VERSION — $TARBALL not found on S3"
+            exit 1
+          fi
           echo "$VERSION" > /tmp/LATEST_VERSION
           aws s3 cp /tmp/LATEST_VERSION s3://${{ env.RELEASE_BUCKET }}/LATEST_VERSION \
             --content-type "text/plain" \
             --cache-control "max-age=60"
+          echo "::notice::LATEST_VERSION updated to ${VERSION}"

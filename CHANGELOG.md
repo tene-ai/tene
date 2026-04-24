@@ -56,3 +56,13 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - `/vs/*` Schema.org `SoftwareApplication` node now conforms to spec.
+- `auto-tag.yml` workflow's `Update LATEST_VERSION` step now runs with
+  `if: always()` and a S3 tarball existence check. Previously a
+  non-critical GoReleaser failure (e.g. Homebrew formula publish)
+  would skip this step and leave `install.sh` users on a stale
+  version — v1.0.5, v1.0.6, and v1.0.7 each required a manual S3
+  hotfix before the next release.
+- Homebrew publishing disabled in `.goreleaser.yml` until the
+  `tomo-kay/homebrew-tene` tap repository and
+  `HOMEBREW_TAP_GITHUB_TOKEN` secret are set up. Re-enable
+  instructions are preserved inline as a comment block.
