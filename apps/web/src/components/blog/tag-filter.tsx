@@ -3,10 +3,18 @@
 // Instagram-style tag filter on /blog index. Client-only filtering via URL
 // query param (?tags=a,b). AND mode: a post is shown only if it carries
 // ALL selected tags. Collapsed by default to avoid clutter.
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { getTagLabel, type TagKey } from "@/lib/tags";
+//
+// Uses window.location + history.replaceState directly rather than
+// next/navigation's router.replace + useSearchParams. The Next.js router
+// hooks combined with a statically-prerendered /blog route and a Suspense
+// fallback were causing the initial render on direct ?tags= URLs to keep
+// the Suspense fallback instead of hydrating the filtered view. Dispatching
+// a custom event on URL change lets BlogIndexClient stay in sync without
+// relying on the router subscription plumbing.
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getTagLabel } from "@/lib/tags";
 import { track } from "@/lib/track";
+import { TAG_CHANGED_EVENT } from "@/components/blog/blog-index-client";
 
 type TagEntry = { tag: string; count: number };
 
@@ -15,7 +23,7 @@ type Props = {
   topN?: number; // how many to show before "Show all"
 };
 
-function parseTagsParam(raw: string | null): Set<string> {
+function parseTagsParam(raw: string | null | undefined): Set<string> {
   if (!raw) return new Set();
   return new Set(
     raw
@@ -25,18 +33,24 @@ function parseTagsParam(raw: string | null): Set<string> {
   );
 }
 
+function readFromUrl(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  return parseTagsParam(new URLSearchParams(window.location.search).get("tags"));
+}
+
 export function TagFilter({ allTags, topN = 6 }: Props) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
-  const [, startTransition] = useTransition();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const selected = useMemo(
-    () => parseTagsParam(searchParams.get("tags")),
-    [searchParams],
-  );
+  // Sync state with URL on mount and on browser nav events
+  useEffect(() => {
+    setSelected(readFromUrl());
+    const sync = () => setSelected(readFromUrl());
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, []);
 
   const filteredTags = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -49,26 +63,27 @@ export function TagFilter({ allTags, topN = 6 }: Props) {
   }, [allTags, search]);
 
   const visibleTags = useMemo(() => {
-    if (search.trim()) return filteredTags; // search overrides topN
+    if (search.trim()) return filteredTags;
     if (showAll) return filteredTags;
     return filteredTags.slice(0, topN);
   }, [filteredTags, showAll, search, topN]);
 
-  const updateUrl = useCallback(
-    (nextSelected: Set<string>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (nextSelected.size === 0) {
-        params.delete("tags");
-      } else {
-        params.set("tags", [...nextSelected].sort().join(","));
-      }
-      const query = params.toString();
-      startTransition(() => {
-        router.replace(query ? `/blog?${query}` : "/blog", { scroll: false });
-      });
-    },
-    [router, searchParams],
-  );
+  const updateUrl = useCallback((nextSelected: Set<string>) => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (nextSelected.size === 0) {
+      params.delete("tags");
+    } else {
+      params.set("tags", [...nextSelected].sort().join(","));
+    }
+    const query = params.toString();
+    const url = query
+      ? `${window.location.pathname}?${query}`
+      : window.location.pathname;
+    window.history.replaceState(window.history.state, "", url);
+    // Notify BlogIndexClient (and any other subscriber) that tags changed.
+    window.dispatchEvent(new Event(TAG_CHANGED_EVENT));
+  }, []);
 
   const toggle = (tag: string) => {
     const next = new Set(selected);
@@ -79,11 +94,13 @@ export function TagFilter({ allTags, topN = 6 }: Props) {
       next.add(tag);
       track("blog_tag_filter", { tag, action: "add", from: "filter" });
     }
+    setSelected(next);
     updateUrl(next);
   };
 
   const clearAll = () => {
     track("blog_tag_filter", { action: "clear_all", from: "filter" });
+    setSelected(new Set());
     updateUrl(new Set());
   };
 

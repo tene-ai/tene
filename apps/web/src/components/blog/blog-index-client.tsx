@@ -1,11 +1,13 @@
 "use client";
 
 // Client component that reads ?tags=a,b from the URL and filters the SSR'd
-// post list in-place. Renders the full list initially so users without JS
-// still see all articles. Kept separate from page.tsx to keep the server
-// component pure (no client hooks).
-import { useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+// post list in place. Uses window.location.search rather than
+// next/navigation's useSearchParams — that hook combined with a Suspense
+// fallback in a statically-prerendered route was causing the initial render
+// to show the unfiltered fallback without ever swapping to the filtered
+// view. Reading directly from the URL after mount guarantees the filter
+// reflects whatever the browser actually loaded.
+import { useEffect, useMemo, useState } from "react";
 import { PostCard } from "@/components/blog/post-card";
 import type { BlogPostMeta } from "@/lib/blog";
 
@@ -13,7 +15,9 @@ type Props = {
   posts: BlogPostMeta[];
 };
 
-function parseSelected(raw: string | null): Set<string> {
+export const TAG_CHANGED_EVENT = "tene:blog-tags-changed";
+
+function parseSelected(raw: string | null | undefined): Set<string> {
   if (!raw) return new Set();
   return new Set(
     raw
@@ -23,18 +27,29 @@ function parseSelected(raw: string | null): Set<string> {
   );
 }
 
+function readTagsFromUrl(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  return parseSelected(new URLSearchParams(window.location.search).get("tags"));
+}
+
 export function BlogIndexClient({ posts }: Props) {
-  const searchParams = useSearchParams();
-  const selected = useMemo(
-    () => parseSelected(searchParams.get("tags")),
-    [searchParams],
-  );
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setSelected(readTagsFromUrl());
+    const sync = () => setSelected(readTagsFromUrl());
+    window.addEventListener("popstate", sync);
+    window.addEventListener(TAG_CHANGED_EVENT, sync);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener(TAG_CHANGED_EVENT, sync);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     if (selected.size === 0) return posts;
-    // AND mode: a post matches only if it contains every selected tag.
     return posts.filter((p) =>
-      [...selected].every((t) => p.tags.includes(t as never)),
+      [...selected].every((t) => (p.tags as readonly string[]).includes(t)),
     );
   }, [posts, selected]);
 
@@ -57,7 +72,10 @@ export function BlogIndexClient({ posts }: Props) {
   }
 
   return (
-    <ul className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
+    <ul
+      className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2"
+      data-filter-active={selected.size > 0 ? "true" : "false"}
+    >
       {filtered.map((post) => (
         <li key={post.slug}>
           <PostCard post={post} />
