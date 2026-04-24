@@ -96,9 +96,14 @@ export function useMDXComponents(
       </blockquote>
     ),
     // Inline code vs code block — rehype-shiki renders blocks with className.
+    // For fenced blocks without a language tag, shiki does not add a className,
+    // so we also detect "block-ness" by looking for a newline in the content.
+    // That prevents the inline-code chip styling (bg-surface pill) from being
+    // applied to multiline blocks and clashing with <pre>'s bg-surface-2.
     code: ({ children, className, ...props }) => {
-      if (!className) {
-        // Inline code
+      const text = typeof children === "string" ? children : "";
+      const isBlock = !!className || text.includes("\n");
+      if (!isBlock) {
         return (
           <code
             className="rounded bg-surface px-1.5 py-0.5 font-mono text-sm text-accent"
@@ -108,9 +113,11 @@ export function useMDXComponents(
           </code>
         );
       }
-      // Block code — shiki adds class like "language-bash shiki ..."
+      // Block code — shiki adds class like "language-bash shiki ..." for
+      // language-tagged blocks. For plaintext blocks the className is missing
+      // and we render a bare <code> so <pre>'s bg-surface-2 shows through.
       return (
-        <code className={className} {...props}>
+        <code className={className ?? ""} {...props}>
           {children}
         </code>
       );

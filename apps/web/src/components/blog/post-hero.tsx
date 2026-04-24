@@ -1,5 +1,6 @@
 import { TagChip } from "@/components/blog/tag-chip";
 import { CategoryBadge } from "@/components/blog/category-badge";
+import { TTSButton } from "@/components/blog/tts-button";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -46,6 +47,8 @@ export function PostHero({ meta }: Props) {
         <p className="mt-6 text-base text-muted leading-relaxed sm:text-lg">
           {meta.description}
         </p>
+
+        <TTSButton slug={meta.slug} readingMinutes={meta.readingMinutes} />
 
         {meta.tags.length > 0 && (
           <div className="mt-6 flex flex-wrap gap-2">
