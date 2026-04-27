@@ -1,0 +1,195 @@
+---
+slug: recovery-key-explained
+title: "The 12-word recovery key: how a local vault survives a forgotten password"
+description: "How a 12-word BIP-39 mnemonic lets a local-first secret vault survive a forgotten master password — without a cloud account or email reset."
+publishedAt: "2026-04-27"
+updatedAt: "2026-04-27"
+category: engineering
+tags: ["cryptography", "deep-dive", "tene", "security"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/recovery-key-explained"
+faqs:
+  - question: "Is a 12-word recovery key as strong as my master password?"
+    answer: "It encodes 128 bits of entropy by the BIP-39 standard, which is comparable to a long generated password. The strength is in the entropy, not the word count — fewer words means weaker. Most modern wallets and tene default to 12, which is the practical sweet spot between security and writeability."
+  - question: "What if my recovery key falls into the wrong hands?"
+    answer: "It grants full vault access, exactly like the master password. Treat the 12 words as you would your master credentials — never store them in the same place as the vault file, never paste them into a chat or AI agent, and never photograph them with a phone that auto-uploads to the cloud."
+  - question: "Why not just use a key-file backup instead?"
+    answer: "A key file is brittle: it lives on the same kind of disk that just failed, it has no checksum to detect bit-rot, and it cannot be split across locations easily. A 12-word phrase can be hand-written, printed, memorized, or stamped into metal — it survives hardware failure that a key file does not."
+  - question: "Does the recovery key still work after my laptop dies?"
+    answer: "Only if the vault file itself was backed up. The recovery key recovers access to a vault — it does not regenerate the encrypted data. Back up the encrypted vault file separately; ciphertext is safe to push anywhere, including a public bucket."
+---
+
+## Why a master password alone is a single point of failure
+
+A local-first secret vault solves one problem — the cloud dependency — and creates another. You, alone, are now the recovery process. The master password is a single point of failure: lose it, and the encrypted blob on your disk is indistinguishable from random bytes.
+
+Cloud secret managers handle this with email-based reset flows. A vault that has no server cannot. The fix tene borrows is older than secret managers — older than the web, in fact: a 12-word mnemonic from BIP-39, the same standard Bitcoin wallets have used since 2013. This article walks through how it works, why 12 words is enough, and what threats it does and does not protect against.
+
+## The simplest model: master password to vault key
+
+Before the recovery key enters the picture, the basic model has two pieces.
+
+```text
+master password ──[ Argon2id ]──► vault key ──[ XChaCha20 ]──► ciphertext
+```
+
+The vault key is what actually encrypts your secrets. It is a 256-bit random value generated once at `tene init` and never written to disk in plaintext. The master password does not encrypt your secrets directly — it derives a wrapping key (via Argon2id, a memory-hard password hash), and that wrapping key is used to encrypt the vault key. The encrypted vault key sits in `.tene/vault.db` next to the ciphertext.
+
+When you unlock the vault, you give your master password, Argon2id derives the wrapping key, the wrapping key decrypts the stored vault key, and the vault key decrypts your secrets. If the password is wrong, the wrapping key is wrong, and the unwrap fails — there is nothing to brute-force against beyond the password itself.
+
+This design has one consequence that matters here: **the master password is the only thing standing between the on-disk ciphertext and the plaintext**. Forget it, and the ciphertext is junk.
+
+## What goes wrong without a recovery path
+
+Consider three failure modes that happen to real solo developers:
+
+- **Password manager loss.** You stored the master password in a password manager, and the password manager itself is locked behind another password you cannot recall.
+- **Long gaps.** You set up the vault for a side project, did not touch it for nine months, and your fingers no longer remember the typed sequence.
+- **Hardware migration.** New laptop, fresh OS install, you have the vault file but no longer have the typed-once-and-never-saved master password.
+
+In all three cases the vault file is fine. The encryption is not broken. You just cannot get back in. A traditional cloud manager would offer email-based reset; a local-first one cannot. Without a separate recovery channel, the only remaining option is brute force, which against a strong password backed by Argon2id is computationally infeasible — that is the whole point of using Argon2id.
+
+## BIP-39: borrowing the mnemonic from Bitcoin
+
+BIP-39 is a 2013 Bitcoin proposal for representing high-entropy random numbers as human-readable word sequences. The mechanism is simple: take 128 bits of entropy, append a 4-bit checksum derived from its SHA-256 hash, split the resulting 132 bits into eleven-bit chunks, and look each chunk up in a 2048-word standardized wordlist.
+
+```text
+128 bits entropy + 4-bit checksum  =  132 bits
+132 bits / 11 bits per word        =  12 words
+2^11 words per slot                =  2048-word list
+```
+
+The wordlist is curated to avoid mistakes humans make: no two words share the first four letters, no homophones, no words shorter than three letters. "abandon" and "ability" are the first two entries; "zoo" is the last. The same 2048 words apply across every BIP-39 implementation in existence, which is why a Bitcoin hardware wallet and a tene vault and a 1Password recovery sheet all look identical at the word level.
+
+The key insight: 128 bits of entropy is a *lot*. It is the same security level as AES-128, which is what protects most internet traffic. A 12-word phrase is not "12 letters of password" — each word adds 11 bits, and the total beats almost any password a human would type.
+
+## How tene generates and stores the recovery key
+
+At `tene init` time, two things happen alongside the master password setup:
+
+1. The CLI generates 128 bits of cryptographically-random entropy via the operating system's secure random source.
+2. It encodes those bits as a 12-word BIP-39 mnemonic and prints them once, with a clear instruction to write them down before continuing.
+
+```bash
+tene init
+# Master password: ••••••••••
+# Confirm:         ••••••••••
+#
+# Recovery Key (write this down NOW — shown only once):
+# finish south dentist oxygen mercy seven verb stock walnut joy advice hold
+#
+# Press Enter when written.
+```
+
+The mnemonic is not stored on disk in any form. What *is* stored is a second wrapping key, derived from the mnemonic the same way the password-wrapping key is derived from your master password. That second wrapping key encrypts the *same* vault key as the password path. Two locks, one box.
+
+After init, the file layout looks like this:
+
+```text
+.tene/
+└── vault.db
+    ├── ciphertext (your secrets, encrypted with vault_key)
+    ├── wrapped_vault_key_password   (vault_key sealed by password-derived key)
+    └── wrapped_vault_key_recovery   (vault_key sealed by mnemonic-derived key)
+```
+
+There is no key escrow, no third party. The recovery key never leaves your hand once you write it down.
+
+## The dual-unlock chain: two paths to the same vault key
+
+This is the architectural insight that makes the whole scheme work without a server.
+
+```text
+master password ─[ Argon2id ]─► password_key ─┐
+                                              ├─► unwrap ─► vault_key ─► plaintext
+12-word mnemonic ─[ PBKDF2 ]──► recovery_key ─┘
+```
+
+Both paths terminate at the same vault key. The wrapped copies are independent — losing one wrapping does not affect the other. This means:
+
+- If you forget the password, the recovery path still works.
+- If you lose the recovery key, the password path still works.
+- If you lose both, the vault is gone forever — there is no third path by design.
+
+The dual-unlock pattern shows up in many modern key-management designs (FileVault, BitLocker, 1Password) under different names. The variation tene uses is straight BIP-39 + Argon2id/PBKDF2 because both primitives are well-studied and have audited Go implementations in the standard library ecosystem.
+
+<GifEmbed
+  src="/demo/recovery-flow-demo.gif"
+  alt="Demo: master password forgotten, then 'tene recover' is run with a 12-word BIP-39 mnemonic and the vault unlocks with a new master password."
+  caption="From forgotten master password to unlocked vault in three commands."
+/>
+
+The demo above shows the recovery flow end to end — what `tene recover` actually does is the next section.
+
+## What happens when you run `tene recover`
+
+The CLI command is short and the steps are linear. Here is what runs under the hood:
+
+```bash
+tene recover
+# Enter your 12-word recovery key (separated by spaces):
+#
+# > finish south dentist oxygen mercy seven verb stock walnut joy advice hold
+#
+# ✓ Mnemonic checksum valid.
+# ✓ Recovery wrap unwrapped successfully.
+#
+# Set a new master password: ••••••••••
+# Confirm:                   ••••••••••
+#
+# ✓ Vault re-wrapped with new password. Recovery key unchanged.
+```
+
+Step by step:
+
+1. **Checksum verification.** The 4 trailing checksum bits are recomputed from the first 128. A typo in any word fails this check immediately, before any cryptographic work. This is why you can mistype "advice" as "advise" and the CLI catches it without trying to brute-force.
+2. **Recovery key derivation.** The 12 words are normalized (NFKD), passed through PBKDF2-HMAC-SHA512 with a fixed salt, and the resulting bytes form the recovery wrapping key.
+3. **Unwrap.** The recovery wrapping key decrypts `wrapped_vault_key_recovery` into the original vault key. If this succeeds, the recovery key was correct.
+4. **Re-wrap with a new password.** You enter a new master password, Argon2id derives a new password-wrapping key, and `wrapped_vault_key_password` is replaced with the new wrap. The recovery wrap is left alone.
+
+The vault key never changes. The ciphertext never re-encrypts. Only the password-side wrapper is replaced. This is why recovery is fast even on a vault with thousands of secrets.
+
+## Threats this does and does not protect against
+
+It is worth being honest about scope. The recovery key is not a universal answer.
+
+<Callout type="warn">
+The 12 words are equivalent in power to your master password. Anyone who reads them can decrypt your vault. They are a *recovery* mechanism, not a *sharing* mechanism — never paste them into a chat, an AI agent, a screenshot, or a cloud-synced photo album.
+</Callout>
+
+Protected against:
+
+- **Forgotten master password.** The primary use case.
+- **Single-disk hardware failure**, *if* you also kept a separate backup of the encrypted vault file. The recovery key plus the ciphertext gets you back in.
+- **Local brute-force attacks.** 128 bits of entropy puts mnemonic guessing well outside practical computational reach.
+
+Not protected against:
+
+- **Loss of both the password and the recovery key.** No third path exists. This is by design — adding one would mean adding a server.
+- **Compromise of the recovery key itself.** If someone reads your 12 words, they have full vault access, regardless of whether you also know the password.
+- **Loss of the encrypted vault file.** Recovery key restores access to a vault, not the vault data itself. Backups of the ciphertext are still your responsibility.
+- **Pre-existing memory exposure.** If your master password was already stolen by malware, the recovery key does not roll back that breach. Rotate secrets and the vault from a clean machine.
+
+## Operational rules: where to actually keep the 12 words
+
+The recovery key only works if you can get to it without also unlocking the vault. A few rules from people who have actually had to use one:
+
+- **Never digital alone.** Do not store the words in a text file on the same machine as the vault. Do not put them in a notes app that syncs to the cloud. Do not photograph them with a phone that auto-uploads.
+- **Paper is fine; metal is better for long-term.** A printed sheet in a drawer survives most household risks. Stamped metal plates survive fires and floods. Bitcoin people overspend on this; a printed sheet covers the realistic developer threat model.
+- **Two locations beat one.** A copy at home and a copy in a relative's safe-deposit box, or a sealed envelope handed to a lawyer. The point is to survive a single-location loss without creating a single point of compromise.
+- **Test the recovery once.** Before you trust it, run `tene recover` on a throwaway vault with the words you wrote. The checksum verification will catch transcription errors that you would otherwise discover only at the worst possible moment.
+
+There is no universal right answer for storage; the right choice depends on your threat model. The wrong answer is "I will remember it" — past you cannot guarantee that for future you.
+
+## Summary
+
+- A master password alone is a single point of failure for any local-first vault.
+- BIP-39 12-word mnemonics encode 128 bits of entropy into human-writable form, with a 4-bit checksum that catches typos.
+- The dual-unlock chain wraps the same vault key twice — once with a password-derived key, once with a mnemonic-derived key — so either can recover access independently.
+- The recovery key is equivalent in power to the master password. Treat it the same way: never paste it into AI tools or cloud-synced storage, and store the words in a separate physical location from the vault file.
+
+Related reading:
+- [XChaCha20-Poly1305 for developers](/blog/xchacha20-for-devs)
+- [Migrating from .env to an encrypted vault in 60 seconds](/blog/migrate-env-60s)
+- [dotenv-vault is shutting down — what to migrate to](/blog/dotenv-vault-alternatives)
