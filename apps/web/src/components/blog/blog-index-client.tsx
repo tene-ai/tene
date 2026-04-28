@@ -1,14 +1,9 @@
 "use client";
 
-// Client component that reads ?tags=a,b from the URL and filters the SSR'd
-// post list in place. Uses window.location.search rather than
-// next/navigation's useSearchParams — that hook combined with a Suspense
-// fallback in a statically-prerendered route was causing the initial render
-// to show the unfiltered fallback without ever swapping to the filtered
-// view. Reading directly from the URL after mount guarantees the filter
-// reflects whatever the browser actually loaded.
+// Client component that filters the SSR'd post list by ?tags= and renders
+// the cards in a row-major masonry grid (delegated to PostMasonry).
 import { useEffect, useMemo, useState } from "react";
-import { PostCard } from "@/components/blog/post-card";
+import { PostMasonry } from "@/components/blog/post-masonry";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -71,22 +66,5 @@ export function BlogIndexClient({ posts }: Props) {
     );
   }
 
-  // CSS multi-column "masonry" — text cards and image cards flow into 2
-  // balanced columns without gap-rows. Reading order is column-by-column
-  // (newest top-left, continuing down before wrapping to right column).
-  return (
-    <ul
-      className="mx-auto max-w-4xl gap-4 sm:columns-2 [column-fill:_balance]"
-      data-filter-active={selected.size > 0 ? "true" : "false"}
-    >
-      {filtered.map((post) => (
-        <li
-          key={post.slug}
-          className="mb-4 break-inside-avoid first:mt-0 sm:mb-4"
-        >
-          <PostCard post={post} />
-        </li>
-      ))}
-    </ul>
-  );
+  return <PostMasonry posts={filtered} />;
 }

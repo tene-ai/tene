@@ -8,6 +8,7 @@ category: vibe-coding
 tags: ["claude-code", "security", "deep-dive", "devsecops"]
 author: "tomo-kay"
 cover: "/og-image.png"
+thumbnail: "/og-image.png"
 canonicalUrl: "https://tene.sh/blog/mcp-rce-and-the-process-layer-threat"
 faqs:
   - question: "Is this a Claude Code-specific issue?"
@@ -94,6 +95,12 @@ Layers 3 through 5 are infrastructure work — container, firewall rules, log sh
 Layers 1 and 2 are the cheap ones, and they remove most of the realistic attack surface for individual contributors. Stop putting secrets in files; stop putting secrets in the parent shell's environment. If `.env` does not exist, `fs.readFileSync('.env')` returns ENOENT no matter how malicious the caller.
 
 ## Where tene fits — runtime injection, not file storage
+
+<GifEmbed
+  src="/og-image.png"
+  alt="tene — local-first encrypted secret manager CLI"
+  caption="tene closes the cheapest two leak paths: secrets stop existing as plaintext files the MCP server can read, and stop being exported in the parent shell the host inherits."
+/>
 
 `tene` exists for exactly this layer. The vault is encrypted on disk (XChaCha20-Poly1305, [details here](/blog/xchacha20-for-developers)); the master key lives in your OS keychain. Secrets become environment variables only at the moment a specific child process starts, and only for that process.
 
