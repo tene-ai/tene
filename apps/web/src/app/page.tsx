@@ -10,10 +10,13 @@ import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
 import { FAQ } from "@/components/faq";
 import { InteractiveGrid } from "@/components/interactive-grid";
+import { HomeJsonLd } from "@/components/seo/home-jsonld";
 
 export default function Home() {
   return (
     <>
+      <HomeJsonLd />
+
       {/* Canvas-based interactive dot grid (desktop only) */}
       <InteractiveGrid />
 
