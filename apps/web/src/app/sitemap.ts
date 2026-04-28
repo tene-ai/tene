@@ -4,8 +4,14 @@ import { getAllCategories, getAllPosts, getAllTags } from "@/lib/blog";
 
 // Next.js generates /sitemap.xml from this file at build time (force-static
 // route). Includes the home page, the /vs index, every /vs/{slug} page, and
-// the /blog + /blog/{slug} + /blog/tag/{tag} + /blog/category/{cat} +
-// /blog/rss.xml. Submit to Google Search Console via "Add sitemap".
+// the /blog + /blog/{slug} + /blog/tag/{tag} + /blog/category/{cat}.
+//
+// /blog/rss.xml is intentionally NOT in this sitemap — it's an RSS feed
+// (XML), not an HTML page. Google flagged it as "크롤링됨 - 색인 안 됨"
+// (crawled but not indexed) when it was here. RSS discovery is handled
+// separately via the `Sitemap:` directive in robots.txt and the
+// <link rel="alternate" type="application/rss+xml"> in the root layout.
+// Submit /sitemap.xml to Google Search Console via "Add sitemap".
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://tene.sh";
   const lastModified = new Date().toISOString();
@@ -68,12 +74,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "weekly",
       priority: 0.9,
-    },
-    {
-      url: `${base}/blog/rss.xml`,
-      lastModified,
-      changeFrequency: "weekly",
-      priority: 0.6,
     },
     ...blogPostUrls,
     ...blogCategoryUrls,
