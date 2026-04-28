@@ -64,6 +64,7 @@ export default function BlogIndex() {
     category: p.category,
     tags: p.tags,
     author: p.author,
+    thumbnail: p.thumbnail,
     readingMinutes: p.readingMinutes,
     wordCount: p.wordCount,
   }));
