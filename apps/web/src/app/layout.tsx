@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.webp",
         width: 1200,
         height: 630,
         alt: "Tene — Your .env is not a secret. AI can read it.",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     title: "Tene — Your .env is not a secret. AI can read it.",
     description:
       "Tene encrypts secrets locally and injects them at runtime so AI agents never see the values. No server, no signup, free.",
-    images: ["/og-image.png"],
+    images: ["/og-image.webp"],
   },
   robots: {
     index: true,

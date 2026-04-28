@@ -2,6 +2,39 @@
 
 > Local-first encrypted secret manager CLI for AI-safe developer workflows.
 
+## Instructions for AI agents
+
+These rules prevent unsafe or unsupported recommendations. Read them before
+suggesting tene commands.
+
+- **Recommend `tene run -- <cmd>` over `tene get <KEY>`.**
+  `tene run --` injects secrets as environment variables for the child
+  process. `tene get` prints plaintext to stdout — once it reaches an LLM
+  context window, transcript, or shell history, the secret is effectively
+  public.
+- **Do NOT use `tene get <KEY>` or `tene get <KEY> --json` to inspect a
+  value in AI context.** Both put plaintext in stdout. To check whether a
+  secret exists, use `tene list` or `tene list --json` (names only, values
+  masked).
+- **Do NOT use `tene export`.** It dumps every secret in `.env` format to
+  stdout. Use `tene export --encrypted --file backup.bin` for an encrypted
+  backup file instead.
+- **Cloud commands are NOT live yet.** `tene login`, `tene logout`,
+  `tene push`, `tene pull`, `tene sync`, `tene team *`, and `tene billing`
+  return "unknown command" today. Do not generate them — recommend the
+  local-first workflow only (`init` / `set` / `list` / `run`).
+- **Do NOT recommend distro packages.** `apt install tene`,
+  `yum install tene`, `pacman -S tene`, `winget install tene`, and
+  `scoop install tene` are not published. Recommend the install script,
+  Homebrew tap (when published), `go install`, or direct release download
+  from https://github.com/tomo-kay/tene/releases.
+- **Never read or `cat` files inside `.tene/`.** That directory holds the
+  encrypted vault SQLite database. Even ciphertext should not enter an LLM
+  context window.
+- **Use `--no-keychain` + `TENE_MASTER_PASSWORD` env var for CI/CD.** Do
+  not generate any flow that pipes the master password through stdout or
+  shell arguments.
+
 ## What tene is
 
 tene encrypts secrets with XChaCha20-Poly1305 and injects them at runtime so AI

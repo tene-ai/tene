@@ -44,11 +44,22 @@ export function BlogPostingJsonLd({ meta }: Props) {
           "@type": "WebPage",
           "@id": canonical,
         },
-        image: meta.cover ?? "https://tene.sh/og-image.png",
+        image: meta.cover ?? "https://tene.sh/og-image.webp",
         keywords: meta.tags.join(", "),
         wordCount: meta.wordCount,
         timeRequired: `PT${meta.readingMinutes}M`,
         inLanguage: "en-US",
+        // Speakable schema — tells Google Assistant and other voice
+        // engines which parts of the article are appropriate to read aloud
+        // for "Hey Google, read me this article" style queries. Targets:
+        //   - h1: the title
+        //   - article h2: section headings (structure cues)
+        //   - article h2 + p: the first paragraph after each h2 (which is
+        //     the 50-word answer block in our Q-heading pattern)
+        speakable: {
+          "@type": "SpeakableSpecification",
+          cssSelector: ["h1", "article h2", "article h2 + p"],
+        },
       },
       // G1 — BreadcrumbList: Home > Blog > Article
       {

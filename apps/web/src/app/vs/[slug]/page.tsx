@@ -55,7 +55,7 @@ export async function generateMetadata({
       modifiedTime: data.updatedAt,
       images: [
         {
-          url: "/og-image.png",
+          url: "/og-image.webp",
           width: 1200,
           height: 630,
           alt: `tene vs ${data.competitorName}`,
@@ -66,7 +66,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: data.metaTitle,
       description: data.metaDescription,
-      images: ["/og-image.png"],
+      images: ["/og-image.webp"],
     },
     robots: {
       index: true,

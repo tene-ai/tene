@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.webp",
         width: 1200,
         height: 630,
         alt: "tene Tech Blog",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "tene Tech Blog",
     description:
       "AI-safe secrets · Vibe coding · Developer security · Local-first infrastructure",
-    images: ["/og-image.png"],
+    images: ["/og-image.webp"],
   },
   robots: { index: true, follow: true },
 };
