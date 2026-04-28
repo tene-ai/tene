@@ -24,6 +24,7 @@ func SetVersion(v, c, d string) {
 	version = v
 	commit = c
 	date = d
+	rootCmd.Version = v
 }
 
 // App holds the dependencies needed for CLI execution.

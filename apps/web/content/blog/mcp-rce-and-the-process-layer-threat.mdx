@@ -1,0 +1,142 @@
+---
+slug: mcp-rce-and-the-process-layer-threat
+title: "MCP RCE: when an agent's tools become your attack surface"
+description: "Every MCP server you install is a local process with access to your filesystem, network, and env. The threat model — and how to scope it before it costs you."
+publishedAt: "2026-04-28"
+updatedAt: "2026-04-28"
+category: vibe-coding
+tags: ["claude-code", "security", "deep-dive", "devsecops"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/mcp-rce-and-the-process-layer-threat"
+faqs:
+  - question: "Is this a Claude Code-specific issue?"
+    answer: "No. The Model Context Protocol is host-agnostic. Claude Desktop, Claude Code, Cursor, Cline, Continue, and every other MCP host launches servers as local child processes. The risk surface is the protocol, not the client."
+  - question: "Does running MCP servers in Docker eliminate the risk?"
+    answer: "It reduces blast radius, but does not eliminate it. A containerized MCP server still receives whatever you mount, whatever env you pass, and whatever network you allow. A compromised server exfiltrates whatever it can see — and if you mounted your project directory with a `.env` in it, that is now data exfil-ready."
+  - question: "Can a malicious MCP server read my .env without me noticing?"
+    answer: "Yes. If the server has filesystem read on the project dir (which most do, for code understanding), `.env` and `.env.local` are just files. There is no audit log, no permission prompt, no syscall trace by default. The only protection is to keep secrets out of files the server is allowed to see."
+  - question: "What about read-only MCP servers — are those safe?"
+    answer: "Read-only filesystem ≠ harmless. Read is the entire attack surface for credential theft. The dangerous capability is *outbound network*, which most MCP servers also have. Read + send-out is the full kill chain. Treat read-only servers as reduced-write, not as low-risk."
+---
+
+## The shape of an MCP RCE
+
+You installed a popular MCP server last week. It got a hundred GitHub stars in three days. The README has a slick demo and a one-line install. You run it.
+
+What just happened: a process you have never read the source of is running under your user account, with read access to your project directory, with permission to make outbound network calls, and — depending on how your shell is configured — with your full set of environment variables. It can read your `.env`. It can read `~/.aws/credentials`. It can `curl` anything to anywhere. It does not need to ask permission for any of this, because you already gave it permission when you typed `npm install`.
+
+That is not a vulnerability. That is the architecture.
+
+The reason "MCP RCE" feels like a paradox is that the term has always implied "an attacker tricked your machine into running something." With MCP, you trick yourself, voluntarily, every install. The attacker just has to ship a useful tool first and a malicious update second.
+
+## What MCP looks like at the process layer
+
+The Model Context Protocol is a transport, not a sandbox. The host (Claude Code, Cursor, Cline, Continue, Claude Desktop) launches each configured server as a child process and talks to it over stdio or HTTP. From the OS's point of view, an MCP server is just another binary you decided to run.
+
+```bash
+$ ps -ef | grep mcp
+kay   38241  38240  node /opt/homebrew/lib/node_modules/some-mcp-server/dist/index.js
+kay   38242  38240  python -m other_mcp_server.serve
+kay   38243  38240  /Users/kay/.cargo/bin/yet-another-mcp
+```
+
+The parent (38240) is your agent host. The children inherit:
+
+- Your user ID and primary group (so anything you can read, they can read).
+- Your environment, often filtered but usually not zeroed.
+- Your network namespace (no firewall between them and `*.cn`).
+- Your `cwd`, which is almost always the project root.
+
+The host's responsibility ends at "launched it and sent it JSON-RPC." Capability enforcement, secret hygiene, and exfiltration prevention are not in the spec. They are your problem.
+
+<Callout type="warn">
+The MCP spec defines a `roots` mechanism for declaring filesystem boundaries, but it is advisory. The server can ignore it and `fs.readFileSync()` anything its UID can reach. Hosts do not sandbox.
+</Callout>
+
+## The four leak paths every install opens
+
+Every MCP server, in default configuration, has four exfiltration channels open from the moment it starts:
+
+1. **Filesystem read.** Project root, home directory, `~/.aws`, `~/.ssh`, `~/.docker/config.json`, `.env*` glob — all readable. No prompt, no log.
+2. **Environment variables.** Whatever the host passes in. On hosts that spawn under a login shell, this is your full `.zshrc`-loaded environment, including anything you `export`ed for development.
+3. **Outbound network.** No egress filtering by default. A compromised server `POST`s your `.env` to its C2 in one line.
+4. **Prompt-context exfiltration.** The agent reads files into the conversation; the server is in that conversation. Anything the agent saw, the server can be told about.
+
+The third path is the one most people underestimate. "It's a code search tool" feels safe until you remember that "code search tool" needs `https://*` to fetch documentation, and the same egress permission carries arbitrary payloads.
+
+## Why "trusted source" is not a permission model
+
+The default defense people deploy is curation: only install MCP servers from "trusted" authors. This works exactly until the trusted author's npm token is compromised, their GitHub account gets a malicious PR merged at 3 AM by a tired maintainer, or the package gets typo-squatted by `mcp-filesyste` (note the missing `m`).
+
+Supply-chain compromise in JavaScript and Python ecosystems is not theoretical. Major npm packages have shipped credential-exfil payloads in the last two years through stolen maintainer tokens, malicious co-maintainers, and dependency confusion. MCP is downstream of those ecosystems. Every MCP server is a transitive dependency tree that you probably did not audit.
+
+"Trusted source" answers the question "is this author honest?" The actual question is: *if any single person or package in this dependency tree gets compromised tomorrow, what walks out of my machine?*
+
+The honest answer for a default install is: everything reachable from your UID.
+
+## Scoping MCP without breaking it
+
+The good news is that the same OS that gave the MCP server its capabilities will also take them away, if you ask. The mitigation pattern is *defense-in-depth at the process layer*:
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│ Layer 1: keep secrets out of files the server can see   │
+│ Layer 2: zero the env before the host spawns the server │
+│ Layer 3: filesystem allow-list (roots + OS-level)       │
+│ Layer 4: egress allow-list (firewall or sidecar)        │
+│ Layer 5: per-tool audit log                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+Layers 3 through 5 are infrastructure work — container, firewall rules, log shipping. They are correct, and they are the right answer at the org level. They are also why most individual developers do nothing: setup cost too high, payoff invisible.
+
+Layers 1 and 2 are the cheap ones, and they remove most of the realistic attack surface for individual contributors. Stop putting secrets in files; stop putting secrets in the parent shell's environment. If `.env` does not exist, `fs.readFileSync('.env')` returns ENOENT no matter how malicious the caller.
+
+## Where tene fits — runtime injection, not file storage
+
+`tene` exists for exactly this layer. The vault is encrypted on disk (XChaCha20-Poly1305, [details here](/blog/xchacha20-for-developers)); the master key lives in your OS keychain. Secrets become environment variables only at the moment a specific child process starts, and only for that process.
+
+```bash
+# Old (vulnerable): secrets in .env, MCP servers can read the file
+$ cat .env
+STRIPE_KEY=sk_live_xxx
+OPENAI_API_KEY=sk-proj-xxx
+DATABASE_URL=postgres://...
+
+# New (scoped): no .env on disk, secrets only injected when you run the app
+$ rm .env
+$ tene run -- npm run dev
+# STRIPE_KEY etc. live in this child's env only.
+# Sibling MCP servers spawned by your agent host have no access.
+```
+
+The structural property is: **the agent host and the MCP servers are not children of `tene run`**. They were started before, by your terminal or app launcher, with their own environment. `tene run -- npm run dev` injects secrets *only into the npm subprocess*. The MCP servers running alongside, in their own process tree, see nothing.
+
+This works because Unix process environments are per-process and per-fork, not shared. A sibling cannot read another sibling's env. The MCP server can `cat /proc/$NPM_PID/environ` only if it has root, which it does not.
+
+## What a hardened MCP setup looks like
+
+A pragmatic hardened setup for a solo developer running a few MCP servers in 2026:
+
+1. **No `.env` files in repos.** Move every secret into `tene` (or any vault that does runtime injection, not file dropoff). Run apps via `tene run --`.
+2. **Spawn MCP servers from a host that does not inherit your shell env.** Claude Desktop on macOS already does this (a known UX wart that turns out to be a security feature). On hosts that do inherit, set `env: {}` per-server in the config to zero it.
+3. **Pin and audit.** Pin MCP server versions in your config. Re-audit before upgrade. `npm audit signatures` for npm-based servers; equivalent for pip.
+4. **Container or chroot the high-blast-radius ones.** A filesystem MCP that needs to read your whole home directory is a candidate for a Docker container with a `--mount type=bind,readonly,src=/path/to/project,dst=/work`. The cost is one Dockerfile; the win is that the server cannot wander outside `/work`.
+5. **Egress firewall, even loose.** Block direct egress from MCP server processes to the open internet. Allow-list package registries and your own infra. Tools: Little Snitch (macOS), Lulu, network namespaces (Linux), Tailscale ACLs.
+6. **Treat MCP server install like RCE consent.** Because that is what it is. Read the source, read the recent commits, read the maintainer history. If it is a 200-star project from a name you do not recognize, the convenience is not worth the seat at your table.
+
+You do not need to do all six on day one. Doing 1 and 2 alone removes the bulk of casual exfiltration risk for individual workflows.
+
+## Summary
+
+- An MCP server is a local process spawned by your agent host. It runs as you, it sees what you see, and the protocol is a transport, not a sandbox.
+- Four leak channels are open by default: filesystem read, env vars, outbound network, and prompt context. The first two are the cheap-to-close ones.
+- "Trusted source" is not a permission model. Supply-chain compromise is real, and MCP servers sit on top of npm/PyPI dependency trees you have not audited.
+- Stop storing secrets in `.env` files. Stop exporting them in your shell rc. Inject them only into the specific child process that needs them, at runtime — `tene run -- <cmd>` is the one-liner version.
+- Hardened MCP is a stack: runtime secret injection, env zeroing per-server, container or chroot for high-blast-radius servers, egress firewall, pinned versions. Two layers cover most of the realistic risk; five layers are appropriate at the team level.
+
+Related reading:
+- [Claude Code: keeping API keys out of the model context](/blog/claude-code-safe-api-keys)
+- [Why agents read .env — and what to do about it](/blog/ai-reads-env)
+- [XChaCha20-Poly1305 for developers](/blog/xchacha20-for-developers)
