@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/verify-blog-indexability.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "verify:blog": "node scripts/verify-blog-indexability.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.4",

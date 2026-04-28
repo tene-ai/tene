@@ -25,14 +25,14 @@ export const metadata: Metadata = {
     url: "https://tene.sh/cli",
     siteName: "Tene",
     type: "article",
-    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.webp", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "tene CLI Reference",
     description:
       "Every tene command, flag, exit code, and JSON schema in one place.",
-    images: ["/og-image.png"],
+    images: ["/og-image.webp"],
   },
   robots: { index: true, follow: true },
 };

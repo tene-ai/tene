@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.webp",
         width: 1200,
         height: 630,
         alt: "Tene — Your .env is not a secret. AI can read it.",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     title: "Tene — Your .env is not a secret. AI can read it.",
     description:
       "Tene encrypts secrets locally and injects them at runtime so AI agents never see the values. No server, no signup, free.",
-    images: ["/og-image.png"],
+    images: ["/og-image.webp"],
   },
   robots: {
     index: true,
@@ -253,6 +253,18 @@ export default function RootLayout({
           type="text/plain"
           title="LLM-optimized full reference (llms-full.txt)"
           href="https://tene.sh/llms-full.txt"
+        />
+        {/* RSS feed auto-discovery — emitted on EVERY page (root layout) so
+            search-engine crawlers and RSS readers find the feed from the
+            homepage, comparison pages, tag pages, etc. Next.js Metadata API
+            shallow-replaces `alternates` per page, which would otherwise drop
+            the link on routes that set their own canonical. Direct <head>
+            injection is the single source of truth. */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="tene Tech Blog RSS"
+          href="https://tene.sh/blog/rss.xml"
         />
         <script
           type="application/ld+json"

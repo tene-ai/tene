@@ -47,11 +47,9 @@ export async function generateMetadata({
     keywords: post.meta.tags,
     alternates: {
       canonical,
-      types: {
-        "application/rss+xml": [
-          { url: "https://tene.sh/blog/rss.xml", title: "tene Tech Blog RSS" },
-        ],
-      },
+      // RSS auto-discovery is emitted on every page from root layout.tsx.
+      // Per-article override of `alternates.types` was removed to prevent
+      // duplicate <link rel="alternate" type="application/rss+xml"> tags.
     },
     openGraph: {
       title: post.meta.title,

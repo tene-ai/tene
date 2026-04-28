@@ -15,12 +15,8 @@ export const metadata: Metadata = {
     "Articles on AI-safe secret management, vibe coding, developer security, local-first infrastructure, and CLI design — from the team building tene.",
   alternates: {
     canonical: "https://tene.sh/blog",
-    // FR-35 — RSS feed auto-discovery (<link rel="alternate"> in head).
-    types: {
-      "application/rss+xml": [
-        { url: "https://tene.sh/blog/rss.xml", title: "tene Tech Blog RSS" },
-      ],
-    },
+    // RSS auto-discovery moved to root layout.tsx <head> — emitted on every
+    // page (FR-35). This page no longer needs its own type entry.
   },
   openGraph: {
     title: "tene Tech Blog",
@@ -31,7 +27,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-image.webp",
         width: 1200,
         height: 630,
         alt: "tene Tech Blog",
@@ -43,7 +39,7 @@ export const metadata: Metadata = {
     title: "tene Tech Blog",
     description:
       "AI-safe secrets · Vibe coding · Developer security · Local-first infrastructure",
-    images: ["/og-image.png"],
+    images: ["/og-image.webp"],
   },
   robots: { index: true, follow: true },
 };
