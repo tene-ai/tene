@@ -3,6 +3,16 @@ name: Auto Tag & Release
 on:
   push:
     branches: [staging, main]
+    # Web/docs-only changes must NOT trigger a CLI version bump.
+    # The CLI is versioned by changes to source, build config, or this
+    # workflow itself — not by landing-page or blog content.
+    paths-ignore:
+      - 'apps/web/**'
+      - 'docs/**'
+      - '*.md'
+      - '.gitignore'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
 
 permissions:
   contents: write
