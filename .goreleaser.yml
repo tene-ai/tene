@@ -36,14 +36,14 @@ builds:
 
 archives:
   - id: tene-archive
-    builds:
+    ids:
       - tene
-    format: tar.gz
+    formats: [tar.gz]
     name_template: >-
       {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - src: completions/*
         dst: completions
