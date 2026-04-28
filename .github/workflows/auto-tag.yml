@@ -158,24 +158,25 @@ jobs:
           GORELEASER_CURRENT_TAG: ${{ needs.auto-tag.outputs.version }}
 
       - name: Update LATEST_VERSION (stable only)
-        # Runs even when GoReleaser exited non-zero on a non-critical step
-        # (e.g. Homebrew formula push hitting 401 when the tap repo is
-        # absent). Safeguard: refuse to flip the pointer unless the
-        # darwin/arm64 tarball for this version actually exists on S3 —
-        # that single artifact proves the `blobs:` publishing stage
-        # completed and the install.sh chain is serviceable.
+        # Safeguard: refuse to flip the pointer unless the darwin/arm64
+        # tarball for this version actually exists on S3 — that single
+        # artifact proves the `blobs:` publishing stage completed and
+        # the install.sh chain is serviceable.
         #
-        # Prior to 2026-04-24 this step did not have `if: always()` and
-        # three consecutive stable releases (v1.0.5, v1.0.6, v1.0.7)
-        # required a manual S3 hotfix because the step was skipped after
-        # the Homebrew step failed.
+        # Uses `aws s3api head-object` (requires s3:GetObject only) instead
+        # of `aws s3 ls` (which silently AccessDenies without s3:ListBucket
+        # bucket-level permission). The previous `s3 ls` form caused every
+        # stable release v1.0.5 through v1.0.8 to fail this guard despite
+        # the tarball being present — root cause documented in issue #74.
         if: always() && !contains(needs.auto-tag.outputs.version, '-rc')
         run: |
           VERSION="${{ needs.auto-tag.outputs.version }}"
           VERSION="${VERSION#v}"
-          TARBALL="s3://${{ env.RELEASE_BUCKET }}/v${VERSION}/tene_${VERSION}_darwin_arm64.tar.gz"
-          if ! aws s3 ls "$TARBALL" > /dev/null 2>&1; then
-            echo "::error::Refusing to update LATEST_VERSION — $TARBALL not found on S3"
+          KEY="v${VERSION}/tene_${VERSION}_darwin_arm64.tar.gz"
+          if ! aws s3api head-object \
+              --bucket "${{ env.RELEASE_BUCKET }}" \
+              --key "$KEY" > /dev/null 2>&1; then
+            echo "::error::Refusing to update LATEST_VERSION — s3://${{ env.RELEASE_BUCKET }}/${KEY} not on S3 (or s3:GetObject missing on tene-prod-github-actions role — see issue #74)"
             exit 1
           fi
           echo "$VERSION" > /tmp/LATEST_VERSION
