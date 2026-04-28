@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { InteractiveGrid } from "@/components/interactive-grid";
-import { PostCard } from "@/components/blog/post-card";
+import { PostMasonry } from "@/components/blog/post-masonry";
 import { BlogIndexJsonLd } from "@/components/seo/blog-index-jsonld";
 import { getAllCategories, getPostsByCategory } from "@/lib/blog";
 import {
@@ -117,13 +117,7 @@ export default async function CategoryPage({
               </p>
             </div>
           ) : (
-            <ul className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
-              {posts.map((p) => (
-                <li key={p.slug}>
-                  <PostCard post={p} />
-                </li>
-              ))}
-            </ul>
+            <PostMasonry posts={posts} />
           )}
         </section>
       </main>

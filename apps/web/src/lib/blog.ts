@@ -26,6 +26,10 @@ export type BlogPostFrontmatter = {
   tags: TagKey[];
   author?: string; // default: "tomo-kay"
   cover?: string;
+  // Card thumbnail in /blog index. Optional — articles without a natural
+  // visual asset render as text-only cards. Path under /public, e.g.
+  // "/demo/recovery-flow-demo.gif". Differs from `cover` (1200x630 OG image).
+  thumbnail?: string;
   canonicalUrl?: string; // default: https://tene.sh/blog/{slug}
   draft?: boolean;
   faqs?: Array<{ question: string; answer: string }>;
@@ -98,6 +102,7 @@ function loadPost(slug: string): LoadedPost | null {
     tags,
     author: (data.author as string) ?? "tomo-kay",
     cover: data.cover as string | undefined,
+    thumbnail: data.thumbnail as string | undefined,
     canonicalUrl:
       (data.canonicalUrl as string) ??
       `https://tene.sh/blog/${(data.slug as string) ?? slug}`,

@@ -1,0 +1,112 @@
+---
+slug: spec-driven-coding-with-claude-code
+title: "Spec-driven coding with Claude Code: write the spec, ship the diff"
+description: "Vibe-coding peaks when the spec is written first. The minimum viable spec, why Claude Code rewards it more than other agents, and where it stops paying off."
+publishedAt: "2026-04-28"
+updatedAt: "2026-04-28"
+category: vibe-coding
+tags: ["workflow", "harness-engineering", "claude-code", "deep-dive"]
+author: "tomo-kay"
+cover: "/og-image.png"
+canonicalUrl: "https://tene.sh/blog/spec-driven-coding-with-claude-code"
+faqs:
+  - question: "Is this just waterfall renamed?"
+    answer: "No. Waterfall freezes the spec for a quarter and ships once. Spec-driven coding freezes the spec for a single change and re-runs the loop hourly. The unit of planning shrunk from a release to a feature, then to a single PR. The spec is short-lived, written for the next two hours of work, and discarded after the merge."
+  - question: "Does this approach work with Cursor or Cline too?"
+    answer: "It works, but not as crisply. Claude Code's long-running session, persistent project state, and multi-file edit semantics line up with spec-driven loops better than turn-based editors. With Cursor you can replicate ~70% of the win by pasting the spec at the top of the chat; with Cline the agentic loop is more compatible but the project context surface is smaller. The pattern is portable, the gain is not uniform."
+  - question: "How long should a spec be?"
+    answer: "If you cannot read the spec aloud in under 90 seconds, it is too long for a single change. The minimum viable spec for a feature is roughly 200–400 words of plain English plus a 5-line interface sketch. Everything beyond that should be in code, not in a doc."
+  - question: "What if the spec changes mid-implementation?"
+    answer: "That is a signal you discovered something the spec missed. Pause, edit the spec in place, re-prompt the agent against the updated spec. Do not let the implementation drift away from the spec — the spec is the source of truth for *this loop*. It will be discarded after the merge, so there is no historical-record cost to editing it."
+---
+
+## The bug-fix loop you keep ending up in
+
+You ask the agent for a feature. It writes 300 lines. You read 80, get tired, accept. The next morning a test fails in a way that suggests the agent guessed the contract wrong somewhere around line 140. You ask it to fix the test. It does, by changing the test. You ask it to fix the *code*. It changes the test back and changes a different part of the code. By lunch you have spent more time refereeing the agent than you would have spent writing the feature by hand. You blame the model. You consider switching to another tool. You do not switch.
+
+This loop has one structural fix and a hundred surface fixes. The structural fix is to write the spec before the code, every time, even for a one-hour change. The surface fixes — better prompts, more examples, longer context — are real but bounded. Specs are how you stop *needing* better prompts.
+
+## What "spec-driven" means in 2026
+
+The phrase has a stale waterfall connotation that is not what people mean when they use it now. The 2026 version is closer to test-driven development than to a 50-page Word doc:
+
+- The spec is short (200–400 words for a feature, 50 for a bug fix).
+- The spec is written *just before* the code, not weeks ahead.
+- The spec is discarded after merge, the way TDD's "red" tests evolve into permanent ones or get deleted.
+- The spec is for the *agent*, not for stakeholders. Stakeholder docs are a separate artifact.
+
+The point is not predictability across a quarter. The point is a high-quality two-hour loop where the agent and you agree, in writing, what success looks like before either of you opens an editor.
+
+## The minimum viable spec — four sections, 200 words
+
+The smallest spec that consistently changes outcomes has four sections:
+
+```text
+## Problem
+One paragraph. What is broken or missing. Concrete user-visible behavior.
+
+## Constraint
+Bullet list. What this change must NOT touch. What invariants must hold.
+
+## Interface
+5–15 lines of code or pseudocode showing the new function/component shape.
+Type signature, not implementation.
+
+## Done
+Bullet list. How we know it works. Tests, screenshots, log lines.
+```
+
+Two hundred words. Five minutes to write. The agent reads it once and the entire conversation that follows is anchored to it.
+
+The discipline is in the constraints section. "Don't touch the auth middleware" written explicitly is a 30-token sentence that prevents 800 tokens of spurious refactors. Every senior engineer has a list of these sentences in their head. Spec-driven coding makes you write three of them down before the agent gets a chance to ignore them.
+
+## Why Claude Code rewards specs more than other agents
+
+Claude Code has three structural properties that make it disproportionately responsive to specs:
+
+1. **Long-running session with persistent project state.** The spec stays in context across many turns. You can re-reference "see the constraint section" six prompts later and the model still has it. With turn-based UIs, the spec ages out of the context window and you have to repaste.
+2. **Multi-file edit semantics.** When the agent decides to change five files, the spec's constraint list applies to all five. Ad-hoc prompts only constrain the one file the agent is currently editing.
+3. **Tool use with file reads.** The agent will go look up real code to verify the interface section against. If the type signature in your spec mismatches the actual codebase, Claude Code notices and asks before guessing. Other agents tend to hallucinate the signature.
+
+Together these mean a 200-word spec saves more tokens with Claude Code than the same spec saves with a turn-based assistant. The compounding interest goes up with session length.
+
+## The PDCA loop wrapped around the spec
+
+Plan-Do-Check-Act maps cleanly onto a spec-driven session, which is why the [`bkit` PDCA harness](/blog/bkit-pdca-for-claude-code) treats the spec as the central artifact:
+
+- **Plan** — write the four-section spec. Get user/teammate sign-off if the change is more than two hours of work.
+- **Do** — feed the spec to Claude Code. Let it execute against the spec, not against your verbal prompt.
+- **Check** — run the *Done* section's checks. If they pass, you are done. If they fail, the spec was incomplete or the implementation diverged.
+- **Act** — if the spec was wrong, edit the spec in place and re-Do. If the implementation drifted, point Claude back at the spec and ask for the diff against it.
+
+The act phase is the part most teams skip and most agents need. "Re-anchor to the spec" is a one-prompt operation that recovers 90% of drift without manual code review.
+
+## When not to spec-drive
+
+The pattern has a cost: 5–10 minutes of writing the spec before the agent runs. For changes that take less than 15 minutes of agent time, that is a meaningful tax. Skip the spec when:
+
+- The change is a typo, a comment, a single-line fix, or a config tweak.
+- You are exploring — "show me three options for how to model X" — and the goal is to learn the shape of the problem, not to commit code.
+- The codebase has a strong existing pattern and you want the agent to copy it. "Make this look like `users.ts`" is a one-line spec; explicit is unnecessary.
+- The agent is debugging with you and you are pair-tracing in real time. Specs slow conversation.
+
+Use specs for everything that has a constraint section worth writing. If you cannot think of three things the change must NOT touch, the spec is not earning its keep.
+
+## The compounding effect
+
+The hidden benefit is not the immediate output quality — it is what happens at the team level over weeks. When every change has a written spec, even a 200-word one, code review compresses dramatically. The reviewer reads the spec, skims the diff for spec-compliance, and approves. Disagreements move from the diff to the spec, which is shorter, easier to argue about, and pre-implementation.
+
+The other compounding effect is on the human. Writing four-section specs for two months trains a particular kind of architectural muscle — the constraint section forces you to articulate invariants you have been carrying around implicitly. Engineers who spec-drive for a quarter consistently report that their non-AI work also gets better. The agent is a forcing function for the writing habit; the writing habit is the actual gain. Related: [the AX redesign argument that AI value comes from organizational change, not model choice](/blog/ax-redesign-not-ai-tools).
+
+## Summary
+
+- The unit of spec-driven coding is a single change, not a release. The spec is short, short-lived, and discarded after merge.
+- The minimum viable spec has four sections — Problem, Constraint, Interface, Done — and fits in 200 words.
+- Claude Code rewards specs disproportionately because of long sessions, multi-file edits, and file-read tool use. The same pattern works with Cursor and Cline at lower amplitude.
+- Wrap PDCA around the spec. The Act phase ("re-anchor to the spec") is the one most teams skip and the one that recovers most agent drift.
+- Skip specs for sub-15-minute changes, exploration sessions, and pair-tracing. Use them when you can write three real constraints. The compounding wins are at the review and human-skill levels, not just the immediate output.
+
+Related reading:
+- [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)
+- [bkit: PDCA methodology for Claude Code](/blog/bkit-pdca-for-claude-code)
+- [AX is not AI tool adoption — it is organizational redesign](/blog/ax-redesign-not-ai-tools)
