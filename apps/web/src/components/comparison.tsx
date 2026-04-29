@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { comparisonRows, comparisonPricing } from "@/data/comparison";
 
 // Design Ref: §4.6 — Comparison table with data import, "Secrets hidden from AI" first
@@ -71,6 +72,16 @@ export function Comparison() {
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <div className="mt-10 flex justify-center">
+          <Link
+            href="/vs"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-accent transition-colors hover:text-accent/80 sm:text-base"
+          >
+            See in-depth comparisons against every secret manager
+            <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+          </Link>
         </div>
       </div>
     </section>
