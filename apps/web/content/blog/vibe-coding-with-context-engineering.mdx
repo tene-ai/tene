@@ -73,7 +73,75 @@ A single sprint, end to end, looks like this from my side:
 /pdca report sprint-refactor-H      # completion report with quality gates
 ```
 
-Eight commands. Per sprint. Nine times. The state machine inside `bkit` refuses to advance if a quality gate fails — typecheck, architecture violations, matrix-to-code sync, L1-L5 tests. I do not run `tsc --noEmit` myself anymore; the gate does. I do not measure architecture violations myself; `measure-arch-violations.ts` does, and the result is checked in as `arch-baseline.json` so the next sprint cannot regress without me being told.
+Eight commands. Per sprint. Nine times — seventy-two prompts to drive the day. Most of them were ceremony rather than decision. That friction is exactly the thing that produced the wrapper I will describe in two sections. For now: the bkit state machine refuses to advance if a quality gate fails — typecheck, architecture violations, matrix-to-code sync, L1-L5 tests. I do not run `tsc --noEmit` myself anymore; the gate does. I do not measure architecture violations myself; `measure-arch-violations.ts` does, and the result is checked in as `arch-baseline.json` so the next sprint cannot regress without me being told.
+
+## From one sprint to thirty
+
+A single sprint is not the unit of work. The four-month roadmap is. The plan lives in `docs/01-plan/sprint-master/` — thirteen documents covering thirty sprints across seven phases, each sprint with explicit dependencies on its predecessors. One slash command, `/sprint-status`, reads four sources at once — bkit's `pdca-status.json`, the architecture-violation `arch-baseline.json`, the GitHub issue list, and the master plan markdown — and renders one screen:
+
+```text
+Sprint Master Plan — Progress
+─────────────────────────────────
+Phase 0 — Merge baseline           [done]
+  Sprint 00 — Merge Ready           [✓]   Match Rate 96%
+Phase 1 — Beta (Apr 28 – May 2)
+  Sprint 01 — Beta P1.1             [in progress]   design phase
+  Sprint 02 — Beta P1.2             [blocked by 01]
+
+Cumulative KPIs
+  GitHub issues:           27 → 25  (2 closed)
+  Architecture violations: 79 → 79  (Sprint 27 target)
+  Matrix sync:             19.4% → 19.4%
+
+Next: /sprint-start 02-beta-p1-2
+```
+
+<GifEmbed
+  src="/blog/vibe-coding-with-context-engineering/sprint-master-plan.webp"
+  alt="A top-down view of a desk where a glowing holographic Master Plan hovers over the surface — Phase 1 milestones along the top, Q1 through Q4 timeline bars across the middle, and sticky notes labeled idea, priority, deadline, and review around the edges."
+  caption="Thirty sprints, seven phases. The plan is the artefact that makes a single /sprint-status query meaningful."
+/>
+
+The point is not the layout. It is that "where am I?" never means scrolling the chat. It means one slash command, four data sources, one screen. Dependency enforcement lives in the plan too: Sprint 11 (cutover) has `requires: sprint-03 (data migration)`; Sprint 30 (final E2E) has `requires: sprint-12..29`. Trying to start out of order triggers a confirmation prompt. The plan refuses to be ignored quietly.
+
+## Wrapping generic PDCA in project context
+
+There is a tension between two truths. bkit's `/pdca plan / design / do / analyze / iterate / qa / report` works for any project — that is its strength. But "any project" means it knows nothing about *my* project. It does not know that Sprint 17 is the payment epic, that Sprint 24 is the SEO push, or that the matrix files under `docs/qa/matrices/` must update before the report can pass.
+
+The fix is a thin wrapper. `sprint-orchestrator` is a project-local skill (`.claude/skills/sprint-orchestrator.md`) that intercepts `/sprint-start NN`, auto-injects the project context, and then runs `/pdca` underneath:
+
+```text
+user                  project layer             bkit (vendor plugin)
+────                  ─────────────             ────────────────────
+/sprint-start 17  →   sprint-orchestrator  →    /pdca plan
+                      (auto-loads payment             /pdca design
+                       matrices, payment-              /pdca do
+                       expert, gates,                  /pdca analyze
+                       baselines)                      /pdca iterate
+                                                       /pdca qa
+                                                       /pdca report
+```
+
+Sprint 17 starts → `payment-expert` joins automatically. Sprint 24 → `seo-expert`. Sprint 27 → `arch-auditor`. I never re-explain area context. The wrap collapses the eight-command-per-sprint sequence I described above into one command. The nine-sprint day cost me seventy-two prompts: 8 × 9. Today the same nine sprints would cost nine. The skill that closed that gap was itself born from the friction of typing seventy-two of them.
+
+## Six gates that refuse to advance
+
+Generic PDCA does not tell you when to stop. Project context does. `sprint-orchestrator` has six quality gates wired into the phase transitions, each measured by a script committed to the repo:
+
+```text
+Gate                       Threshold       Tool
+─────────────────────────  ──────────────  ──────────────────────────
+Match Rate                 >= 95%          gap-detector
+Architecture violation     delta = 0       measure-arch-violations.ts
+Matrix sync                >= 95%          verify-api-matrix.ts
+typecheck                  0 errors        tsc --noEmit
+lint                       0 warnings      eslint --max-warnings 0
+test                       PASS            pnpm test
+```
+
+Match rate below 95? `/pdca iterate` runs automatically, up to five cycles. Architecture delta non-zero? The sprint stops; the fix is forced before the next phase. Matrix below 95%? The `matrix-synchronizer` agent is dispatched. There is no path forward that bypasses a red gate.
+
+The behaviour change is not on the AI side. The AI ran without gates before; it would happily declare done. The gates are for me — the human cannot forget the checklist because the system does not let the human forget.
 
 ## Where I still hold the line
 
