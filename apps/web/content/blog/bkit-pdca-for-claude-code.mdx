@@ -22,14 +22,14 @@ faqs:
 ## What bkit is, in one paragraph
 
 [bkit](https://github.com/popup-studio-ai/bkit-claude-code) is a
-Claude Code plugin that adds a methodology layer on top of the CC
-harness. Concretely: 39 Skills, 36 Agents, 21 hook events, 2 MCP
-servers, and a PDCA (Plan-Do-Check-Act) state machine with 20 guarded
-transitions. It is not a rewrite of Claude Code or a replacement for
-it — it installs into CC via `/plugin install bkit` and hangs off every
-extension point CC already exposes. The source is open on GitHub. If you agree with the thesis that
-workflow around a model matters more than the model itself, bkit is an
-opinionated implementation of that workflow.
+Claude Code plugin. It adds a method on top of CC: 39 Skills, 36
+Agents, 21 hook events, 2 MCP servers, and a PDCA (Plan-Do-Check-Act)
+state machine with 20 guarded steps. It's not a rewrite of Claude
+Code or a swap-in for it. You install it with
+`/plugin install bkit`, and it hooks into every spot CC already
+opens up for plugins. The source is on GitHub. If you think the
+workflow around a model matters more than the model itself, bkit
+is one opinionated way to build that workflow.
 
 <GifEmbed
   src="/blog/bkit-pdca-for-claude-code/bkit-og.png"
@@ -37,20 +37,20 @@ opinionated implementation of that workflow.
   caption="bkit — PDCA methodology, made executable inside Claude Code."
 />
 
-The short version: you type `/pdca plan user-auth` instead of "please
-write a plan for user auth," and from there every phase becomes a state
-transition with acceptance criteria, not a free-text prompt.
+The short version: you type `/pdca plan user-auth` instead of
+"please write a plan for user auth." From there, every phase becomes
+a state move with rules to pass — not a free-text prompt.
 
 ## The four building blocks
 
-bkit is assembled from four primitives Claude Code already understands,
-but composed into a methodology rather than left as raw parts.
+bkit is built from four parts CC already knows about. bkit just
+glues them into a method, not raw parts.
 
-**Skills** are reusable prompts exposed as slash commands. Each has a
-trigger vocabulary (multilingual), a phase gate (which PDCA stage it
-belongs to), and a set of allowed tools. `/pdca`, `/control`,
-`/enterprise`, `/starter`, `/dynamic` are all skills. A skill's
-frontmatter declares its interface:
+**Skills** are reusable prompts you call as slash commands. Each one
+has a trigger word list (multilingual), a phase gate (which PDCA
+step it belongs to), and a list of allowed tools. `/pdca`,
+`/control`, `/enterprise`, `/starter`, `/dynamic` are all skills. A
+skill's frontmatter spells out its interface:
 
 ```yaml
 ---
@@ -62,35 +62,35 @@ phaseGate: all
 ---
 ```
 
-**Agents** are role-based subagents with per-role model assignments.
-`cto-lead` runs on Opus for architectural decisions. `gap-detector`
-runs on Sonnet for cheap, fast comparisons. `code-analyzer` is
-read-only. Each agent defines its own memory scope, max turns, and
-disallowed tools — so "review the design" and "critique the
-implementation" are not the same model call with different prompts,
-they are different agents with different capabilities and cost
-profiles.
+**Agents** are role-based subagents, each tied to its own model.
+`cto-lead` runs on Opus for design calls. `gap-detector` runs on
+Sonnet for cheap, fast comparisons. `code-analyzer` is read-only.
+Each agent sets its own memory scope, max turns, and blocked tools.
+So "review the design" and "critique the implementation" aren't the
+same model call with different prompts. They're different agents
+with different powers and costs.
 
-**Hooks** intercept lifecycle events. 21 events across 6 layers:
+**Hooks** catch lifecycle events. 21 events across 6 layers:
 `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`,
-`TaskCompleted`, `PreCompact`, and more. bkit uses hooks for context
-injection (so every session starts with PDCA state in scope), audit
-logging, destructive-op blocking, and token ledger accounting.
+`TaskCompleted`, `PreCompact`, and more. bkit uses hooks to inject
+context (so every session starts knowing the PDCA state), to log
+audits, to block destructive commands, and to count tokens.
 
-**MCP servers** (two of them) expose structured tools so the model
-does not reason about state from memory alone. `bkit-pdca` offers
+**MCP servers** (two of them) hand the model structured tools so it
+doesn't have to remember state on its own. `bkit-pdca` offers
 `bkit_pdca_status`, `bkit_plan_read`, `bkit_design_read`,
 `bkit_metrics_get`. `bkit-analysis` offers `bkit_gap_analysis`,
-`bkit_code_quality`, `bkit_regression_rules`. They read from durable
-files in `.bkit/state/`, so session restarts never lose PDCA state.
+`bkit_code_quality`, `bkit_regression_rules`. They read from real
+files in `.bkit/state/`, so closing a session never loses the PDCA
+state.
 
-The composition is what makes it work. Skills expose verbs, agents
-execute them, hooks guard the edges, MCP servers persist state. No
-single piece is exotic; the leverage is in how they fit together.
+The mix is what makes it work. Skills are the verbs, agents do the
+work, hooks guard the edges, and MCP servers save state. No single
+piece is fancy. The win is in how they fit.
 
 ## Install and first run
 
-Assuming you already have Claude Code installed:
+Once you have Claude Code installed:
 
 ```bash
 /plugin marketplace add popup-studio-ai/bkit-claude-code
@@ -98,24 +98,23 @@ Assuming you already have Claude Code installed:
 /output-style bkit-learning
 ```
 
-Three commands. The first registers bkit's marketplace source, the
-second installs the plugin (Skills + Agents + Hooks + MCP servers +
-output styles — all wired at once), and the third picks an output
-style that teaches you as you go. There are four output styles
-shipped: `bkit-learning`, `bkit-pdca-guide`, `bkit-enterprise`, and
-`bkit-pdca-enterprise`. `bkit-learning` is the gentle one, recommended
-for your first project.
+Three commands. The first signs up bkit's marketplace source. The
+second installs the plugin (Skills, Agents, Hooks, MCP servers, and
+output styles — all wired at once). The third picks an output style
+that teaches you as you go. Four output styles ship with bkit:
+`bkit-learning`, `bkit-pdca-guide`, `bkit-enterprise`, and
+`bkit-pdca-enterprise`. `bkit-learning` is the gentle one, best for
+your first project.
 
-After install, `/bkit help` lists what is available. A typical
-session opens with bkit injecting the current PDCA state into context
-via the `SessionStart` hook — so Claude knows where you were in
-which feature without you retyping it.
+After install, `/bkit help` lists what you have. A typical session
+opens with bkit pushing the current PDCA state into context via the
+`SessionStart` hook. Claude knows where you were on which feature
+without you retyping it.
 
 ## The PDCA state machine in action
 
-The flagship user-facing command is `/pdca`. It moves a single feature
-through seven phases, each a guarded transition with its own
-acceptance criteria:
+The main user command is `/pdca`. It moves a single feature through
+seven phases. Each step has its own rules to pass:
 
 ```bash
 /pdca pm user-auth         # requirements -> PRD
@@ -127,67 +126,66 @@ acceptance criteria:
 /pdca report user-auth     # completion doc with metrics
 ```
 
-At each phase, bkit writes a document to disk:
-`docs/00-pm/user-auth.prd.md`, `docs/01-plan/user-auth.plan.md`,
-`docs/02-design/user-auth.design.md`, and so on. These are not
-throwaway artifacts — they are the ground truth that later phases
-reference. When `/pdca analyze` runs, it literally diffs the design
-doc against the implementation diff and produces a match rate.
+At each phase, bkit writes a doc to disk:
+`docs/00-pm/user-auth.prd.md`,
+`docs/01-plan/user-auth.plan.md`,
+`docs/02-design/user-auth.design.md`, and so on. These docs aren't
+throwaway. They're the ground truth that later phases read. When
+`/pdca analyze` runs, it really does diff the design doc against
+the code diff and produce a match rate.
 
-Along the way there are five interactive checkpoints, each a small
-pause with a structured question:
+Along the way, you hit five small checkpoints. Each one pauses for
+a clear question:
 
-- **CP1** (after PM analysis): do the requirements match what you meant?
-- **CP2** (after plan): acceptance criteria look right?
+- **CP1** (after PM): do the requirements match what you meant?
+- **CP2** (after plan): do the acceptance criteria look right?
 - **CP3** (after design): three arcs drafted — which one?
-- **CP4** (before do): scope fits the design?
+- **CP4** (before do): does the scope fit the design?
 - **CP5** (after analyze): ship, iterate, or rework the design?
 
-The checkpoints are the human-in-the-loop safety valve. You do not
-get steamrolled; you get asked. In L0 or L1 automation, checkpoints
-are mandatory. In L2+, the routine ones auto-confirm and only the
-key ones stay human-gated.
+The checkpoints are the human-in-the-loop safety valve. You don't
+get steamrolled. You get asked. At L0 or L1, every checkpoint is
+required. At L2 and up, the routine ones auto-confirm and only the
+key ones still ask you.
 
-For a first-time user, the full flow of a small feature takes about
-ten minutes of typing and fifteen of the agent actually working.
-What comes out is four documents plus implementation plus metrics —
-not just code.
+For a first-time user, the full flow on a small feature takes about
+ten minutes of typing and fifteen of the agent doing real work. Out
+the other side: four documents, working code, and metrics. Not just
+code.
 
 ## Quality gates and auto-iterate
 
-The crucial agent in this cycle is `gap-detector`. When `/pdca
-analyze` runs, gap-detector:
+The key agent in this loop is `gap-detector`. When `/pdca analyze`
+runs, it does this:
 
 1. Reads the design doc (`docs/02-design/user-auth.design.md`).
-2. Walks the implementation diff for the feature.
-3. Lines up design intent against implementation reality.
-4. Produces a structured match rate (0–100%) and a list of specific
-   gaps.
+2. Walks the code diff for the feature.
+3. Lines up the design intent against the code reality.
+4. Outputs a match rate (0–100%) and a list of specific gaps.
 
-The threshold is 90%. Below that, `/pdca iterate` kicks off a loop:
-read gaps, patch each gap via an implementation agent, re-run
-gap-detector, repeat. The loop is capped at five iterations. If it
-still fails after five, bkit stops and asks a human — it does not
-silently ship a 60% match.
+The bar is 90%. Below that, `/pdca iterate` kicks off a loop: read
+the gaps, patch each one with an implementation agent, re-run
+gap-detector, repeat. The loop is capped at five tries. If it still
+fails after five, bkit stops and asks a human. It will not silently
+ship a 60% match.
 
 This is the Evaluator-Optimizer pattern from the multi-agent
-literature: two roles, the generator and the critic, where the critic
-has an explicit spec (the design doc) to compare against. What makes
-this beat a bigger single-pass model is boring: most failure modes
-come from the generator forgetting a constraint the design doc made
-explicit. A second pass with the critic noticing "you never wired the
-rate limiter" is a cheaper fix than a smarter single-shot generator.
+playbook: two roles, the maker and the critic, where the critic has
+a clear spec (the design doc) to compare against. The reason this
+beats one bigger model is plain — most failure modes come from the
+maker forgetting some constraint the design doc spelled out. A
+second pass that says "you never wired the rate limiter" is cheaper
+than a smarter one-shot.
 
-The same gap-detector pattern shows up in `bkit_regression_rules` —
-eight modules across the cc-regression library that detect
-reintroduced bugs after a CC or model upgrade. Same idea, different
-target.
+The same gap-detector idea shows up in `bkit_regression_rules`.
+Eight modules in the cc-regression library detect re-introduced bugs
+after a CC or model upgrade. Same idea, different target.
 
 ## L0–L4 automation and the trust score
 
-One bkit detail that surprises new users is the automation level
-system. Your current level shows at the top of every session, and you
-can inspect it at any time:
+One bkit detail that surprises new users: the automation level. Your
+current level shows at the top of every session. You can check it
+any time:
 
 ```bash
 /control status
@@ -199,34 +197,33 @@ can inspect it at any time:
 
 The five levels:
 
-- **L0 Manual** — every action requires explicit approval. Useful for
-  a first session where you do not trust the agent yet.
-- **L1 Guided** — routine actions proceed; every checkpoint is
-  mandatory.
-- **L2 Semi-Auto** (default) — routine checkpoints auto-confirm; key
-  ones (CP3 design selection, CP5 ship/iterate/rework) stay
-  human-gated.
-- **L3 Auto** — most transitions automatic; only destructive
-  operations and level escalations are gated.
-- **L4 Full-Auto** — fully autonomous PDCA cycles. Reserved for
-  well-scoped features where you have repeatedly proven the loop
-  works for you.
+- **L0 Manual** — every action needs explicit approval. Good for a
+  first session when you don't trust the agent yet.
+- **L1 Guided** — routine actions go through; every checkpoint is
+  required.
+- **L2 Semi-Auto** (default) — routine checkpoints auto-confirm;
+  key ones (CP3 design pick, CP5 ship/iterate/rework) still ask
+  you.
+- **L3 Auto** — most steps run on their own; only destructive ops
+  and level changes ask you.
+- **L4 Full-Auto** — fully on its own. Save this for well-scoped
+  features where the loop has worked for you again and again.
 
-Graduation is not free. The trust score is a weighted function of
-your track record: completed cycles, average match rate,
-destructive-op count, interrupt frequency. It escalates slowly and
-comes with a cooldown so a lucky streak does not unlock autonomy
-before the system has seen you work.
+You don't get to graduate for free. The trust score is a weighted
+score of your track record: completed cycles, average match rate,
+destructive ops, interrupt count. It climbs slowly and has a
+cooldown, so a lucky streak doesn't unlock auto mode before the
+system has watched you work.
 
-`/control level 3` escalates; `/control level 0` always works as a
-panic brake. The intent is that automation is earned per project,
-not set once in global config.
+`/control level 3` moves you up. `/control level 0` always works as
+a panic brake. The point: trust is earned per project, not flipped
+on once in a global config.
 
 ## Extending bkit + when to use it
 
-Everything in bkit is overridable. Drop a `pdca.skill.md` into
-`.claude/skills/` in your project and bkit's priority chain picks
-yours first. The resolution order:
+Everything in bkit can be overridden. Drop a `pdca.skill.md` into
+`.claude/skills/` in your project, and bkit's priority chain picks
+yours first. Order:
 
 | Priority | Location | Role |
 |---|---|---|
@@ -234,52 +231,86 @@ yours first. The resolution order:
 | 2 | `~/.claude/skills/*.skill.md` | user defaults — personal, cross-project |
 | 3 (lowest) | `{plugin}/skills/*/SKILL.md` | bkit shipped defaults |
 
-The same override chain applies to agents, hooks, templates, and
-output styles. You can ship a team-specific `qa-lead` with your own
-KPIs, or swap out `cto-lead` entirely. The `skill-create` command
-walks you through authoring a new skill interactively.
-`pm-lead-skill-patch` is an example of non-invasive extension — it
+The same chain works for agents, hooks, templates, and output
+styles. You can ship a team-tuned `qa-lead` with your own KPIs, or
+swap out `cto-lead` for good. The `skill-create` command walks you
+through writing a new skill step by step.
+`pm-lead-skill-patch` is an example of a non-invasive add-on — it
 hooks into `pm-lead`'s Phase 4 without editing the upstream file.
 
 <Callout type="tip">
-Level auto-detection helps you pick the right starting point. For a
-static landing page, `/starter` scaffolds the bkit-learning output
-style and the minimal subset of skills. For a fullstack app with a
-BaaS, `/dynamic` wires in bkend-related skills. For microservices on
-Kubernetes, `/enterprise` pulls in terraform, infra-architect, and
-the CTO-led Agent Team.
+Level auto-detection picks a starting point for you. For a static
+landing page, `/starter` scaffolds the bkit-learning output style
+and the smallest skill set. For a fullstack app with a BaaS,
+`/dynamic` wires in bkend skills. For microservices on Kubernetes,
+`/enterprise` pulls in terraform, infra-architect, and the CTO-led
+Agent Team.
 </Callout>
 
-So when should you reach for bkit versus raw Claude Code? A rough
-heuristic:
+So when do you reach for bkit instead of raw Claude Code? A rough
+guide:
 
-- **Small scripts / one-off fixes** — raw CC is fine. PDCA overhead
-  is not worth it for a ten-line change.
+- **Small scripts or one-off fixes** — raw CC is fine. PDCA isn't
+  worth it for a ten-line change.
 - **Anything with a design intent you might forget by Thursday** —
   bkit starts paying off at the design doc.
-- **Features that cross multiple files or require review** —
-  gap-detector is where the real leverage is.
-- **Team projects** — the persistent `docs/` artifacts (PRD, plan,
-  design, report) become shared ground truth rather than private
-  chat logs that evaporate when the window closes.
+- **Features that touch many files or need review** — gap-detector
+  is where the real win lives.
+- **Team projects** — the saved `docs/` artifacts (PRD, plan,
+  design, report) become shared ground truth, not private chat
+  logs that vanish when you close the window.
 
 The five-line summary:
 
-- bkit is a Claude Code plugin that encodes PDCA, quality gates, and
+- bkit is a Claude Code plugin that builds PDCA, quality gates, and
   graduated automation into reusable commands.
-- Install is three commands; the first session teaches itself via
+- Install is three commands. The first session teaches itself via
   the `bkit-learning` output style.
-- The `/pdca` flow takes one feature from requirements to completion
-  with documents at every step.
-- `gap-detector` + 90% match-rate + max-five iterate is the core
-  quality loop.
-- L0–L4 automation lets you graduate trust per project, not flip a
+- The `/pdca` flow takes one feature from requirements to done with
+  documents at every step.
+- `gap-detector` plus a 90% match-rate plus max-five iterate is the
+  core quality loop.
+- L0–L4 automation lets you earn trust per project, not flip a
   global switch.
 
-If [Article 1](/blog/bkit-harness-engineering-vibe-coding) argued that
-workflow beats model choice, this is the concrete shape of that
-workflow. Install it, run one `/pdca` cycle on something small, and
-decide for yourself whether the methodology layer is worth it.
+If [Article 1](/blog/bkit-harness-engineering-vibe-coding) said the
+workflow beats the model choice, this post is the concrete shape of
+that workflow. Install it, run one `/pdca` cycle on something
+small, and decide for yourself whether the method layer pays off.
+
+## Terms used in this post
+
+**PDCA** — Plan, Do, Check, Act. A four-step cycle for getting things right
+  on the second pass instead of the tenth.
+
+**Skill** — A bkit-flavored slash command. Reusable prompt with a trigger
+  list, allowed tools, and a phase gate.
+
+**Agent** — A subagent with a role, its own model, and its own memory. bkit
+  ships 36 of them.
+
+**Hook** — Code that runs at a lifecycle event (`SessionStart`,
+  `PreToolUse`, etc). bkit uses hooks for context, audits, and
+  blocking risky commands.
+
+**MCP server** — A small server that gives the model structured tools to call.
+  bkit's two MCP servers expose PDCA state and analysis results.
+
+**State machine** — A system with a fixed set of states and clear rules for moving
+  between them. bkit's PDCA flow is one — seven phases, 20 guarded
+  moves.
+
+**Gap-detector** — A bkit agent that diffs the design doc against the code and
+  reports a match rate plus a list of specific gaps.
+
+**Match rate** — How well the code matches the design doc. 0–100%. Below 90%,
+  iterate.
+
+**Trust score** — A 0–1 number based on your track record. Drives the L0–L4
+  automation level.
+
+**Harness engineering** — The work of building the loop a model lives inside — context,
+  tools, state, retries — instead of just tuning the prompt.
 
 Related reading:
 - [bkit on GitHub (popup-studio-ai/bkit-claude-code)](https://github.com/popup-studio-ai/bkit-claude-code)

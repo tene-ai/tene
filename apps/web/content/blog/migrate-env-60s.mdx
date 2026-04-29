@@ -30,8 +30,8 @@ OPENAI_API_KEY=sk-proj-xxx
 DATABASE_URL=postgres://dev:pw@localhost/myapp
 ```
 
-Turn it into an encrypted vault, and run the app with the same env vars,
-without editing a single line of application code. Budget: 60 seconds.
+Turn it into an encrypted vault. Run the app with the same env vars.
+Touch zero lines of app code. Budget: 60 seconds.
 
 ## Step 1 — install
 
@@ -39,7 +39,7 @@ without editing a single line of application code. Budget: 60 seconds.
 curl -sSfL https://tene.sh/install.sh | sh
 ```
 
-This downloads a single Go binary to `/usr/local/bin/tene`. No runtime
+This drops a single Go binary at `/usr/local/bin/tene`. No runtime
 dependencies.
 
 ## Step 2 — initialize
@@ -49,9 +49,9 @@ cd my-project
 tene init
 ```
 
-You will be prompted for a master password (twice). tene creates
+You will be asked for a master password (twice). tene creates
 `.tene/vault.db` and prints a 12-word BIP-39 recovery mnemonic. Write
-the mnemonic down somewhere safe — if you ever lose the password, this
+the mnemonic down somewhere safe. If you ever lose the password, this
 is the only way back.
 
 Under the hood:
@@ -64,7 +64,7 @@ Under the hood:
 - Key cached in OS keychain (macOS Keychain, Linux libsecret, Windows
   Credential Vault).
 
-`tene init` also generates AI-editor rule files (`CLAUDE.md`,
+`tene init` also writes AI-editor rule files (`CLAUDE.md`,
 `.cursor/rules/tene.mdc`, `.windsurfrules`, `GEMINI.md`, `AGENTS.md`) so
 every agent knows to use `tene run --` instead of reading env files.
 
@@ -83,10 +83,10 @@ Output:
   • DATABASE_URL
 ```
 
-Each KEY=VALUE line becomes an encrypted record. The values are not
-written in plaintext anywhere during or after the import — the import
-parses the file, encrypts each value in memory, writes ciphertext to the
-vault, and discards the plaintext.
+Each KEY=VALUE line becomes an encrypted record. The values are never
+written to plaintext during or after the import. The import parses the
+file, encrypts each value in memory, writes ciphertext to the vault, and
+drops the plaintext.
 
 ## Step 4 — delete the plaintext
 
@@ -94,9 +94,9 @@ vault, and discards the plaintext.
 rm .env
 ```
 
-Yes, really. This is the whole point. The plaintext file is gone.
+Yes, really. That is the whole point. The plaintext file is gone.
 
-If you commit your repo now, there is no env file to accidentally include.
+If you commit your repo now, there is no env file to include by accident.
 
 <GifEmbed
   src="/demo/dotenv-gone-demo.gif"
@@ -110,9 +110,9 @@ If you commit your repo now, there is no env file to accidentally include.
 tene run -- npm start
 ```
 
-`tene run` spawns a subshell, sets each vault secret as an environment
-variable on that subshell, and executes `npm start`. Your app reads
-`process.env.STRIPE_KEY`, `process.env.OPENAI_API_KEY`,
+`tene run` opens a subshell, sets each vault secret as an environment
+variable on that subshell, and runs `npm start`. Your app reads
+`process.env.STRIPE_KEY`, `process.env.OPENAI_API_KEY`, and
 `process.env.DATABASE_URL` exactly as before.
 
 Total elapsed time so far: about 45 seconds.
@@ -133,13 +133,13 @@ Active environment: default
   • DATABASE_URL
 ```
 
-Values are masked. You could run `tene get STRIPE_KEY` to see the actual
-value, but inside an AI coding session prefer `tene list` — `tene get`
-prints plaintext to stdout which enters the LLM context window.
+Values are masked. You could run `tene get STRIPE_KEY` to see the real
+value, but inside an AI coding session prefer `tene list`. `tene get`
+prints plaintext to stdout, which enters the LLM context window.
 
 ## Different languages, same pattern
 
-tene is language-agnostic. It just sets env vars.
+tene does not care about your language. It just sets env vars.
 
 **Node.js**:
 
@@ -165,13 +165,13 @@ tene run -- python app.py
 tene run -- docker compose up
 ```
 
-Your app code keeps using `process.env.KEY`, `os.Getenv("KEY")`,
+Your app keeps using `process.env.KEY`, `os.Getenv("KEY")`, or
 `os.environ["KEY"]`. Nothing changes inside the application.
 
 ## Environments
 
 The default vault environment is `default`. For dev / staging / prod
-separation:
+splits:
 
 ```bash
 tene env create staging
@@ -187,7 +187,7 @@ tene run --env prod -- node server.js
 
 ## CI
 
-Non-interactive environments (GitHub Actions, CircleCI, etc.):
+For non-interactive runners (GitHub Actions, CircleCI, etc.):
 
 ```yaml
 env:
@@ -197,9 +197,9 @@ steps:
 ```
 
 `--no-keychain` tells tene to read the password from the environment
-rather than the OS keychain. `TENE_MASTER_PASSWORD` needs to be the same
-password you used during `tene init` on the machine where you generated
-the vault.
+instead of the OS keychain. `TENE_MASTER_PASSWORD` must match the
+password you set during `tene init` on the machine where the vault was
+made.
 
 ## Summary — the whole migration
 
@@ -213,7 +213,7 @@ tene run -- npm start                          # 5s startup
 ```
 
 Your code did not change. Your build did not change. The plaintext is
-gone from disk. AI coding agents cannot read what is no longer there.
+off disk. AI coding agents cannot read what is not there.
 
 Related: [Your .env is not a secret](/blog/ai-reads-env) —
 why this matters in the AI-agent era.

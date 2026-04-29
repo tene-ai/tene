@@ -20,18 +20,17 @@ faqs:
     answer: "Read literally — typing prompts and accepting whatever comes back — yes, it is hype, and it produces brittle code. Read as a discipline — context engineering, design-first, AI-evaluator loops, automatic checkpoints — it is just engineering with a new tool in the loop. The 9-day bkamp launch is empirical evidence that the disciplined version works. The seven patterns below are the rules of the disciplined version."
 ---
 
-In December 2025 I shipped a content platform called bkamp.ai. Eleven microservices,
-a Next.js portal, GitOps on EKS, and a domain I had never deployed before.
-First production merge: nine days after the first commit. One person.
-Claude Code as the second pair of hands.
+In December 2025 I shipped a content platform called bkamp.ai. Eleven
+microservices. A Next.js portal. GitOps on EKS. A cloud setup I had never
+deployed before. The first production merge went out nine days after the
+first commit. One person, with Claude Code as a second pair of hands.
 
-Four months and roughly 1,500 commits later, the workflow that made that
-possible has been distilled into a Claude Code plugin called
-[bkit](https://bkit.ai). This post is two things at once: the
-case study of how the 9 days actually went, and the codification of
-what the case study taught.
+Four months and about 1,500 commits later, that workflow has been packed
+into a Claude Code plugin called [bkit](https://bkit.ai). This post is
+two things at once. It's the story of how those 9 days actually went.
+And it's a write-up of what those 9 days taught.
 
-## The result first: nine days, eleven microservices, one person
+## The result first: 9 days, 11 services, one person
 
 <GifEmbed
   src="/blog/bkamp-knowhow-to-bkit-plugin/bkamp-home.webp"
@@ -39,7 +38,7 @@ what the case study taught.
   caption="bkamp.ai today. The homepage is the visible 1% of a stack with 19 microservices, Terraform-managed AWS, ArgoCD GitOps, and four months of post-launch evolution. The first version of all of this went live on Day 9."
 />
 
-The numbers, before the narrative:
+Here are the numbers, before the story:
 
 | Metric | Value |
 |---|---|
@@ -52,49 +51,50 @@ The numbers, before the narrative:
 | Claude Co-Authored ratio (final 14 days) | **177/320 = 55%** |
 | Structured docs produced in first 14 days | 70+ |
 
-That last row is the one that explains the rest. Most "AI shipped a project
-in N days" stories optimize for prompt-typing speed. This one optimized
-for the opposite: spec-first, doc-numbered, AI-translatable work units.
-The model wrote a lot of code, but it almost never decided what code to write.
+That last row is the one that explains all the others. Most "AI shipped
+a project in N days" stories speed up prompt typing. This one did the
+opposite. It put the spec first, numbered each doc, and broke work into
+units the AI could translate. The model wrote a lot of code. It almost
+never picked what code to write.
 
-The body of this post follows the actual chronology, then extracts the
-seven patterns that show up across all of it, then walks through how
-those patterns are now baked into bkit.
+The rest of this post follows the real timeline. Then it pulls out the
+seven patterns that show up everywhere. Then it walks through how those
+patterns are now baked into bkit.
 
 ## Day 0: write the rules before writing code
 
-The first four commits to `bkamp-portal` contain **zero lines of business
-logic**. They contain:
+The first four commits to `bkamp-portal` had **zero lines of business
+logic**. They had this:
 
 | Commit | Contents |
 |---|---|
 | `baeb2aff` | `README.md` + `.claude/instructions/CLAUDE.md` (159 lines) + `docs/00-requirement/` |
 | `ab8b00d8` | Commit-message convention added to the Claude instruction file |
 | `70110820` | A market-strategy PDF in `docs/00-requirement/` |
-| `ace3314c` | A short brand/strategy video as binary asset |
+| `ace3314c` | A short brand/strategy video as a binary file |
 
-That CLAUDE.md is the load-bearing artifact. It encodes a PDCA cycle as
-ASCII flow, prescribes Plan→Do→Check→Act per task, names me (kay) as the
-mandatory verifier of every Claude output, mandates Korean for commit
-messages, and requires `TodoWrite` use for any non-trivial change.
-Roughly 100 useful lines of meta-rules.
+That CLAUDE.md is the load-bearing piece. It draws a PDCA cycle as ASCII
+flow. It tells the AI to do Plan→Do→Check→Act per task. It names me (kay)
+as the verifier of every Claude output. It demands Korean for commit
+messages. It requires `TodoWrite` for any non-trivial change. About 100
+lines of useful meta-rules.
 
-Those 100 lines shaped the other 1,170 commits. Every PR that followed
-inherited the cadence, the language split, the verifier-of-record, and
-the document-numbering habit from this single file. Day 0 is when you
-build the house the AI is going to live in. Skip it and you are debating
-conventions inside every prompt for the rest of the project.
+Those 100 lines shaped the other 1,170 commits. Every PR after this
+inherited the rhythm, the language split, the named verifier, and the
+doc-numbering habit from one file. Day 0 is when you build the house
+the AI is going to live in. Skip it and you'll argue about conventions
+inside every prompt for the rest of the project.
 
-## Day 1: eleven microservices in 24 hours (because the spec was ready)
+## Day 1: 11 microservices in 24 hours (because the spec was ready)
 
-Day 1 produced 17 commits and merged PRs #1–#3. By end of day, the
-`services/` directory contained Auth, User, Project, Content, Community,
-Chat, Media, Search, Admin, Notification, and a `shared/` package — eleven
-Clean-Architecture skeletons with Pydantic schemas, FastAPI routers, and
-docker-compose wiring. From scratch.
+Day 1 produced 17 commits and merged PRs #1–#3. By the end of day, the
+`services/` folder held Auth, User, Project, Content, Community, Chat,
+Media, Search, Admin, Notification, and a `shared/` package. Eleven
+Clean-Architecture skeletons with Pydantic schemas, FastAPI routers,
+and docker-compose wiring. From scratch.
 
-That sounds like a model-capability story. It isn't. Read the commits
-in order:
+That sounds like a story about how smart the model is. It isn't. Read
+the commits in order:
 
 ```text
 45302a2a  market analysis report
@@ -109,22 +109,23 @@ b4d1c7a8  API contract spec
 a13f18fe  Phase 3 extension + Gap analysis  → PR #1, #2, #3 merge
 ```
 
-Six design documents land before the first scaffold commit. By the time
-Claude Code is asked to generate the eleven services, the spec for each
-already exists as a numbered document. The work unit is not "build a
-chat service." It is "translate Document 7 §3.2 into FastAPI." Eleven
-of those translations fit in a day because the model never has to invent
-boundaries — only render specifications it has already been handed.
+Six design docs land before the first scaffold commit. By the time
+Claude Code is asked to build the eleven services, the spec for each
+one is already a numbered document. The work unit isn't "build a chat
+service." It's "translate Document 7 §3.2 into FastAPI." Eleven of
+those translations fit in a day, because the model never had to invent
+boundaries. It just rendered specs it had already been handed.
 
-This is the first compression mechanism. The spec is the bottleneck;
-when it is ready in advance, the keyboard is not.
+This is the first speed trick. The spec is the bottleneck. When it's
+ready in advance, the keyboard isn't.
 
-## Day 3: when terminology drifts, the AI drifts
+## Day 3: when terms drift, the AI drifts
 
-The most instructive day is Day 3. The platform had two related
-concepts — voting on showcase entries and "liking" community posts — and
-the codebase was using both terms inconsistently across API responses,
-DB columns, Service Worker push payloads, and admin UI labels.
+Day 3 is the most useful day to study. The platform had two related
+ideas — voting on showcase entries, and "liking" community posts. The
+codebase used both terms in different places. API responses, DB columns,
+Service Worker push payloads, and admin UI labels all said different
+things.
 
 The fix is in the **order** of the commits:
 
@@ -137,24 +138,23 @@ The fix is in the **order** of the commits:
 | `9d3b2413` | Firebase Service Worker payload: `upvote → like` |
 | `c39263fa` | Refactor: collapse `vote/upvote` concept into `like` |
 
-A guide-document commit lands **first**. Then the sweep. The model
-needs a single, written, link-targetable definition of "Like" vs "Vote"
-to stay consistent across six layers of the codebase. Without that doc,
-the same prompt produces different terminology in different sessions.
+A guide-document commit comes **first**. Then the sweep. The model needs
+one written, link-targetable definition of "Like" vs "Vote" to stay
+consistent across six layers of the codebase. Without that doc, the same
+prompt makes different terms in different sessions.
 
-The lesson is unromantic and important: **the LLM mirrors the
-inconsistency it finds.** Pinning terminology in a doc, then sweeping,
-is faster than asking the model to be consistent in spite of an
-inconsistent codebase. That same day also bundled "unified logging,"
-"environment variable consolidation," and "OAuth error standardization"
-in the same window — a deliberate cross-cutting day to clear future
-drift in one pass.
+The lesson is plain and important: **the LLM mirrors the mess it sees.**
+Pin the term in a doc, then sweep — that beats asking the model to be
+consistent on top of an inconsistent codebase. That same day also rolled
+in "unified logging," "environment variable cleanup," and "OAuth error
+standardization" all at once. A planned cross-cutting day to clear
+future drift in one pass.
 
 ## Day 4: checkpoint, then tear it down
 
-Day 4 made the most aggressive call of the launch: rebuild three days
-of frontend on top of shadcn/ui, and lift the codebase into a monorepo
-at the same time.
+Day 4 made the boldest call of the launch. Rebuild three days of
+frontend on top of shadcn/ui, and lift the codebase into a monorepo at
+the same time.
 
 ```text
 ee56f2b3  checkpoint: hero/cards/buttons polish ("rollback point")
@@ -163,20 +163,19 @@ ee56f2b3  checkpoint: hero/cards/buttons polish ("rollback point")
 ... PR #7 (Major Refactoring)
 ```
 
-Two things matter about this sequence. First, the checkpoint commit
-literally has the words "rollback point" in its message. There is one
-known-good coordinate to return to if the rebuild fails. Second, the
-rewrite is bundled with a structural improvement (`packages/ui`
-extraction) — not "redo the UI" but "redo the UI on the structure we
-should have started with."
+Two things matter here. First, the checkpoint commit has the words
+"rollback point" right in its message. There's one known-good spot to
+return to if the rebuild fails. Second, the rewrite is bundled with a
+structural fix (`packages/ui` extraction). It isn't "redo the UI." It's
+"redo the UI on the structure we should have started with."
 
-This is the third compression mechanism: **safety net first, then
-courage**. A 9-day timeline does not survive being timid on Day 4.
-It also does not survive having no escape route from a bold call.
+This is the third speed trick: **safety net first, then nerve**. A
+9-day timeline doesn't survive being timid on Day 4. It also doesn't
+survive having no escape route from a bold call.
 
 ## Day 8: the infrastructure big bang
 
-For seven days the `infra/` directory did not exist. Then Day 8 ran 56
+For seven days the `infra/` folder didn't exist. Then Day 8 ran 56
 commits in 24 hours — one every 26 minutes on average — and shipped:
 
 ```text
@@ -191,26 +190,26 @@ e91880b1  GitHub Actions CI/CD: 5 workflows
 b35c2b17  PR #21 staging→production release  ← LIVE 20:11 KST
 ```
 
-This 24-hour compression is only legible because of the seven days
-that preceded it. Backend and frontend had been kept in a state where
-they "only need to be put on rails" — the conventions, environment
-variable layout, and Docker boundaries had been pre-aligned. Nine
-out of seventeen Day-8 PRs are GitOps-simplification PRs, which is
-the visible signature of the alignment work.
+This 24-hour sprint is only possible because of the seven days before
+it. Backend and frontend were kept in a state where they "just need to
+be put on rails." The conventions, env var layout, and Docker boundaries
+had been pre-aligned. Nine of seventeen Day-8 PRs are
+GitOps-simplification PRs. That's the visible signature of the alignment
+work.
 
-The next day was live-hotfix mode: ALB → Nginx Ingress, CloudFront CDN
-in front of media buckets, Redis-backed view counters. The image-tag
-auto-update workflow was already running on Day 9, which is why the
-hotfix cycle was minutes-not-hours.
+The next day was hotfix mode. ALB to Nginx Ingress. CloudFront CDN in
+front of media buckets. Redis-backed view counters. The image-tag
+auto-update workflow was already running on Day 9, which is why each
+hotfix took minutes, not hours.
 
 ## What bkamp is now, four months later
 
-That same codebase has since grown to 19 microservices, an i18n
-journey from 8 languages back to 2, an MCP v2 surface that exposes
-bkamp's data to external AI agents, and a competition domain. The
-homepage you see at the top of this post is the visible tip; below
-the surface are the community feed and showcase that the launch was
-designed to power.
+That same codebase has since grown to 19 microservices. It made an i18n
+trip from 8 languages back to 2. It picked up an MCP v2 surface that
+exposes bkamp's data to outside AI agents. It added a competition
+domain. The homepage you see at the top of this post is the visible tip.
+Below the surface sit the community feed and showcase that the launch
+was built to power.
 
 <GifEmbed
   src="/blog/bkamp-knowhow-to-bkit-plugin/bkmap-community.webp"
@@ -224,48 +223,48 @@ designed to power.
   caption="The showcase — curated portfolios. After launch this surface picked up batch curation APIs, drag-and-drop ordering, and series grouping (PR #250)."
 />
 
-Two PRs from the post-launch arc are worth flagging because they make
-the workflow legible. **PR #249 (April 2026)** intentionally rolled the
-i18n surface from 8 languages back to ko/en after data showed 86%
-translation traffic was being burned on languages with negligible
-read share. The PR preserved DB rows and OpenSearch fields rather than
-deleting them — a deliberately reversible regression. **PR #245**
-shrank Redis PVC from 8Gi to 1Gi, with a cost analysis doc as a
-co-author on the decision. Both PRs read like PDCA Act-phase work,
-not "let's clean up." That is not an accident; the first 100 lines of
-CLAUDE.md set the cadence and it persisted.
+Two PRs from after the launch are worth flagging. They make the
+workflow easy to read. **PR #249 (April 2026)** rolled the i18n surface
+back from 8 languages to ko/en, on purpose, after data showed 86% of
+translation traffic was being burned on languages with tiny read share.
+The PR kept DB rows and OpenSearch fields in place rather than deleting
+them. A reversible step back, by design. **PR #245** shrank the Redis
+PVC from 8Gi to 1Gi, with a cost analysis doc as a co-author on the
+call. Both PRs read like PDCA Act-phase work, not "let's clean up."
+That's not luck. The first 100 lines of CLAUDE.md set the rhythm and
+it stuck.
 
-## Seven patterns of "vibe coding", extracted
+## Seven patterns of "vibe coding," extracted
 
-If you watch the 1,170-commit timeline at a distance, the same seven
-patterns repeat. They are the rules I would hand to anyone trying to
-reproduce this kind of timeline:
+Watch the 1,170-commit timeline from a distance and the same seven
+patterns repeat. They're the rules I'd hand to anyone trying to copy
+this kind of timeline:
 
 | # | Pattern | What it looks like |
 |---|---|---|
 | 1 | **Day 0 meta-rules** | A 100–200 line CLAUDE.md before any business logic. Names the verifier, the cadence, the language split |
-| 2 | **Korean intent / English code / Korean commit** | Plan in your strongest language; let the model render code in its strongest. AI is excellent at the translation |
-| 3 | **Numbered docs as work units** | "Document 28 §3" beats "build the chat service." Reduces output variance to near zero |
-| 4 | **One PDCA cycle per day** | Plan→Do→Check→Act cadence per day; one PR ≈ one cycle. Keeps context fresh and scope finite |
-| 5 | **Cross-cutting day** | Logging, env vars, terminology, design system — bundled together on one day so feature days stay clean |
-| 6 | **Checkpoint then rebuild** | Mark the rollback coordinate, then make the bold call. Day 4 shadcn rebuild and Day 8 infra big bang are both this pattern |
+| 2 | **Korean intent / English code / Korean commit** | Plan in your strongest language; let the model write code in its strongest. AI is great at the translation |
+| 3 | **Numbered docs as work units** | "Document 28 §3" beats "build the chat service." Drops output variance to near zero |
+| 4 | **One PDCA cycle per day** | Plan→Do→Check→Act per day; one PR ≈ one cycle. Keeps context fresh and scope finite |
+| 5 | **Cross-cutting day** | Logging, env vars, terms, design system — bundled together on one day so feature days stay clean |
+| 6 | **Checkpoint then rebuild** | Mark the rollback spot, then make the bold call. Day 4 shadcn rebuild and Day 8 infra big bang are both this |
 | 7 | **Spec-first, code-second** | Six design docs before the first scaffold. The keyboard is not the bottleneck |
 
-The thing that ties these together is not "the model is smart." It is
-"the human work is moved earlier in the cycle." The author still has to
-write the design doc, write the convention, choose the rollback point.
-What changes is that those artifacts become inputs to a translation
-process rather than ornaments to the code.
+The thread that ties these together isn't "the model is smart." It's
+"the human work moves earlier in the cycle." The author still has to
+write the design doc, write the convention, pick the rollback point.
+What changes is that those notes become inputs to a translation step,
+not stuff added to the code after the fact.
 
-For a closer look at one of these patterns specifically, the
+For a closer look at one of these patterns, the
 [harness engineering post](/blog/bkit-harness-engineering-vibe-coding)
 goes deeper on why the workflow around the model matters more than
 which model you pick.
 
 ## From practice to plugin: meet bkit
 
-Exactly one month after the bkamp launch — 2026-01-09 — I opened a
-new repository called [bkit-claude-code](https://github.com/popup-studio-ai/bkit-claude-code).
+Exactly one month after the bkamp launch — 2026-01-09 — I opened a new
+repo called [bkit-claude-code](https://github.com/popup-studio-ai/bkit-claude-code).
 The slogan is one sentence:
 
 > The only Claude Code plugin that verifies AI-generated code against its own design specs.
@@ -276,12 +275,11 @@ The slogan is one sentence:
   caption="bkit inside Claude Code. The PDCA badge above each response, the dashboard, and the auto-injected context all come from the plugin — you do not see them in plain CC."
 />
 
-bkit exists because the seven patterns above are difficult to enforce
-by willpower across many sessions. A 9-day push is sustainable; a
-12-month one is not. The plugin makes the patterns the default rather
-than the discipline.
+bkit exists because the seven patterns above are hard to keep up by
+willpower across many sessions. A 9-day push is doable. A 12-month one
+isn't. The plugin makes the patterns the default, not the discipline.
 
-In numbers, the v2.1.12 surface area is:
+The v2.1.12 surface area, in numbers:
 
 | Surface | Count | Purpose |
 |---|---|---|
@@ -292,18 +290,18 @@ In numbers, the v2.1.12 surface area is:
 | MCP servers | 2 | `bkit-pdca` (10 tools) + `bkit-analysis` (6 tools) |
 | Output styles | 4 | Learning / PDCA-guide / Enterprise / PDCA-Enterprise |
 
-These are the surfaces; the patterns are encoded **in** them. The Day-0
+These are the surfaces. The patterns live **inside** them. The Day-0
 meta-rule habit is now an auto-injected SessionStart context. The
 numbered-doc habit is now `docs/01-plan/features/{feature}.plan.md`
 through `docs/04-report/features/{feature}.completion-report.md`, with
-a strict directory schema. Korean+English intent is now an 8-language
-intent router (`lib/intent/`) plus a KO/EN translation pool with
+a strict folder schema. Korean+English intent is now an 8-language
+intent router (`lib/intent/`) plus a KO/EN translation pool with a
 6-language fallback.
 
 ## PDCA as a state machine, not a vibe
 
-The single most consequential decision in bkit was modeling PDCA as a
-declarative finite state machine instead of an etiquette. The file
+The single most important call in bkit was modeling PDCA as a written
+finite state machine, not as etiquette. The file
 `lib/pdca/state-machine.js` defines:
 
 - **States (11):** `idle, pm, plan, design, do, check, act, qa, report, archived, error`
@@ -317,51 +315,50 @@ declarative finite state machine instead of an etiquette. The file
   caption="PDCA as a state machine. The bkamp 'one cycle a day' habit is now a literal automaton: states, events, guards, iteration cap. The Match Rate gate is the only thing standing between Check and Report."
 />
 
-The `Match Rate ≥ 90%` threshold lives in exactly one place
-(`bkit.config.json:67`) — it became single-source-of-truth in v2.1.10
-after we caught a 100/90 inconsistency between the doc and the gate.
-That is the kind of bug that bkit is engineered to make impossible.
+The `Match Rate ≥ 90%` threshold sits in exactly one place
+(`bkit.config.json:67`). It became a single source of truth in v2.1.10
+after we caught a 100/90 mismatch between the doc and the gate. That's
+the kind of bug bkit is built to make impossible.
 
-The shift from bkamp to bkit is not "now the AI is smarter." It is
-"now the workflow is checkable." When `gap-detector` reports that
-implementation matches design at 87%, `pdca-iterator` is the agent that
-re-enters Act, fixes the gap, and re-runs the gate — up to five times.
-The human in the loop reviews outcomes; the loop itself runs without
-prodding. For the methodology behind that loop, the
+The shift from bkamp to bkit isn't "now the AI is smarter." It's "now
+the workflow is checkable." When `gap-detector` reports that the code
+matches the design at 87%, `pdca-iterator` is the agent that re-enters
+Act, fixes the gap, and re-runs the gate — up to five times. The human
+in the loop reviews outcomes. The loop itself runs without prodding.
+For the method behind that loop, the
 [PDCA-for-Claude-Code post](/blog/bkit-pdca-for-claude-code) is the
 deep dive.
 
-## The payoff: 79 consecutive Claude Code releases
+## The payoff: 79 straight Claude Code releases
 
-The discipline pays off in numbers that are visible from outside:
+The discipline pays off in numbers you can see from outside:
 
-- **79 consecutive compatible CC releases** (v2.1.34 → v2.1.118+) without a breakage
+- **79 straight compatible CC releases** (v2.1.34 → v2.1.118+) without a break
 - **117+ test files / 4,000+ test cases** with zero failures on `main`
-- **Invocation Contract L1–L5** with **226 CI-gated assertions** that re-run on every push — the public surface of the plugin cannot change shape silently
-- **Domain-purity CI** (`scripts/check-domain-purity.js`) blocks `fs`, `child_process`, `net`, `http`, `os` from entering `lib/domain/` — the architectural boundary is mechanically enforced
+- **Invocation Contract L1–L5** with **226 CI-gated assertions** that re-run on every push — the public surface of the plugin can't change shape silently
+- **Domain-purity CI** (`scripts/check-domain-purity.js`) blocks `fs`, `child_process`, `net`, `http`, `os` from entering `lib/domain/` — the architectural boundary is enforced by code
 - **Docs=Code CI** (`scripts/docs-code-sync.js`) blocks drift across 8 architecture counters (Skills, Agents, Hook events, Lib modules, MCP servers, …), 5 BKIT_VERSION locations, and 5 one-liner SSoT pins
 
-The reason 79 consecutive CC versions have not broken bkit is not
-luck and not "we move fast." It is that the contract between bkit
-and Claude Code is written down as 226 assertions, and every commit
-re-proves them. The same idea bkamp was using on Day 0 — pin the
-convention before you write code — is now an automated property of
-the bkit codebase itself.
+The reason 79 straight CC versions haven't broken bkit isn't luck. It
+isn't "we move fast." It's that the contract between bkit and Claude
+Code is written down as 226 assertions, and every commit re-proves them.
+The same idea bkamp used on Day 0 — pin the convention before you write
+code — is now an automatic property of the bkit codebase itself.
 
 ## Takeaways
 
 Five things to walk away with:
 
-1. **Day 0 is not optional.** The 100 lines of CLAUDE.md decide the
+1. **Day 0 isn't optional.** The 100 lines of CLAUDE.md decide the
    shape of the next 1,000 commits more than any model upgrade does.
 2. **Move human work earlier in the cycle.** Specs, conventions, and
    rollback points all belong before the keyboard, not after the bug.
 3. **The model is a translator, not an author.** Numbered design docs
-   convert "build X" into "render Document N §3." Variance collapses,
-   throughput compounds.
+   turn "build X" into "render Document N §3." Variance drops, output
+   compounds.
 4. **Checkpoint, then be brave.** The Day 4 shadcn rewrite and the
    Day 8 infra big bang were possible because there was a known-good
-   commit to return to. No safety net, no boldness.
+   commit to return to. No safety net, no nerve.
 5. **Bottle the discipline.** Personal willpower scales to one project.
    A plugin like [bkit](https://bkit.ai) scales it to every session.
    The gap between bkamp and bkit is the gap between a 9-day sprint
@@ -371,3 +368,59 @@ If any of this is useful to your own work, the source is open:
 [github.com/popup-studio-ai/bkit-claude-code](https://github.com/popup-studio-ai/bkit-claude-code).
 And the platform that proved the method is live at
 [bkamp.ai](https://bkamp.ai).
+
+## Terms used in this post
+
+**ArgoCD** — A tool that watches a Git repo and keeps a Kubernetes cluster in
+  sync with what the repo says. Push to Git, the cluster updates.
+
+**Clean Architecture** — A way to lay out code so the business rules don't depend on the
+  framework or the database. Easy to test, easy to swap out parts.
+
+**Domain-purity CI** — A check that runs on every commit. It blocks the core "domain"
+  folder from importing things like file system or network code, so
+  the boundary stays clean.
+
+**GitOps** — A workflow where the live system is described by files in a Git
+  repo. Want to change the system? Edit the files and merge. A bot
+  applies the change.
+
+**Harness engineering** — Building the rails around an AI model — the prompts, hooks, checks,
+  and rollback points — instead of just chatting with the model. The
+  rails matter more than the model.
+
+**Invocation Contract** — A written-down list of what a tool's outside surface looks like
+  (commands, inputs, outputs). Tests re-prove it on every push, so
+  callers don't break by surprise.
+
+**K8s (Kubernetes)** — A system that runs and manages many small server processes
+  (containers) across a fleet of machines. Restarts them, scales
+  them, networks them.
+
+**Match Rate** — A score from bkit. It compares the finished code to the design
+  doc and returns a percent. If it's below the threshold (default
+  90%), the cycle loops back to fix the gap.
+
+**MCP** — Model Context Protocol. A standard way for AI tools to call
+  external functions. bkit ships two MCP servers so the model can
+  read PDCA state and run analyses.
+
+**MSA (microservices)** — An app split into many small services that talk over the network,
+  instead of one big program. Each service can be built and deployed
+  on its own.
+
+**PDCA** — Plan, Do, Check, Act. A four-step loop for getting work done. You
+  plan, you do it, you check the result, then you act on what you
+  learned and start again.
+
+**State machine** — A list of named states (like `plan`, `do`, `check`) and the rules
+  for moving between them. If a move isn't on the list, it can't
+  happen. Stops the workflow from going off the rails.
+
+**Terraform** — A tool that builds cloud infrastructure (servers, networks,
+  databases) from text files. Edit the files, run the tool, the
+  cloud changes to match.
+
+Related reading:
+- [Harness engineering for vibe coding](/blog/bkit-harness-engineering-vibe-coding)
+- [PDCA for Claude Code](/blog/bkit-pdca-for-claude-code)

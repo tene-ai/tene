@@ -22,7 +22,9 @@ faqs:
 
 ## The lonely sprint
 
-Last Tuesday I shipped 9 refactor sprints. In old-shop arithmetic — 1 PM, 1 designer, 2 engineers, 1 QA — that is 5 people × 5 weeks ≈ 25 person-weeks of work. I did it in 1 day. This is not a flex. It is the prompt for an honest accounting: where does the AI start, where does the human end, and what disappears in between. I have 28 days of usage data sitting on disk — 3,514 messages across 175 sessions, 7,939 Bash calls, 1,072 sub-agent invocations — to grade myself against, and I want to lay it out without the marketing varnish.
+Last Tuesday I shipped 9 refactor sprints in one day. In a normal team — 1 PM, 1 designer, 2 engineers, 1 QA — that's about 25 person-weeks of work. I did it solo. This isn't a flex. It's the start of an honest count: where does the AI begin, where does the human end, and what falls away in between?
+
+I have 28 days of usage data. 3,514 messages across 175 sessions. 7,939 Bash calls. 1,072 sub-agent runs. Let me walk through it without the marketing gloss.
 
 <GifEmbed
   src="/blog/vibe-coding-with-context-engineering/solo-orchestration.webp"
@@ -32,13 +34,15 @@ Last Tuesday I shipped 9 refactor sprints. In old-shop arithmetic — 1 PM, 1 de
 
 ## What "context engineering" actually means
 
-Prompt engineering is what you write into the box. Context engineering is what is already there before you write anything. The slogan I keep coming back to is this: build the system so you never have to re-explain the same context twice. Every decision you persist — a convention, a guardrail, a workflow shape — pays compound interest the next time you sit down. The first sprint is slow because you are pouring the foundation. The ninth is fast because you are not.
+Prompt engineering is what you type into the box. Context engineering is what's already there before you type anything.
 
-A second-order definition: prompt engineering optimizes one turn. Context engineering optimizes the *project's memory across all turns*. It is closer to onboarding a new hire than to crafting a clever sentence. You do not write better prompts forever. You build a project that requires fewer of them.
+The slogan I keep coming back to: build the system so you never have to re-explain the same thing twice. Every rule, guardrail, or workflow you save up front pays you back the next time you sit down. The first sprint is slow because you're pouring the foundation. The ninth is fast because you're not.
+
+A second way to put it: prompt engineering tunes one turn. Context engineering tunes the project's memory across all turns. It's closer to onboarding a new hire than writing a clever sentence. You don't write better prompts forever. You build a project that needs fewer of them.
 
 ## The 4-layer context stack
 
-The stack I use is layered and additive. Each layer answers a different question: what is true, what is forbidden, how do we work, what did we ship.
+My stack has four layers. Each one answers a different question: what's true, what's banned, how do we work, what did we ship.
 
 ```text
 Layer 1  CLAUDE.md           Auto-injected every prompt = "context that never forgets"
@@ -52,13 +56,26 @@ Layer 4  docs/01-plan/       Source-of-truth artifacts. The output of one phase
          docs/05-qa/
 ```
 
-Layer 1 is the constitution. Three CLAUDE.md files (root, common, sprint-master) inject ~470 lines of "this is what the project is, here is the 30-sprint plan, here is what you absolutely must not do" into every single prompt at zero cost to me. I never re-explain conventions across sessions. Layer 2 is enforcement, not advice — `architecture-rules.md`, `design-system-rules.md`, `safety-rules.md` are wired into pre-commit and `PreToolUse:Write` hooks that *refuse* a write if it violates the rule. Layer 3 is the workflow library. Layer 4 is what every sprint produces and the next sprint reads.
+Layer 1 is the constitution. Three CLAUDE.md files (root, common, sprint-master) inject about 470 lines of project facts into every prompt. The 30-sprint plan, the rules I must not break, the project conventions — all loaded for free. I never re-explain them across sessions.
 
-The crucial property: every sprint that closes makes the stack richer. New scripts go into `scripts/qa/`, new agents into `.claude/agents/`, refined templates into `.claude/templates/`. Sprint N+1 starts on a stronger floor than sprint N did.
+Layer 2 isn't advice. It's enforcement. Files like `architecture-rules.md`, `design-system-rules.md`, and `safety-rules.md` are wired into pre-commit hooks and `PreToolUse:Write` hooks. They *refuse* a write if it breaks a rule.
+
+Layer 3 is the workflow library. Layer 4 is the paper trail every sprint produces and the next sprint reads.
+
+The key property: every sprint that closes makes the stack richer. New scripts go into `scripts/qa/`. New agents land in `.claude/agents/`. Refined templates live in `.claude/templates/`. Sprint N+1 starts on a stronger floor than sprint N did.
 
 ## Where AI takes over (a real day)
 
-The 9-sprint day was not heroic concentration on my side. It was orchestration. The Claude Code usage report tells the story plainly: Bash 7,939 calls, Edit 2,837, Read 2,676, TaskUpdate 1,997, Write 1,327, Agent 1,072. Multi-clauding (parallel sessions overlapping in time) accounts for 36% of all messages. At one point I dispatched 26 sub-agents in parallel for an architecture audit. The shape is not "I write code with AI helping" — it is "I run a small studio and the studio is AI."
+The 9-sprint day wasn't heroic focus on my side. It was orchestration. The Claude Code usage report tells the story plainly:
+
+- Bash: 7,939 calls
+- Edit: 2,837
+- Read: 2,676
+- TaskUpdate: 1,997
+- Write: 1,327
+- Agent: 1,072
+
+Multi-clauding (parallel sessions running at the same time) made up 36% of all messages. At one point I sent off 26 sub-agents in parallel for an architecture audit. The shape isn't "I write code with AI helping." It's "I run a small studio, and the studio is AI."
 
 A single sprint, end to end, looks like this from my side:
 
@@ -73,11 +90,15 @@ A single sprint, end to end, looks like this from my side:
 /pdca report sprint-refactor-H      # completion report with quality gates
 ```
 
-Eight commands. Per sprint. Nine times — seventy-two prompts to drive the day. Most of them were ceremony rather than decision. That friction is exactly the thing that produced the wrapper I will describe in two sections. For now: the bkit state machine refuses to advance if a quality gate fails — typecheck, architecture violations, matrix-to-code sync, L1-L5 tests. I do not run `tsc --noEmit` myself anymore; the gate does. I do not measure architecture violations myself; `measure-arch-violations.ts` does, and the result is checked in as `arch-baseline.json` so the next sprint cannot regress without me being told.
+Eight commands per sprint. Nine sprints. Seventy-two prompts to drive the day. Most of them were ceremony, not real choices. That friction is what pushed me to build the wrapper I'll show you in two sections.
+
+For now: the bkit state machine refuses to advance if a quality gate fails — typecheck, architecture violations, matrix-to-code sync, L1-L5 tests. I don't run `tsc --noEmit` myself anymore. The gate does. I don't count architecture violations myself. `measure-arch-violations.ts` does. The result is checked in as `arch-baseline.json`, so the next sprint can't slide backwards without me hearing about it.
 
 ## From one sprint to thirty
 
-A single sprint is not the unit of work. The four-month roadmap is. The plan lives in `docs/01-plan/sprint-master/` — thirteen documents covering thirty sprints across seven phases, each sprint with explicit dependencies on its predecessors. One slash command, `/sprint-status`, reads four sources at once — bkit's `pdca-status.json`, the architecture-violation `arch-baseline.json`, the GitHub issue list, and the master plan markdown — and renders one screen:
+A single sprint isn't the unit of work. The four-month roadmap is. The plan lives in `docs/01-plan/sprint-master/` — thirteen documents covering thirty sprints across seven phases. Each sprint has explicit dependencies on earlier ones.
+
+One slash command, `/sprint-status`, reads four sources at once — bkit's `pdca-status.json`, the architecture-violation `arch-baseline.json`, the GitHub issue list, and the master plan markdown — and renders one screen:
 
 ```text
 Sprint Master Plan — Progress
@@ -102,13 +123,15 @@ Next: /sprint-start 02-beta-p1-2
   caption="Thirty sprints, seven phases. The plan is the artefact that makes a single /sprint-status query meaningful."
 />
 
-The point is not the layout. It is that "where am I?" never means scrolling the chat. It means one slash command, four data sources, one screen. Dependency enforcement lives in the plan too: Sprint 11 (cutover) has `requires: sprint-03 (data migration)`; Sprint 30 (final E2E) has `requires: sprint-12..29`. Trying to start out of order triggers a confirmation prompt. The plan refuses to be ignored quietly.
+The point isn't the layout. It's that "where am I?" never means scrolling back through the chat. It means one command, four data sources, one screen.
+
+Dependency rules live in the plan too. Sprint 11 (cutover) has `requires: sprint-03 (data migration)`. Sprint 30 (final E2E) has `requires: sprint-12..29`. Try to start out of order and a confirmation prompt fires. The plan refuses to be ignored quietly.
 
 ## Wrapping generic PDCA in project context
 
-There is a tension between two truths. bkit's `/pdca plan / design / do / analyze / iterate / qa / report` works for any project — that is its strength. But "any project" means it knows nothing about *my* project. It does not know that Sprint 17 is the payment epic, that Sprint 24 is the SEO push, or that the matrix files under `docs/qa/matrices/` must update before the report can pass.
+There's a tension between two truths. bkit's `/pdca plan / design / do / analyze / iterate / qa / report` works for any project — that's its strength. But "any project" means it knows nothing about *my* project. It doesn't know that Sprint 17 is the payment epic, that Sprint 24 is the SEO push, or that the matrix files under `docs/qa/matrices/` must update before the report can pass.
 
-The fix is a thin wrapper. `sprint-orchestrator` is a project-local skill (`.claude/skills/sprint-orchestrator.md`) that intercepts `/sprint-start NN`, auto-injects the project context, and then runs `/pdca` underneath:
+The fix is a thin wrapper. `sprint-orchestrator` is a project-local skill (`.claude/skills/sprint-orchestrator.md`) that catches `/sprint-start NN`, auto-loads the project context, then runs `/pdca` underneath:
 
 ```text
 user                  project layer             bkit (vendor plugin)
@@ -122,11 +145,13 @@ user                  project layer             bkit (vendor plugin)
                                                        /pdca report
 ```
 
-Sprint 17 starts → `payment-expert` joins automatically. Sprint 24 → `seo-expert`. Sprint 27 → `arch-auditor`. I never re-explain area context. The wrap collapses the eight-command-per-sprint sequence I described above into one command. The nine-sprint day cost me seventy-two prompts: 8 × 9. Today the same nine sprints would cost nine. The skill that closed that gap was itself born from the friction of typing seventy-two of them.
+Sprint 17 starts → `payment-expert` joins automatically. Sprint 24 → `seo-expert`. Sprint 27 → `arch-auditor`. I never re-explain area context.
+
+The wrapper collapses eight commands per sprint into one. The 9-sprint day cost me 72 prompts: 8 × 9. Today the same nine sprints would cost nine. The skill that closed that gap was born from the friction of typing 72 of them.
 
 ## Six gates that refuse to advance
 
-Generic PDCA does not tell you when to stop. Project context does. `sprint-orchestrator` has six quality gates wired into the phase transitions, each measured by a script committed to the repo:
+Generic PDCA doesn't tell you when to stop. Project context does. `sprint-orchestrator` has six quality gates wired into the phase transitions. Each one is measured by a script committed to the repo:
 
 ```text
 Gate                       Threshold       Tool
@@ -139,13 +164,15 @@ lint                       0 warnings      eslint --max-warnings 0
 test                       PASS            pnpm test
 ```
 
-Match rate below 95? `/pdca iterate` runs automatically, up to five cycles. Architecture delta non-zero? The sprint stops; the fix is forced before the next phase. Matrix below 95%? The `matrix-synchronizer` agent is dispatched. There is no path forward that bypasses a red gate.
+Match rate below 95? `/pdca iterate` runs by itself, up to five cycles. Architecture delta non-zero? The sprint stops; the fix is forced before the next phase. Matrix below 95%? The `matrix-synchronizer` agent gets dispatched. There's no path forward that skips a red gate.
 
-The behaviour change is not on the AI side. The AI ran without gates before; it would happily declare done. The gates are for me — the human cannot forget the checklist because the system does not let the human forget.
+The change isn't on the AI side. AI ran without gates before, and it would happily declare done. The gates are for me. The system doesn't let the human forget the checklist.
 
 ## Where I still hold the line
 
-The 26-agent fan-out is impressive. The matching report on outcomes is also revealing: 49 sessions "fully achieved", 34 "mostly", 14 "partially", 4 "not achieved". The same data shows 235 "likely satisfied" sessions versus 34 "dissatisfied". The dissatisfied ones cluster around a recognizable failure mode: AI declared done before it actually was. Anthropic's own analysis of my sessions named the pattern — *premature completion claims* — and noted I "have zero tolerance for theater." That sentence I will keep.
+The 26-agent fan-out is impressive. The matching report on outcomes is also revealing. Of my sessions: 49 "fully achieved", 34 "mostly", 14 "partially", 4 "not achieved". The same data shows 235 "likely satisfied" sessions versus 34 "dissatisfied". The dissatisfied ones cluster around one failure mode: AI declared done before it actually was.
+
+Anthropic's own analysis of my sessions named the pattern — *premature completion claims* — and noted I "have zero tolerance for theater." That sentence I'll keep.
 
 These are the five things I never delegate:
 
@@ -159,11 +186,20 @@ Quality gates, matrix sync, lint      Choice of verification tool
 27 plan/design/report markdowns       Noticing what is missing
 ```
 
-The convention trade-offs are the most underrated. In the 9-sprint day, the orchestrator stopped four times to ask me an explicit question: an Auth Guard naming choice (consistency vs back-compat), a poll-vote business rule (one-shot vs editable), a component name (two reasonable options), an SDK namespace (match the existing convention or break it). None of those are technical questions an AI can decide on the merits. They are *taste* and *product* decisions. The harness is good enough to know which is which, and to ask.
+Convention trade-offs are the most underrated. In the 9-sprint day, the orchestrator stopped four times to ask me a direct question:
+
+- An Auth Guard naming choice (consistency vs back-compat)
+- A poll-vote business rule (one-shot vs editable)
+- A component name (two reasonable options)
+- An SDK namespace (match the existing convention or break it)
+
+None of those are technical questions an AI can settle on the merits. They're *taste* and *product* calls. The harness is good enough to know which is which, and to ask.
 
 ## The 682GB lesson
 
-Here is mine. During an unattended Sprint 4.5 audit, the audit-logger Claude wrote had an infinite recursion bug — `logger.info()` called itself inside its own hook. By the time I noticed, it had filled **682 GB** of disk. No one was hurt; the laptop was. The pattern in the report is named — *self-inflicted bugs and resource issues during long autonomous runs* — and the lesson is not "AI is unreliable." The lesson is that *long-running autonomy without circuit breakers* is the unreliability. With them, the same agent is fine.
+Here's mine. During an unattended Sprint 4.5 audit, the audit-logger Claude wrote had an infinite recursion bug. `logger.info()` called itself inside its own hook. By the time I noticed, it had filled **682 GB** of disk. No one was hurt. The laptop was.
+
+The pattern in the report has a name: *self-inflicted bugs and resource issues during long autonomous runs*. The lesson isn't "AI is unreliable." The lesson is that *long-running autonomy without circuit breakers* is the unreliability. With them, the same agent is fine.
 
 The fix was small enough to fit in one block:
 
@@ -181,7 +217,7 @@ const logger = pino({
 })
 ```
 
-The lesson lives in two places now. One: the code, with the comment. Two: the hooks. `safety-rules.md` got an addendum, `PreToolUse:Bash` started watching `du -sh ~/.cache` style indicators, and the QA stage runs disk checks before declaring success. The cost of one 682GB mistake was a guardrail that prevents the next ten.
+The lesson now lives in two places. One: the code, with the comment. Two: the hooks. `safety-rules.md` got an addendum. `PreToolUse:Bash` started watching `du -sh ~/.cache` style indicators. The QA stage runs disk checks before declaring success. The cost of one 682GB mistake was a guardrail that prevents the next ten.
 
 <Callout type="warn">
 The most important byproduct of a runaway bug is the rule it leaves behind. If a single incident does not change the stack, the next incident is the same incident.
@@ -189,15 +225,39 @@ The most important byproduct of a runaway bug is the rule it leaves behind. If a
 
 ## What this changes about being a founder
 
-5 × 5 = 25 became 1 × 1 = 0.2. The arithmetic is real. What it changed about my day is also real, and unevenly distributed. The hours I used to spend typing are gone. They were not replaced by leisure. They were replaced by hours of *judgment density* — deciding what to ship, what counts as done, which two of four reasonable options is right for *this* product, where to push back on an output that smelled fine but was not. AX-redesign was not optional. It was forced on me by the math: if I do not redesign my own role, the leverage I just gained is wasted on more typing.
+5 × 5 = 25 became 1 × 1 = 0.2. The math is real. What it changed about my day is also real — and unevenly spread.
 
-The other quiet shift is patience around the foundation. The same instinct that makes a founder ship fast — "I'll do it once, ugly, and move on" — fights the discipline that context engineering rewards. The right move was the opposite. Spend a week writing rules and templates that make the next ten weeks compound. The first sprint felt slow. By the ninth it was no longer a question of effort.
+The hours I used to spend typing are gone. They weren't replaced by leisure. They were replaced by hours of *judgment density*. Deciding what to ship. Deciding what counts as done. Picking the right two of four options for *this* product. Pushing back on output that smelled fine but wasn't.
 
-## The discipline before the leverage
+AX-redesign wasn't optional. The math forced it on me. If I don't redesign my own role, the time I just gained gets spent on more typing.
 
-Without context engineering, a faster model is just a faster way to repeat the same mistake. The 4-layer stack is not glamorous, and there is nothing in it that you cannot reproduce in your own repo this afternoon. The leverage is on the other side of that hour. If you are vibe-coding without rules, without skills, without `docs/*` artifacts and without hooks, you are not getting AI's help. You are getting AI's noise. The fix is not a better prompt. It is a better project.
+The other quiet shift is patience around the foundation. The same instinct that makes a founder ship fast — "I'll do it once, ugly, and move on" — fights the discipline that context engineering rewards. The right move was the opposite. Spend a week writing rules and templates that make the next ten weeks compound. The first sprint felt slow. By the ninth it didn't feel like effort.
 
-That is what `tene` and `bkit` are, in the end — opinionated context engineering for two specific problems (secret-handling and PDCA delivery). I keep building them because the leverage I described in this post is conditional. It exists when the stack exists. It is gone the moment it does not.
+## The discipline before the payoff
+
+Without context engineering, a faster model is just a faster way to repeat the same mistake. The 4-layer stack isn't glamorous. There's nothing in it you can't reproduce in your own repo this afternoon. The payoff is on the other side of that hour.
+
+If you're vibe-coding without rules, without skills, without `docs/*` artifacts, without hooks — you're not getting AI's help. You're getting AI's noise. The fix isn't a better prompt. It's a better project.
+
+That's what `tene` and `bkit` are, in the end — opinionated context engineering for two specific problems (secret-handling and PDCA delivery). I keep building them because the payoff I described in this post is conditional. It exists when the stack exists. It's gone the moment it doesn't.
+
+## Terms used in this post
+
+**Context engineering** — The practice of building durable project memory — rules, docs, hooks, workflows — so AI doesn't need to be re-briefed every session.
+
+**Prompt engineering** — The narrower craft of writing one good message into the AI box. Useful, but limited to a single turn.
+
+**Harness** — The system around the AI — the rules, hooks, slash commands, and gates — that turns a chatbot into a reliable worker.
+
+**Agent (sub-agent)** — A Claude session spawned for a specific job. The orchestrator delegates work to many agents and collects their results.
+
+**Orchestrator** — The top-level Claude session that plans, delegates to sub-agents, and decides what happens next.
+
+**PDCA** — Plan → Do → Check → Act. A four-step loop bkit uses (split into seven sub-phases) to drive each sprint.
+
+**Quality gate** — An automated check that blocks a phase from advancing until the result passes a threshold (e.g., 0 typecheck errors).
+
+**Multi-clauding** — Running several Claude sessions in parallel on different parts of the project at the same time.
 
 Related reading:
 - [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)
