@@ -26,10 +26,10 @@ export function BlogPostingJsonLd({ meta }: Props) {
         articleSection: getCategoryLabel(meta.category),
         author: {
           "@type": "Person",
-          name: meta.author ?? "tomo-kay",
-          url: "https://github.com/tomo-kay",
+          name: meta.author ?? "agent-kay",
+          url: "https://agentkay.it",
           // G5 — sameAs authorship graph
-          sameAs: ["https://github.com/tomo-kay"],
+          sameAs: ["https://agentkay.it"],
         },
         publisher: {
           "@type": "Organization",
