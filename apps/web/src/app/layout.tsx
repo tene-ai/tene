@@ -35,8 +35,8 @@ export const metadata: Metadata = {
     "environment variables",
     ".env alternative",
   ],
-  authors: [{ name: "tomo-kay", url: "https://github.com/tomo-kay" }],
-  creator: "tomo-kay",
+  authors: [{ name: "agent-kay", url: "https://agentkay.it" }],
+  creator: "agent-kay",
   metadataBase: new URL("https://tene.sh"),
   alternates: {
     canonical: "https://tene.sh",
@@ -94,7 +94,7 @@ const jsonLd = {
       },
       sameAs: [
         "https://github.com/tomo-kay/tene",
-        "https://github.com/tomo-kay",
+        "https://agentkay.it",
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -103,8 +103,8 @@ const jsonLd = {
       },
       founder: {
         "@type": "Person",
-        name: "tomo-kay",
-        url: "https://github.com/tomo-kay",
+        name: "agent-kay",
+        url: "https://agentkay.it",
       },
     },
     {
@@ -143,8 +143,8 @@ const jsonLd = {
       license: "https://opensource.org/licenses/MIT",
       author: {
         "@type": "Person",
-        name: "tomo-kay",
-        url: "https://github.com/tomo-kay",
+        name: "agent-kay",
+        url: "https://agentkay.it",
       },
       publisher: { "@id": "https://tene.sh/#organization" },
     },

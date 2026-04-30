@@ -24,7 +24,7 @@ export type BlogPostFrontmatter = {
   updatedAt?: string;
   category: CategoryKey; // REQUIRED. See taxonomy design doc.
   tags: TagKey[];
-  author?: string; // default: "tomo-kay"
+  author?: string; // default: "agent-kay"
   cover?: string;
   // Card thumbnail in /blog index. Optional — articles without a natural
   // visual asset render as text-only cards. Path under /public, e.g.
@@ -100,7 +100,7 @@ function loadPost(slug: string): LoadedPost | null {
     updatedAt: data.updatedAt as string | undefined,
     category: rawCategory,
     tags,
-    author: (data.author as string) ?? "tomo-kay",
+    author: (data.author as string) ?? "agent-kay",
     cover: data.cover as string | undefined,
     thumbnail: data.thumbnail as string | undefined,
     canonicalUrl:

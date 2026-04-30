@@ -35,7 +35,24 @@ export function PostHero({ meta }: Props) {
           {meta.author && (
             <>
               <span aria-hidden="true">·</span>
-              <span>by {meta.author}</span>
+              <span className="inline-flex items-center gap-1.5">
+                by{" "}
+                <a
+                  href="https://agentkay.it"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-accent transition-colors"
+                >
+                  <img
+                    src="/agent-kay.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                    className="h-5 w-5 rounded-full ring-1 ring-border"
+                  />
+                  {meta.author}
+                </a>
+              </span>
             </>
           )}
         </div>

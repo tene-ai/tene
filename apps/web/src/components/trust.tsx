@@ -113,12 +113,12 @@ export function Trust() {
           <p className="text-sm text-muted">
             Built by{" "}
             <a
-              href="https://github.com/tomo-kay"
+              href="https://agentkay.it"
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              @tomo-kay
+              @agent-kay
             </a>
             , a developer tired of leaking API keys to AI agents.
           </p>

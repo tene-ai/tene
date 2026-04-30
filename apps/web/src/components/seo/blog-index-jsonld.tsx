@@ -73,7 +73,7 @@ export function BlogIndexJsonLd({ posts, tag, category }: Props) {
           keywords: p.tags.join(", "),
           author: {
             "@type": "Person",
-            name: p.author ?? "tomo-kay",
+            name: p.author ?? "agent-kay",
           },
         })),
       },

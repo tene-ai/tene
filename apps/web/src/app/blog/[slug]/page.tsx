@@ -59,7 +59,7 @@ export async function generateMetadata({
       type: "article",
       publishedTime: post.meta.publishedAt,
       modifiedTime: post.meta.updatedAt ?? post.meta.publishedAt,
-      authors: [post.meta.author ?? "tomo-kay"],
+      authors: [post.meta.author ?? "agent-kay"],
       tags: post.meta.tags,
       // blog-seo-enhancements G3 — Next.js auto-wires og:image from the
       // co-located app/blog/[slug]/opengraph-image.tsx file convention.

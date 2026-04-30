@@ -44,8 +44,8 @@ export function ComparisonJsonLd({ comparison, pageUrl }: Props) {
         },
         author: {
           "@type": "Person",
-          name: "tomo-kay",
-          url: "https://github.com/tomo-kay",
+          name: "agent-kay",
+          url: "https://agentkay.it",
         },
       },
       {
