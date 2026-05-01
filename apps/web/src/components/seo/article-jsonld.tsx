@@ -2,6 +2,7 @@
 // single @graph. Adds articleSection (G4) and author.sameAs (G5) alongside
 // the breadcrumb trail (G1).
 import { getCategoryLabel } from "@/lib/tags";
+import { toIsoDateTime } from "@/lib/iso-date";
 import type { BlogPostMeta } from "@/lib/blog";
 
 type Props = {
@@ -18,8 +19,11 @@ export function BlogPostingJsonLd({ meta }: Props) {
         "@type": "BlogPosting",
         headline: meta.title,
         description: meta.description,
-        datePublished: meta.publishedAt,
-        dateModified: meta.updatedAt ?? meta.publishedAt,
+        // Schema.org requires full ISO 8601 datetime with timezone — the
+        // helper anchors date-only frontmatter at UTC midnight (Z). See
+        // src/lib/iso-date.ts for the rationale.
+        datePublished: toIsoDateTime(meta.publishedAt),
+        dateModified: toIsoDateTime(meta.updatedAt ?? meta.publishedAt),
         // G4 — articleSection maps to the post's category (taxonomy change
         // 2026-04-24: previously used first tag; category is now the
         // primary navigation axis and a better Schema.org match).

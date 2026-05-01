@@ -16,6 +16,7 @@ import {
   getComparison,
   getRelatedComparisons,
 } from "@/data/comparisons";
+import { toIsoDateTime } from "@/lib/iso-date";
 
 // Static at build time — no database, no request-time work. Every slug is
 // known ahead of time, so Next.js renders these pages as static HTML with
@@ -51,8 +52,8 @@ export async function generateMetadata({
       url: canonical,
       siteName: "Tene",
       type: "article",
-      publishedTime: data.publishedAt,
-      modifiedTime: data.updatedAt,
+      publishedTime: toIsoDateTime(data.publishedAt),
+      modifiedTime: toIsoDateTime(data.updatedAt),
       images: [
         {
           url: "/og-image.webp",

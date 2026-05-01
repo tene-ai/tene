@@ -74,7 +74,11 @@ export function CliJsonLd({ dateModified }: Props) {
         headline: "tene CLI Reference",
         description:
           "Canonical reference for every tene command, flag, exit code, and JSON schema.",
-        datePublished: "2026-04-22",
+        // Full ISO 8601 datetime with timezone (UTC) — Google Rich Results
+        // Test rejects date-only values. `dateModified` is already
+        // `mtime.toISOString()` which is full ISO; this literal mirrors
+        // that format for `datePublished`.
+        datePublished: "2026-04-22T00:00:00.000Z",
         dateModified,
         author: {
           "@type": "Person",

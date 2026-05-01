@@ -3,6 +3,7 @@
 // this to identify the section as a blog and enumerate articles for citation.
 import type { BlogPostMeta } from "@/lib/blog";
 import { getCategoryLabel, getTagLabel } from "@/lib/tags";
+import { toIsoDateTime } from "@/lib/iso-date";
 
 type Props = {
   posts: BlogPostMeta[];
@@ -67,8 +68,8 @@ export function BlogIndexJsonLd({ posts, tag, category }: Props) {
           headline: p.title,
           description: p.description,
           url: `https://tene.sh/blog/${p.slug}`,
-          datePublished: p.publishedAt,
-          dateModified: p.updatedAt ?? p.publishedAt,
+          datePublished: toIsoDateTime(p.publishedAt),
+          dateModified: toIsoDateTime(p.updatedAt ?? p.publishedAt),
           articleSection: getCategoryLabel(p.category),
           keywords: p.tags.join(", "),
           author: {

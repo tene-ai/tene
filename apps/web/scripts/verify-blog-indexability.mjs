@@ -10,6 +10,10 @@
 //      → 404 in production, missing from sitemap
 //   4. Frontmatter missing required field
 //      → already throws at loadPost(), but we re-assert here for clarity
+//   5. Schema.org / OG datetime regression (added 2026-05-02 after Rich
+//      Results Test rejected date-only `datePublished` / `dateModified`)
+//      → catches the case where a future emission site forgets the
+//        toIsoDateTime() helper and ships date-only strings
 //
 // Runs as `npm run verify:blog` and as a postbuild step.
 // Exits non-zero on any violation.
@@ -89,6 +93,82 @@ for (const file of files) {
       `${relPath(filePath)}: draft: true → will be excluded from RSS + sitemap`,
     );
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Datetime regression guard — runs only if Next.js has produced its build
+// output (.next/server/app). Skipped during `npm run verify:blog` outside
+// of postbuild (where there's nothing to grep yet).
+// ──────────────────────────────────────────────────────────────────────
+const buildDir = path.resolve(__dirname, "..", ".next", "server", "app");
+
+// ISO 8601 datetime with timezone (Z or ±HH:MM). What Schema.org / OG want.
+// Examples that PASS: "2026-05-02T00:00:00.000Z", "2026-05-02T00:00:00+09:00"
+// Examples that FAIL: "2026-05-02", "2026-05-02T00:00:00" (no TZ)
+const ISO_DT = /T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})/;
+
+function checkDatetimeFile(htmlPath) {
+  const html = fs.readFileSync(htmlPath, "utf-8");
+  const rel = path.relative(path.resolve(__dirname, ".."), htmlPath);
+  // Schema.org JSON-LD fields
+  for (const field of ["datePublished", "dateModified"]) {
+    const matches = html.match(
+      new RegExp(`"${field}":"([^"]+)"`, "g"),
+    );
+    if (!matches) continue;
+    for (const m of matches) {
+      const v = m.match(/"[^"]+":"([^"]+)"/)[1];
+      if (!ISO_DT.test(v)) {
+        errors.push(
+          `${rel}: Schema.org ${field}='${v}' is not full ISO 8601 datetime ` +
+            `with timezone. Use src/lib/iso-date.ts → toIsoDateTime().`,
+        );
+      }
+    }
+  }
+  // OpenGraph article:*_time meta tags
+  for (const prop of ["article:published_time", "article:modified_time"]) {
+    const matches = html.match(
+      new RegExp(`property="${prop}"[^>]*content="([^"]+)"`, "g"),
+    );
+    if (!matches) continue;
+    for (const m of matches) {
+      const v = m.match(/content="([^"]+)"/)[1];
+      if (!ISO_DT.test(v)) {
+        errors.push(
+          `${rel}: OG ${prop}='${v}' is not full ISO 8601 datetime ` +
+            `with timezone. Wrap with toIsoDateTime() in the page metadata.`,
+        );
+      }
+    }
+  }
+}
+
+function walkHtml(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const out = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const e of entries) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(...walkHtml(p));
+    else if (e.isFile() && e.name.endsWith(".html")) out.push(p);
+  }
+  return out;
+}
+
+if (fs.existsSync(buildDir)) {
+  const htmlFiles = walkHtml(buildDir);
+  // Only the surfaces that emit datePublished/dateModified or OG article:*_time.
+  const relevant = htmlFiles.filter((p) => {
+    const rel = path.relative(buildDir, p);
+    return (
+      rel.startsWith("blog") ||
+      rel === "cli.html" ||
+      rel.startsWith("vs/") ||
+      rel.startsWith("vs.html")
+    );
+  });
+  for (const p of relevant) checkDatetimeFile(p);
 }
 
 if (warnings.length) {
