@@ -1,0 +1,363 @@
+---
+slug: make-ai-recommend-your-app
+title: "Make AI Recommend Your App: An AEO Playbook for Vibe Coders"
+description: "Get Claude, ChatGPT, Gemini, and Perplexity to cite your app. Real retrieval pathways, JSON-LD that works, GEO numbers, and the MCP registry."
+publishedAt: "2026-05-02"
+updatedAt: "2026-05-02"
+category: vibe-coding
+tags: ["tutorial", "workflow", "deep-dive", "comparison"]
+author: "agent-kay"
+thumbnail: "/blog/make-ai-recommend-your-app/SEO_vs_AEO_vs_GEO.webp"
+faqs:
+  - question: "Is AEO just SEO renamed?"
+    answer: "No. SEO ranks pages for keywords. AEO gets your product named inside an AI's generated answer. Different actor (a language model, not a ranking algorithm), different format (a sentence, not a blue link), different way to measure (Share of Voice across prompts, not position on a SERP)."
+  - question: "My product is brand new. Won't AI ignore it because of the training cutoff?"
+    answer: "For real-time retrieval, no. ChatGPT search, Claude.ai's web search, and Perplexity all read the web for every answer. Optimize those paths first. Training-cutoff visibility comes later, on a 6 to 18 month clock as new models get released."
+  - question: "Do AI assistants actually fetch /llms.txt?"
+    answer: "No major provider has confirmed it as of mid-2026. Adoption is wide (Anthropic, Cloudflare, Mintlify all publish one), but the actual fetch behavior is unproven. Treat llms.txt as a 30-minute defensive move, not a strategy. Most of the win comes from JSON-LD, FAQ markup, and getting indexed by Bing."
+  - question: "Should I block AI crawlers in robots.txt?"
+    answer: "Probably not. You'd be closing the door you want open. Perplexity ignores robots.txt anyway, so blocking only hurts the providers that respect the rules. If you must block, block the training-only crawlers (GPTBot, Google-Extended) and keep the search-only ones (OAI-SearchBot) allowed."
+---
+
+## AI is the new discovery gate
+
+You shipped your app on a Friday afternoon. Monday morning, a stranger
+types "best CLI for managing API keys" into Claude. The answer names
+three tools. Yours isn't one of them. The AI didn't know about you yet.
+
+This is the new acquisition funnel for vibe coders. Discovery, interest,
+desire, purchase — the same four stages we've always had. But the gate
+at the front used to be Google. Now, for a growing slice of users, it's
+a chat box that picks three names. If you don't get picked, you don't
+exist.
+
+SEO got pages indexed. AEO — Answer Engine Optimization — gets your
+product cited inside the answer itself. The job is no longer to rank
+fourth on a search results page. The job is to be one of the names the
+AI types.
+
+<GifEmbed
+  src="/blog/make-ai-recommend-your-app/SEO_vs_AEO_vs_GEO.webp"
+  alt="Three columns side by side. SEO: a search results page with blue links and a rising bar chart. AEO: a single highlighted answer card with a checkmark and a target icon. GEO: a chat bubble with several AI provider logos and a community icon."
+  caption="SEO ranks a page. AEO gets you cited in one answer. GEO spans every AI assistant at once."
+/>
+
+| | SEO | AEO |
+|---|---|---|
+| Goal | Rank a URL | Get cited in an answer |
+| Actor | Ranking algorithm | Language model |
+| Format | Blue link, snippet | A sentence, a name, sometimes a footnote |
+| Measure | Position, CTR | Share of Voice, citation rate |
+| Asset | Page | Page + structured data + brand mentions + MCP server |
+
+The two overlap. A page that ranks well on Bing also gets fed to
+ChatGPT. But you can't stop at ranking. You also have to make the page
+easy for an LLM to *cite* — short, sourced, structured.
+
+## Where each AI assistant actually searches
+
+Real-time AI answers come from a small set of indexes. Knowing which
+one sits behind each assistant tells you exactly where to submit your
+sitemap.
+
+| Assistant | Live retrieval source |
+|---|---|
+| ChatGPT (with search) | Bing index + OpenAI's own crawler |
+| Claude.ai web search | Brave Search API |
+| Claude Code (`WebFetch`) | Direct HTTP fetch to a URL the model picks |
+| Perplexity | Google-derived SERP + Sonar's own ranker |
+| Gemini / AI Overviews | Google index (via `Google-Extended`) |
+| GitHub Copilot Chat | Bing-class web search |
+| Brave Leo | Brave Search index |
+
+Two practical things follow from that table.
+
+First, **Bing is the choke point for ChatGPT.** Seer Interactive
+measured 87% of SearchGPT citations matching Bing's top-five results
+in 2025. If Bing Webmaster Tools doesn't show your sitemap, ChatGPT
+can't see you no matter how clean your JSON-LD is.
+
+Second, **Brave matters for Claude.** Anthropic uses the Brave Search
+API behind the scenes for claude.ai's web search; the parameter names
+were confirmed by both TechCrunch and independent observers in early
+2025.
+
+Submitting to Bing Webmaster Tools is a five-minute job most vibe
+coders skip because they only know Google Search Console. Don't skip
+it.
+
+## Two clocks: retrieval-time vs training-time
+
+Tactics fall on two different clocks. Confusing them is the most common
+AEO mistake.
+
+**Retrieval-time** is what happens this week. ChatGPT searches Bing.
+Claude searches Brave. Perplexity reads the SERP. If your page is on
+those indexes, the AI can find it for the next prompt. Visibility
+arrives in days and disappears the same way — one indexing hiccup and
+you vanish.
+
+**Training-time** is what happens 6 to 18 months from now, when the
+next model is trained. The crawl behind that model — Common Crawl,
+GitHub, Wikipedia, Reddit, Stack Overflow — gets baked into the
+weights. Once it's in, the model "knows" your product without searching
+for it.
+
+You need both. Retrieval gives you fast, fragile visibility. Training
+gives you slow, sticky visibility that keeps working even when the user
+has search turned off.
+
+<Callout type="info">
+A vibe coder I know spent two months tweaking landing-page copy for
+"AI Overviews" and got nothing. The reason: their site was on Google
+but not on Bing. None of those edits touched the path ChatGPT
+actually uses. Five minutes in Bing Webmaster Tools fixed more than
+two months of rewriting.
+</Callout>
+
+## 30-minute baseline: structured data, sitemaps, llms.txt
+
+Three things you can ship in a single coffee break.
+
+**JSON-LD structured data.** Add `SoftwareApplication`, `FAQPage`, and
+`Organization` to your landing page. AI search systems parse these to
+understand what your site is, what it does, and what questions it
+answers. Google's own data shows pages with FAQ markup are 3.2 times
+more likely to appear in AI Overviews — keep each answer between 40
+and 60 words.
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "tene",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "macOS, Linux, Windows",
+  "offers": { "@type": "Offer", "price": "0" },
+  "description": "Local-first secret manager. Encrypted vault, no server."
+}
+```
+
+Drop that into a `<script type="application/ld+json">` tag. Validate
+it with Google's Rich Results Test before shipping.
+
+**Sitemap submission.** Submit `/sitemap.xml` to:
+
+- Bing Webmaster Tools (this is the one that feeds ChatGPT)
+- Google Search Console (for Gemini and AI Overviews)
+- IndexNow (a one-time ping that notifies Bing, Yandex, and others)
+
+**llms.txt as cheap insurance.** Drop a markdown manifest at
+`/llms.txt` that summarizes your site for LLMs. Adoption is wide —
+BuiltWith tracks more than 800 thousand sites including Anthropic and
+Cloudflare — but no major provider has confirmed they actually fetch
+it. Treat it as a 30-minute defensive move, not a growth lever.
+
+```text
+# tene
+
+> Local-first secret manager. Encrypted on disk with XChaCha20-Poly1305.
+
+## Docs
+- [Quickstart](https://tene.sh/docs/quickstart): One-command install
+- [Concepts](https://tene.sh/docs/concepts): Vault, env, recovery key
+- [CLI reference](https://tene.sh/docs/cli): Every command and flag
+```
+
+## GEO-rewrite your hero pages
+
+A 2024 paper from Princeton, "GEO: Generative Engine Optimization"
+(Aggarwal et al.), measured what actually moves the needle for getting
+cited inside a generated answer. The results, by visibility lift over a
+no-edit baseline:
+
+| Tactic | Lift |
+|---|---|
+| Add direct quotes from credible sources | +41% |
+| Add concrete statistics and numbers | +33% |
+| Cite sources inline | +28% |
+| Improve fluency (shorter, clearer prose) | +28% |
+| Use relevant technical terms | +18% |
+| **Keyword stuffing** | **−8%** |
+
+Rewrite your three best-performing posts with this checklist:
+
+- Every claim that could be doubted gets a direct quote from a primary
+  source.
+- Every "many users" or "most teams" gets replaced with a specific
+  number.
+- Every paragraph that can be shorter, gets shorter.
+- Cut the LLM-tells: words like "robust", "comprehensive", and
+  "leverage" hurt your fluency score.
+
+Before:
+
+> Modern AI tools leverage robust retrieval to facilitate seamless
+> answers across diverse use cases.
+
+After:
+
+> The 2024 Princeton GEO paper measured a 41% lift when pages add
+> direct quotes from credible sources. Adding inline citations is the
+> single biggest change you can make to a page.
+
+The "after" version reads cleaner *and* scores higher on every GEO
+factor.
+
+## Brand mention seeding for the next training cycle
+
+AI training corpora pull from a small set of sources, weighted by
+quality. RedPajama-V2, an open replica of LLaMA's training mix, gives
+a usable proxy for which sources matter most:
+
+- GitHub: 60 billion tokens
+- arXiv: 28 billion
+- Books: 26 billion
+- Wikipedia: 24 billion
+- Stack Exchange: 20 billion
+- Common Crawl: 878 billion (lower per-token quality)
+
+Translation: a single high-quality GitHub README, Stack Overflow
+answer, or Wikipedia mention is worth more per token than a hundred
+marketing pages buried in CommonCrawl. For a solo vibe coder, the
+practical seeding plan:
+
+- Submit a PR to two or three relevant `awesome-*` lists. One link,
+  one line — gets indexed by both the GitHub corpus and Bing.
+- Post a thoughtful Show HN that explains the idea, not the product.
+  Front page is a bonus; HN gets crawled either way.
+- Find one Stack Overflow question where your tool is genuinely the
+  answer. Write a 200-word reply. Link only once.
+- Do an honest AMA in a target subreddit (r/cursor, r/selfhosted,
+  r/golang — pick the one that matches your product).
+
+Wikipedia is the highest-weight surface per token. It's also the one
+that will most ruthlessly revert a self-promotional edit. Only push for
+a mention there when your product is genuinely notable.
+
+## Ship an MCP server (if your product is tool-shaped)
+
+The Model Context Protocol is a standard for connecting AI assistants
+to external tools. The official MCP Registry launched in September
+2025. Subregistries — Smithery, PulseMCP, mcp.so, the Anthropic Desktop
+directory — federate from it.
+
+For tool-shaped products (CLIs, dev utilities, internal APIs), getting
+listed in the registry is the closest thing to an App Store entry for
+AI assistants. Once registered, a Claude Desktop or Cursor user can
+install your tool with one command.
+
+```bash
+npx -y @modelcontextprotocol/create-server my-tool
+mcp publish
+```
+
+The verification step uses GitHub login or DNS challenge, so
+impersonation is hard. If your product can be wrapped in an MCP server
+in a weekend, this is the single biggest AEO move available right now.
+
+## Measure with a monthly prompt panel
+
+You can't optimize what you don't measure. Two paths:
+
+**Free DIY.** Pick 20 prompts a target user might type. Run them once
+a month against ChatGPT, Claude, Perplexity, Gemini, and Brave Leo.
+For each prompt, log: did your product get mentioned, in what
+position, and alongside which competitors. A single Google Sheet does
+this fine.
+
+```text
+prompt: "Best CLI for storing API keys locally"
+- ChatGPT:    pass-1 miss   pass-2 hit (position 3 of 5)
+- Claude.ai:  hit (position 1)
+- Perplexity: miss
+- Gemini:     miss
+- Brave Leo:  hit (position 2)
+```
+
+**Paid tools.** Profound, AthenaHQ, Peec.ai, and Otterly all track
+Share of Voice across the major assistants. They're priced for teams,
+not solo founders, but worth the free trial once you cross
+product-market fit.
+
+Watch the trend, not the number. A week of bad results doesn't mean
+your tactics failed — retrieval indexes recrawl on their own clock.
+
+## Don't backfire
+
+Black hat AEO is real and largely punished. Skip these:
+
+<Callout type="warn">
+- **Hidden prompt injection** (white-on-white text, `display:none`
+  instructions to LLMs). Search Engine Land has documented Google
+  blacklisting offenders. The trick has a six-month half-life before
+  detection improves.
+- **Keyword stuffing.** The GEO paper measured this at minus 8%. It
+  actively hurts your citation rate.
+- **AI-generated slop blogs.** Google's helpful-content layer
+  down-weights thin AI content, and you also lose the GEO fluency lift.
+- **Fake llms.txt** padded with marketing copy. No enforcement today,
+  but if providers start fetching llms.txt directly, they'll trust it
+  like a robots.txt — easy to get banned later.
+- **Robots.txt blocking AI crawlers** as a blanket policy. Tempting if
+  you're worried about training, but Perplexity ignores robots.txt
+  entirely, so blocking only shuts the door for providers that respect
+  the rules.
+</Callout>
+
+The pattern: the tactics that work for AEO are mostly the same ones
+that work for being a good citizen of the open web. Cite well.
+Quantify. Be findable. Don't game.
+
+## Summary
+
+- AI assistants pull from different live indexes — Bing for ChatGPT,
+  Brave for Claude, Google for Gemini. Submit your sitemap to all three.
+- JSON-LD, FAQ schema, and structured data are the cheapest 30-minute
+  lift you can ship today.
+- Princeton's GEO paper shows the recipe: cite, quantify, soften your
+  prose. Skip keyword stuffing — it's measurably negative.
+- Brand mentions on GitHub, Stack Overflow, Wikipedia, and Hacker News
+  compound into the next training cycle.
+- For tool-shaped products, an MCP server in the official registry is
+  the highest-impact AEO move available.
+- Measure with a monthly prompt panel. Optimize the trend, not single
+  results.
+
+## Terms used in this post
+
+**AEO (Answer Engine Optimization)** — Making your product likely to be
+named inside an AI's generated answer. Different from SEO, which ranks
+a page on a search results screen.
+
+**GEO (Generative Engine Optimization)** — A research term, often used
+as a synonym for AEO. The Princeton paper of the same name first
+measured what actually moves citation rate.
+
+**JSON-LD** — A way of writing Schema.org structured data as JSON
+inside a `<script>` tag. Search engines and LLMs parse it to understand
+your page.
+
+**llms.txt** — A proposed markdown manifest at the root of your site,
+summarizing your content for LLMs. Adoption is wide; provider
+commitment to actually fetch it is unclear.
+
+**MCP (Model Context Protocol)** — A standard from Anthropic for
+letting AI assistants call external tools. Each tool runs as an MCP
+server.
+
+**RedPajama** — An open replica of the LLaMA training dataset. Its
+public token weights tell us roughly which web sources matter most for
+training.
+
+**Retrieval-time vs training-time** — Two different clocks for AI
+visibility. Retrieval is what an assistant searches the web for right
+now. Training is what gets baked into the next model release.
+
+**Share of Voice** — In AEO measurement, the percentage of relevant
+prompts where your brand gets mentioned by name.
+
+Related reading:
+- [Web basics for vibe coders: from localhost to production](/blog/web-basics-for-vibe-coders)
+- [Vibe coding with context engineering](/blog/vibe-coding-with-context-engineering)
+- [bkit: harness engineering for vibe coding](/blog/bkit-harness-engineering-vibe-coding)

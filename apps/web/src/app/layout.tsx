@@ -113,14 +113,10 @@ const jsonLd = {
       url: "https://tene.sh",
       name: "Tene",
       publisher: { "@id": "https://tene.sh/#organization" },
-      potentialAction: {
-        "@type": "SearchAction",
-        target: {
-          "@type": "EntryPoint",
-          urlTemplate: "https://tene.sh/blog?q={search_term_string}",
-        },
-        "query-input": "required name=search_term_string",
-      },
+      // SearchAction intentionally NOT declared — /blog has no ?q= search
+      // endpoint yet. Asserting one would fail Google's Rich Results
+      // validator and trigger "구조화된 데이터 오류". Add SearchAction back
+      // once a real search route exists.
       inLanguage: "en-US",
     },
     {
