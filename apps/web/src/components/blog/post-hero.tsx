@@ -7,12 +7,16 @@ type Props = {
   meta: BlogPostMeta;
 };
 
+// en-US fixed format. See post-card.tsx for the rationale (site is
+// English-only; UTC anchor keeps the calendar day stable across viewers).
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("en-US", {
+    const anchor = /T\d/.test(iso) ? iso : `${iso}T12:00:00.000Z`;
+    return new Date(anchor).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
+      timeZone: "UTC",
     });
   } catch {
     return iso;

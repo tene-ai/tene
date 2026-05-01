@@ -10,12 +10,19 @@ type Props = {
   featured?: boolean;
 };
 
+// en-US fixed format ("May 2, 2026"). The site is English-only
+// (`inLanguage: 'en-US'`) so the visible date stays English regardless of
+// browser locale. `timeZone: "UTC"` pins the rendered calendar day to the
+// publish day; otherwise UTC+13 (Auckland) viewers would see a date one day
+// ahead of the author's intent.
 function formatDate(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("en-US", {
+    const anchor = /T\d/.test(iso) ? iso : `${iso}T12:00:00.000Z`;
+    return new Date(anchor).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC",
     });
   } catch {
     return iso;

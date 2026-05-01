@@ -22,6 +22,7 @@ import {
   getPostBySlug,
   getRelatedPosts,
 } from "@/lib/blog";
+import { toIsoDateTime } from "@/lib/iso-date";
 
 export const dynamic = "error";
 
@@ -57,8 +58,10 @@ export async function generateMetadata({
       url: canonical,
       siteName: "Tene",
       type: "article",
-      publishedTime: post.meta.publishedAt,
-      modifiedTime: post.meta.updatedAt ?? post.meta.publishedAt,
+      // OG article:*_time also wants full ISO 8601 datetime — same helper
+      // as Schema.org so both surfaces stay in lockstep.
+      publishedTime: toIsoDateTime(post.meta.publishedAt),
+      modifiedTime: toIsoDateTime(post.meta.updatedAt ?? post.meta.publishedAt),
       authors: [post.meta.author ?? "agent-kay"],
       tags: post.meta.tags,
       // blog-seo-enhancements G3 — Next.js auto-wires og:image from the
