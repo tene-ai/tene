@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "node scripts/verify-blog-indexability.mjs",
+    "postbuild": "node scripts/verify-blog-indexability.mjs && node scripts/verify-thin-pages.mjs",
     "start": "next start",
     "lint": "eslint",
-    "verify:blog": "node scripts/verify-blog-indexability.mjs"
+    "verify:blog": "node scripts/verify-blog-indexability.mjs",
+    "verify:thin": "node scripts/verify-thin-pages.mjs",
+    "verify:all": "npm run verify:blog && npm run verify:thin"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.4",

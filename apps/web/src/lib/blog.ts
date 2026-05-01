@@ -178,6 +178,28 @@ export function getPostsByTag(tag: string): BlogPostMeta[] {
 }
 
 // ---------------------------------------------------------------------------
+// Thin-tag protection — tag pages with fewer than this many articles get a
+// `noindex` meta + are excluded from sitemap.xml. Industry default = 3
+// (see .claude/rules/blog-content.md §10.1 and the GSC indexing plan).
+//
+// Why: Google's helpful-content classifier flags tag pages with 1–2 articles
+// as "Crawled - currently not indexed" (thin content) which drags sitewide
+// quality signal. Pages still render normally for UX — only crawlers are
+// instructed to skip them. As soon as a tag accumulates ≥3 articles it
+// becomes indexable again automatically.
+// ---------------------------------------------------------------------------
+export const INDEXABLE_TAG_THRESHOLD = 3;
+
+export function getIndexableTags(): Array<{ tag: string; count: number }> {
+  return getAllTags().filter(({ count }) => count >= INDEXABLE_TAG_THRESHOLD);
+}
+
+export function isIndexableTag(tag: string): boolean {
+  if (!isValidTag(tag)) return false;
+  return getPostsByTag(tag).length >= INDEXABLE_TAG_THRESHOLD;
+}
+
+// ---------------------------------------------------------------------------
 // Categories — returns all 4 even with count=0 (empty categories remain
 // visible in navigation so readers see the full taxonomy).
 // ---------------------------------------------------------------------------

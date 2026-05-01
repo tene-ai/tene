@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer";
 import { InteractiveGrid } from "@/components/interactive-grid";
 import { PostMasonry } from "@/components/blog/post-masonry";
 import { BlogIndexJsonLd } from "@/components/seo/blog-index-jsonld";
-import { getAllTags, getPostsByTag } from "@/lib/blog";
+import { getAllTags, getPostsByTag, isIndexableTag } from "@/lib/blog";
 import { getTagLabel, isValidTag } from "@/lib/tags";
 
 export const dynamic = "error";
@@ -25,6 +25,12 @@ export async function generateMetadata({
   if (!isValidTag(tag)) return {};
   const label = getTagLabel(tag);
   const canonical = `https://tene.sh/blog/tag/${tag}`;
+  // Thin-tag protection: tag pages with < INDEXABLE_TAG_THRESHOLD articles
+  // render normally for UX but emit noindex so Google's helpful-content
+  // classifier doesn't penalise the whole site for thin archives. They
+  // become indexable automatically once the article count crosses the
+  // threshold (no manual flip required). See lib/blog.ts.
+  const indexable = isIndexableTag(tag);
 
   return {
     title: `${label} articles — tene Tech Blog`,
@@ -37,7 +43,12 @@ export async function generateMetadata({
       siteName: "Tene",
       type: "website",
     },
-    robots: { index: true, follow: true },
+    // follow:true even when noindex — Google should still walk the article
+    // links from this page (preserves internal link graph for the articles
+    // themselves; only the archive page itself is hidden from the index).
+    robots: indexable
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
   };
 }
 

@@ -10,6 +10,8 @@ import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { InteractiveGrid } from "@/components/interactive-grid";
 import { Breadcrumb } from "@/components/breadcrumb";
+import { CliJsonLd } from "@/components/seo/cli-jsonld";
+import { useMDXComponents } from "../../../mdx-components";
 
 export const dynamic = "error";
 
@@ -24,7 +26,9 @@ export const metadata: Metadata = {
       "Every tene command, flag, exit code, and JSON schema in one place.",
     url: "https://tene.sh/cli",
     siteName: "Tene",
-    type: "article",
+    // Reference doc, not a long-form article — og:type=website matches
+    // OpenGraph spec for evergreen reference pages.
+    type: "website",
     images: [{ url: "/og-image.webp", width: 1200, height: 630 }],
   },
   twitter: {
@@ -39,15 +43,18 @@ export const metadata: Metadata = {
 
 // Load docs/cli-reference.md at build time. The apps/web workspace sits in
 // apps/web/ so we traverse up twice to reach the repo root where `docs/`
-// lives.
-async function loadReference(): Promise<string> {
+// lives. Returns both the source content and the file mtime so JSON-LD can
+// emit an accurate `dateModified`.
+async function loadReference(): Promise<{ source: string; mtime: string }> {
   const candidates = [
     path.join(process.cwd(), "..", "..", "docs", "cli-reference.md"),
     path.join(process.cwd(), "docs", "cli-reference.md"),
   ];
   for (const p of candidates) {
     try {
-      return fs.readFileSync(p, "utf-8");
+      const source = fs.readFileSync(p, "utf-8");
+      const mtime = fs.statSync(p).mtime.toISOString();
+      return { source, mtime };
     } catch {
       // try next candidate
     }
@@ -58,10 +65,11 @@ async function loadReference(): Promise<string> {
 }
 
 export default async function CliReferencePage() {
-  const source = await loadReference();
+  const { source, mtime } = await loadReference();
 
   return (
     <>
+      <CliJsonLd dateModified={mtime} />
       <InteractiveGrid />
       <div className="dot-grid-fixed sm:hidden" />
       <Nav />
@@ -75,6 +83,7 @@ export default async function CliReferencePage() {
         <article className="mx-auto max-w-3xl px-4 pt-4 pb-12 sm:px-6 prose prose-invert prose-headings:scroll-mt-24">
           <MDXRemote
             source={source}
+            components={useMDXComponents({})}
             options={{
               parseFrontmatter: false,
               mdxOptions: {

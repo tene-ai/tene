@@ -25,8 +25,47 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Hide Next.js fingerprint from response headers (no SEO/AEO benefit, minor
+  // security hygiene — bots still detect the framework via other signals).
+  poweredByHeader: false,
+
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
+  },
+
+  async redirects() {
+    return [
+      // www.tene.sh → apex (canonical is no-www). Keeps Google from picking
+      // www as the indexed host. Middleware drops www from ALLOWED_HOSTS so
+      // any request that slips past this redirect (shouldn't happen on
+      // Vercel) still gets noindex via the middleware fallback.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.tene.sh' }],
+        destination: 'https://tene.sh/:path*',
+        permanent: true,
+      },
+      // Retired blog tags — see RETIRED_TAG_REDIRECTS in src/lib/tags.ts.
+      // External links (Wayback Machine, Daily.dev posts, GeekNews) still
+      // reference these. 301 keeps PageRank flowing into the new home.
+      // MUST MATCH src/lib/tags.ts:76 — adding a tag to that map requires
+      // a redirect entry here too.
+      {
+        source: '/blog/tag/ai',
+        destination: '/blog/category/vibe-coding',
+        permanent: true,
+      },
+      {
+        source: '/blog/tag/go',
+        destination: '/blog/tag/architecture',
+        permanent: true,
+      },
+      {
+        source: '/blog/tag/vibe-coding',
+        destination: '/blog/category/vibe-coding',
+        permanent: true,
+      },
+    ];
   },
 };
 
