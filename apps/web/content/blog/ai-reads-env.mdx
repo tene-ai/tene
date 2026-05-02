@@ -1,22 +1,38 @@
 ---
 slug: ai-reads-env
-title: "Your .env is not a secret. AI can read it."
-description: "Plaintext .env files are a liability in the AI coding era. Here is why the AI-agent threat model changes the math, and what to replace .env with."
-publishedAt: "2026-04-23"
-updatedAt: "2026-04-23"
+title: Your .env is not a secret. AI can read it.
+description: >-
+  Plaintext .env files are a liability in the AI coding era. Here is why the
+  AI-agent threat model changes the math, and what to replace .env with.
+publishedAt: '2026-04-23'
+updatedAt: '2026-04-23'
 category: vibe-coding
-tags: ["security", "devsecops", "tene"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/demo/the-full-story-demo.gif"
-canonicalUrl: "https://tene.sh/blog/ai-reads-env"
+tags:
+  - security
+  - devsecops
+  - tene
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /demo/the-full-story-demo.gif
+canonicalUrl: 'https://tene.sh/blog/ai-reads-env'
 faqs:
-  - question: "Does .gitignore protect my .env from AI agents?"
-    answer: ".gitignore prevents Git from committing the file. It does nothing about the AI agent running on your machine — the agent reads the file from disk as part of the project context before any git boundary."
-  - question: "Which AI agents read .env?"
-    answer: "Every major coding assistant indexes project files as part of its context. Claude Code, Cursor, Windsurf, Gemini Code Assist, GitHub Copilot Chat, and Codex all read local files including .env unless explicitly excluded via an ignore file."
-  - question: "What should replace .env?"
-    answer: "Encrypt secrets at rest and inject them at runtime as environment variables. tene is one implementation — XChaCha20-Poly1305 vault plus 'tene run --' subshell. Your application code keeps reading process.env.* unchanged."
+  - question: Does .gitignore protect my .env from AI agents?
+    answer: >-
+      .gitignore prevents Git from committing the file. It does nothing about
+      the AI agent running on your machine — the agent reads the file from disk
+      as part of the project context before any git boundary.
+  - question: Which AI agents read .env?
+    answer: >-
+      Every major coding assistant indexes project files as part of its context.
+      Claude Code, Cursor, Windsurf, Gemini Code Assist, GitHub Copilot Chat,
+      and Codex all read local files including .env unless explicitly excluded
+      via an ignore file.
+  - question: What should replace .env?
+    answer: >-
+      Encrypt secrets at rest and inject them at runtime as environment
+      variables. tene is one implementation — XChaCha20-Poly1305 vault plus
+      'tene run --' subshell. Your application code keeps reading process.env.*
+      unchanged.
 ---
 
 ## The AI-agent threat model changes the math
@@ -145,3 +161,18 @@ roadmap includes a reference server.
 
 tene is one option. You can build your own. What matters is that you
 stop trusting `.env` with values an AI coding agent will read.
+
+## FAQ
+
+**Does .gitignore protect my .env from AI agents?**
+
+.gitignore prevents Git from committing the file. It does nothing about the AI agent running on your machine — the agent reads the file from disk as part of the project context before any git boundary.
+
+**Which AI agents read .env?**
+
+Every major coding assistant indexes project files as part of its context. Claude Code, Cursor, Windsurf, Gemini Code Assist, GitHub Copilot Chat, and Codex all read local files including .env unless explicitly excluded via an ignore file.
+
+**What should replace .env?**
+
+Encrypt secrets at rest and inject them at runtime as environment variables. tene is one implementation — XChaCha20-Poly1305 vault plus 'tene run --' subshell. Your application code keeps reading process.env.* unchanged.
+

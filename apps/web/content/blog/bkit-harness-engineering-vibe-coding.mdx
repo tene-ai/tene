@@ -1,22 +1,41 @@
 ---
 slug: bkit-harness-engineering-vibe-coding
-title: "bkit + harness engineering: workflow beats model choice"
-description: "Why the workflow around Claude Code matters more than picking a bigger model. Harness engineering, bkit's PDCA, and L0–L4 trust-graduated automation."
-publishedAt: "2026-04-23"
-updatedAt: "2026-04-23"
+title: 'bkit + harness engineering: workflow beats model choice'
+description: >-
+  Why the workflow around Claude Code matters more than picking a bigger model.
+  Harness engineering, bkit's PDCA, and L0–L4 trust-graduated automation.
+publishedAt: '2026-04-23'
+updatedAt: '2026-04-23'
 category: vibe-coding
-tags: ["bkit", "harness-engineering", "workflow"]
-author: "agent-kay"
-cover: "/blog/bkit-harness-engineering-vibe-coding/bkit-og.png"
-thumbnail: "/blog/bkit-harness-engineering-vibe-coding/bkit-og.png"
-canonicalUrl: "https://tene.sh/blog/bkit-harness-engineering-vibe-coding"
+tags:
+  - bkit
+  - harness-engineering
+  - workflow
+author: agent-kay
+cover: /blog/bkit-harness-engineering-vibe-coding/bkit-og.png
+thumbnail: /blog/bkit-harness-engineering-vibe-coding/bkit-og.png
+canonicalUrl: 'https://tene.sh/blog/bkit-harness-engineering-vibe-coding'
 faqs:
-  - question: "Does the model choice not matter at all?"
-    answer: "It matters, but second-order. With a thin workflow around it, a better model just repeats the same mistakes faster. The real power is in the loop: what context the model sees, how its output is evaluated, and what happens when it's wrong. bkit's gap-detector and auto-iterate close failure modes that a bigger model alone does not."
-  - question: "Can I get the same result from plain Claude Code, without bkit?"
-    answer: "Yes, if you are willing to hand-roll the workflow every session: write plan and design docs, review iterations, set your own guardrails. bkit encodes that discipline as a state machine and a set of agents so you do not have to rebuild it per project. It is the difference between a framework and a convention."
-  - question: "Is 'harness engineering' an established term?"
-    answer: "It became common in 2025 as multi-agent systems matured. The idea: LLM inference is a leaf, and the surrounding engineering — context curation, tool orchestration, state, guardrails, retry loops — is what determines real-world reliability. Prompt engineering is one piece inside a harness."
+  - question: Does the model choice not matter at all?
+    answer: >-
+      It matters, but second-order. With a thin workflow around it, a better
+      model just repeats the same mistakes faster. The real power is in the
+      loop: what context the model sees, how its output is evaluated, and what
+      happens when it's wrong. bkit's gap-detector and auto-iterate close
+      failure modes that a bigger model alone does not.
+  - question: 'Can I get the same result from plain Claude Code, without bkit?'
+    answer: >-
+      Yes, if you are willing to hand-roll the workflow every session: write
+      plan and design docs, review iterations, set your own guardrails. bkit
+      encodes that discipline as a state machine and a set of agents so you do
+      not have to rebuild it per project. It is the difference between a
+      framework and a convention.
+  - question: Is 'harness engineering' an established term?
+    answer: >-
+      It became common in 2025 as multi-agent systems matured. The idea: LLM
+      inference is a leaf, and the surrounding engineering — context curation,
+      tool orchestration, state, guardrails, retry loops — is what determines
+      real-world reliability. Prompt engineering is one piece inside a harness.
 ---
 
 ## The model churn trap
@@ -191,6 +210,21 @@ instead of evaporating.
 
 **PDCA** — Plan, Do, Check, Act. A four-step cycle. bkit turns it into a
   state machine with clear gates between phases.
+
+## FAQ
+
+**Does the model choice not matter at all?**
+
+It matters, but second-order. With a thin workflow around it, a better model just repeats the same mistakes faster. The real power is in the loop: what context the model sees, how its output is evaluated, and what happens when it's wrong. bkit's gap-detector and auto-iterate close failure modes that a bigger model alone does not.
+
+**Can I get the same result from plain Claude Code, without bkit?**
+
+Yes, if you are willing to hand-roll the workflow every session: write plan and design docs, review iterations, set your own guardrails. bkit encodes that discipline as a state machine and a set of agents so you do not have to rebuild it per project. It is the difference between a framework and a convention.
+
+**Is 'harness engineering' an established term?**
+
+It became common in 2025 as multi-agent systems matured. The idea: LLM inference is a leaf, and the surrounding engineering — context curation, tool orchestration, state, guardrails, retry loops — is what determines real-world reliability. Prompt engineering is one piece inside a harness.
+
 
 Related reading:
 - [bkit on GitHub (popup-studio-ai/bkit-claude-code)](https://github.com/popup-studio-ai/bkit-claude-code)

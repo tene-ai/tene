@@ -1,22 +1,38 @@
 ---
 slug: migrate-env-60s
-title: "Migrating from .env to an encrypted vault in 60 seconds"
-description: "A hands-on tutorial: take an existing .env file, import it into an encrypted vault, and get your app running through runtime injection. No code changes needed."
-publishedAt: "2026-04-22"
-updatedAt: "2026-04-22"
+title: Migrating from .env to an encrypted vault in 60 seconds
+description: >-
+  A hands-on tutorial: take an existing .env file, import it into an encrypted
+  vault, and get your app running through runtime injection. No code changes
+  needed.
+publishedAt: '2026-04-22'
+updatedAt: '2026-04-22'
 category: tools
-tags: ["tene", "tutorial", "cli"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/demo/env-migration-demo.gif"
-canonicalUrl: "https://tene.sh/blog/migrate-env-60s"
+tags:
+  - tene
+  - tutorial
+  - cli
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /demo/env-migration-demo.gif
+canonicalUrl: 'https://tene.sh/blog/migrate-env-60s'
 faqs:
-  - question: "Do I need to change my application code?"
-    answer: "No. 'tene run -- <command>' sets the same environment variables your code already reads via process.env.*, os.Getenv, os.environ, etc. You typically remove the dotenv package import because it is no longer needed."
-  - question: "What if my .env has comments and blank lines?"
-    answer: "tene import handles standard .env syntax: KEY=VALUE lines, quoted values, and blank/comment lines that are ignored. It does not evaluate variable expansion — if you use VAR=${OTHER_VAR} style expansion, resolve those first."
-  - question: "Can I roll back?"
-    answer: "Yes. Run 'tene export' to print the vault contents in .env format, or 'tene export --file backup.env' to write to a file. You can always go back to plaintext if you need to."
+  - question: Do I need to change my application code?
+    answer: >-
+      No. 'tene run -- <command>' sets the same environment variables your code
+      already reads via process.env.*, os.Getenv, os.environ, etc. You typically
+      remove the dotenv package import because it is no longer needed.
+  - question: What if my .env has comments and blank lines?
+    answer: >-
+      tene import handles standard .env syntax: KEY=VALUE lines, quoted values,
+      and blank/comment lines that are ignored. It does not evaluate variable
+      expansion — if you use VAR=${OTHER_VAR} style expansion, resolve those
+      first.
+  - question: Can I roll back?
+    answer: >-
+      Yes. Run 'tene export' to print the vault contents in .env format, or
+      'tene export --file backup.env' to write to a file. You can always go back
+      to plaintext if you need to.
 ---
 
 ## The goal
@@ -217,3 +233,18 @@ off disk. AI coding agents cannot read what is not there.
 
 Related: [Your .env is not a secret](/blog/ai-reads-env) —
 why this matters in the AI-agent era.
+
+## FAQ
+
+**Do I need to change my application code?**
+
+No. 'tene run -- \<command\>' sets the same environment variables your code already reads via process.env.*, os.Getenv, os.environ, etc. You typically remove the dotenv package import because it is no longer needed.
+
+**What if my .env has comments and blank lines?**
+
+tene import handles standard .env syntax: KEY=VALUE lines, quoted values, and blank/comment lines that are ignored. It does not evaluate variable expansion — if you use VAR=$\{OTHER_VAR\} style expansion, resolve those first.
+
+**Can I roll back?**
+
+Yes. Run 'tene export' to print the vault contents in .env format, or 'tene export --file backup.env' to write to a file. You can always go back to plaintext if you need to.
+

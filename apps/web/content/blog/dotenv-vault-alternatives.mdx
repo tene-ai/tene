@@ -1,23 +1,41 @@
 ---
 slug: dotenv-vault-alternatives
-title: "dotenv-vault is shutting down. Here's what to migrate to."
-description: "The dotenv-vault Pro tier was discontinued in February 2026. Here is a honest side-by-side of the migration options — Doppler, Infisical, HashiCorp Vault, and tene — and a one-command path off the old product."
-publishedAt: "2026-04-23"
-updatedAt: "2026-04-23"
+title: dotenv-vault is shutting down. Here's what to migrate to.
+description: >-
+  The dotenv-vault Pro tier was discontinued in February 2026. Here is a honest
+  side-by-side of the migration options — Doppler, Infisical, HashiCorp Vault,
+  and tene — and a one-command path off the old product.
+publishedAt: '2026-04-23'
+updatedAt: '2026-04-23'
 category: tools
-tags: ["tene", "comparison", "tutorial", "devsecops"]
-author: "agent-kay"
-cover: "/og-image.webp"
-canonicalUrl: "https://tene.sh/blog/dotenv-vault-alternatives"
+tags:
+  - tene
+  - comparison
+  - tutorial
+  - devsecops
+author: agent-kay
+cover: /og-image.webp
+canonicalUrl: 'https://tene.sh/blog/dotenv-vault-alternatives'
 faqs:
-  - question: "What exactly did dotenv-vault discontinue?"
-    answer: "The Pro tier that enabled encrypted team sync and the .env.vault committable file was discontinued in February 2026. The Free tier CLI still works for local use, but the team-collaboration story is gone."
-  - question: "Can I stay on dotenv-vault Free?"
-    answer: "Yes, if you only use it locally as an encrypted .env alternative for a single developer. But the main reason to use dotenv-vault was team sync, which is no longer offered."
-  - question: "Do I need to pay to migrate?"
-    answer: "No. tene is MIT licensed and free forever. Doppler and Infisical have free tiers. HashiCorp Vault OSS is source-available. Migration itself requires no payment."
-  - question: "Will my .env.vault file still work during migration?"
-    answer: "The Free-tier CLI can still 'dotenv-vault pull' a current .env. Do that first to extract your secrets, then import into the new tool."
+  - question: What exactly did dotenv-vault discontinue?
+    answer: >-
+      The Pro tier that enabled encrypted team sync and the .env.vault
+      committable file was discontinued in February 2026. The Free tier CLI
+      still works for local use, but the team-collaboration story is gone.
+  - question: Can I stay on dotenv-vault Free?
+    answer: >-
+      Yes, if you only use it locally as an encrypted .env alternative for a
+      single developer. But the main reason to use dotenv-vault was team sync,
+      which is no longer offered.
+  - question: Do I need to pay to migrate?
+    answer: >-
+      No. tene is MIT licensed and free forever. Doppler and Infisical have free
+      tiers. HashiCorp Vault OSS is source-available. Migration itself requires
+      no payment.
+  - question: Will my .env.vault file still work during migration?
+    answer: >-
+      The Free-tier CLI can still 'dotenv-vault pull' a current .env. Do that
+      first to extract your secrets, then import into the new tool.
 ---
 
 ## What happened
@@ -168,3 +186,22 @@ Pro plan uses a dedicated end-to-end encrypted sync channel.
 
 A longer take on the AI-editor angle lives in our other piece
 [Your .env is not a secret](/blog/ai-reads-env).
+
+## FAQ
+
+**What exactly did dotenv-vault discontinue?**
+
+The Pro tier that enabled encrypted team sync and the .env.vault committable file was discontinued in February 2026. The Free tier CLI still works for local use, but the team-collaboration story is gone.
+
+**Can I stay on dotenv-vault Free?**
+
+Yes, if you only use it locally as an encrypted .env alternative for a single developer. But the main reason to use dotenv-vault was team sync, which is no longer offered.
+
+**Do I need to pay to migrate?**
+
+No. tene is MIT licensed and free forever. Doppler and Infisical have free tiers. HashiCorp Vault OSS is source-available. Migration itself requires no payment.
+
+**Will my .env.vault file still work during migration?**
+
+The Free-tier CLI can still 'dotenv-vault pull' a current .env. Do that first to extract your secrets, then import into the new tool.
+

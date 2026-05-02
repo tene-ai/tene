@@ -206,6 +206,28 @@ available:
 man tene
 ```
 
+## FAQ
+
+**What is tene?**
+
+tene is a local-first encrypted secret manager CLI. It encrypts API keys with XChaCha20-Poly1305 and injects them at runtime via tene run, so AI coding agents never see plaintext values.
+
+**How do I install tene?**
+
+Run curl -sSfL https://tene.sh/install.sh | sh on macOS or Linux. The installer auto-detects your platform, downloads the latest release binary, and places it on your PATH. No Go toolchain or account is required.
+
+**How do I run a command with secrets injected?**
+
+tene run -- `<command>` launches your command with every secret in the active environment exposed as a process-scoped environment variable. The values never appear on stdout or in shell history. Example: tene run -- npm start.
+
+**Can my AI assistant read tene secrets?**
+
+No. tene get refuses to print secrets to a non-TTY stdout (exit code 2, STDOUT_SECRET_BLOCKED) so an AI agent or log pipeline cannot pipe the value out. Use tene run -- `<command>` instead, which keeps secrets in the child process environment only.
+
+**Where are secrets stored?**
+
+Encrypted in a local SQLite vault at .tene/vault.db, scoped per project directory. The master key is held in your OS keychain (Keychain on macOS, libsecret on Linux, Credential Manager on Windows). A 12-word BIP-39 recovery key is issued on tene init for offline backup.
+
 ## Resources
 
 - Repository: https://github.com/tomo-kay/tene

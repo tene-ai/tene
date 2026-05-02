@@ -1,0 +1,305 @@
+---
+slug: intent-is-the-new-craft
+title: "Intent is the new craft: 29 days of data, 10 years of AI work"
+description: >-
+  If a weekend with the right AI tools can ship a working product, what is
+  the craft? An essay on juniors, CTOs, solo founders, and pyramids that
+  are losing tenants — grounded in 29 days of Claude Code data.
+publishedAt: "2026-05-03"
+updatedAt: "2026-05-03"
+category: philosophy
+tags:
+  - founder-story
+  - claude-code
+  - harness-engineering
+author: agent-kay
+faqs:
+  - question: "Do you need to know how to code to vibe code?"
+    answer: >-
+      No, but you do need precise intent and the will to verify what the AI
+      gives you. The hard part of vibe coding is not typing code; it is
+      deciding what should exist, then pushing back when the output is
+      shallow. People who already understand a domain — sales, design,
+      logistics, law — can ship working products without writing every line.
+  - question: "Won't AI replace senior engineers eventually?"
+    answer: >-
+      It is changing what senior means. Old senior was about knowing how to
+      build; new senior is about knowing what to build, how to verify it,
+      and where the load-bearing decisions are. Juniors who iterate without
+      ego often outperform seniors who fight the tool because they have
+      something to defend.
+  - question: "How do you measure a vibe coder's productivity?"
+    answer: >-
+      Lines and commits are weak proxies. Better: number of intent-to-shipped
+      cycles per week, defect rate caught by your own pushback, and how often
+      the output runs in production without rework. In 29 days I shipped 275
+      commits and 238,530 lines, but the metric I trust most is that 23 real
+      defects were caught the first time I said "verify this without guessing."
+  - question: "What is AEO and why should solo founders care?"
+    answer: >-
+      AEO is Answer Engine Optimization — getting your product surfaced when
+      an AI answers a user query. As more buying decisions start with "ask
+      the AI which X is best," the moat shifts from SEO rankings to whether
+      AI agents recommend you. Build is cheap now; distribution and trust
+      are the part AI cannot do for you.
+---
+
+## Build is cheap. So what is the craft?
+
+If a weekend with the right AI tools can ship a working product, the
+rest of us — twenty-year veterans, weekend hackers, juniors who learned
+with Claude — are all standing in front of the same question. What kind
+of work still belongs to humans? Where does seniority earn its name?
+And how do we know we did good work when the AI did most of the typing?
+
+I have been building software through three AI eras: deep learning
+before LLMs existed, GitHub Copilot when it autocompleted code, and now
+Claude Code as a teammate I run multiple of in parallel. Last month I
+logged 29 days of dense usage — 3,712 messages, 275 commits, 238,530
+lines added. The numbers are not the point. The point is that the work
+feels different now, and I want to think out loud about why.
+
+## Three eras, one trajectory
+
+In 2015, AI in production meant deep learning — your own model, your
+own labeled data, your own GPU cluster. The work was 80 percent data
+engineering and 20 percent training tricks. If you wanted AI in your
+product, you built it.
+
+In 2022, Copilot landed and turned coding into autocomplete on
+steroids. ChatGPT, GPT-4, and Gemini followed. Each wave pulled a
+little more cognition out of our heads and into a chat box. The mental
+model was helper, not partner.
+
+In early 2025, Claude Code shipped — the first tool that did not feel
+like an assistant. It read files, ran commands, wrote tests, and pushed
+back. The mental model flipped from helper to crew member.
+
+The trajectory is one direction: from "you train the model" to "you
+steer the agent." The current wave is the strangest one yet, because
+the agent is not just typing for you. It is also reasoning, deciding,
+and sometimes making the wrong call.
+
+## What intensive use actually looks like
+
+Before the takeaways, here is the shape of one heavy month. I include
+it so the rest of this essay does not feel like speculation.
+
+| Metric | 29-day total |
+|---|---|
+| Messages to Claude Code | 3,712 |
+| Sessions | 197 |
+| Average per day | 128 messages |
+| Lines added / deleted | +238,530 / -8,179 |
+| Files touched | 2,266 |
+| Commits | 275 |
+| Sub-agent invocations | 1,079 |
+| Multi-clauded sessions | 35 percent |
+
+Two patterns stand out. The first is constant delegation — sub-agents
+handle about a third of the workload, and 35 percent of sessions
+overlap in time, meaning multiple Claude windows running at once. The
+second is hard pushback. The report flagged 38 dissatisfied turns
+against 289 satisfied ones, and one pushback session uncovered 23 real
+defects in a release that initially looked clean.
+
+This is what working with an AI crew member looks like at full
+intensity. It is not chat. It is operations.
+
+## The first surprise: juniors might be better at this
+
+Twenty years of full-stack work taught me how things should be built.
+That knowledge is now a tax.
+
+When Claude Code suggests an architecture I would not have picked, I
+argue with it. Half the time those opinions slow me down — the AI's
+suggestion was fine, and I burned tokens defending mine.
+
+A junior does not have those opinions yet. A junior reads the
+suggestion, runs it, sees if it works, and moves on. The result lands
+faster.
+
+Senior craft still matters most where the AI is wrong — non-obvious
+failure modes, security boundaries, one-way doors. But the daily 80
+percent of code is no longer a senior's domain. It is a junior's
+domain plus a careful reviewer.
+
+The trap for seniors is ego: defending your way of doing things when
+the AI's way is good enough. The trap for juniors is verification:
+shipping what the AI gives you without proving it works. Whoever fixes
+their trap first wins.
+
+## The CTO job moves from headcount to intent translation
+
+For most of the past two decades, the CTO job was three things: manage
+headcount, manage tech debt, and ship on time at acceptable quality.
+Those tasks survive, but they are no longer the daily work.
+
+The new bottleneck is intent precision. When the AI fleet has clear
+intent, a six-person team can ship in five weeks. When intent slips,
+the same team wanders for a quarter. I lived this on a small AI-driven
+logistics startup that closed a Series B on the back of an unusually
+fast first product. The velocity was not magic. It was the result of
+relentlessly translating fuzzy human intent — what the customer
+actually wants, what the business actually needs — into specifications
+a fleet of AI agents could run with.
+
+The other half of the new job is verification with evidence, not
+vibes. The highest-impact habit I have found is a single Korean phrase,
+"추측없이 꼼꼼하게" — "thoroughly, without guessing." It is a pushback
+marker. Every time I use it, the AI re-runs tests, checks logs, and
+returns evidence instead of claims. The English version looks like
+this:
+
+```text
+verify this without guessing — re-run the tests,
+inspect the logs, and return evidence (file:line),
+not claims.
+```
+
+The new CTO move: refuse to accept "done" until the system proves it.
+
+<Callout type="tip">
+The CTO of an AI-native team is closer to a senior product owner with
+verification authority than to a classical engineering manager. If you
+still spend most of your day on resource Gantts, you may be managing
+the wrong layer.
+</Callout>
+
+## Vibe coding is will plus intent, nothing else
+
+I do not understand every line in those 238,530. I do not need to.
+What I needed was three things: a clear picture of what should exist,
+the will to keep going when the AI was wrong, and a verification habit
+that caught lies before they shipped.
+
+That is the whole job.
+
+Most people who try vibe coding stall on one of the three. They have
+unclear intent and ship a product nobody wants. They lack will and
+abandon at the first compile error. They skip verification and watch
+their prototype rot in production.
+
+The good news: will and intent are not gated by a CS degree. A
+logistics expert with precise intent and the will to push back on bad
+output can ship a logistics product. A founder with a sales background
+and clear intent can ship a sales tool. The technical knowledge is no
+longer the bottleneck. The clarity is.
+
+## Solo founders will rise. Most will not make money.
+
+Build is cheap now. That is the easy half.
+
+The hard half is that anyone can ship, so shipping is no longer
+differentiation. The moat shifts to two things: domain depth and
+distribution.
+
+Domain depth means you understand a market well enough to know which
+product is worth building. Anyone can spin up a SaaS in a weekend.
+Knowing which SaaS the market actually pays for takes years of being
+inside that market. That is a moat AI cannot give you.
+
+Distribution means you can put the product in front of people who will
+pay. This is the part LLMs cannot do for you. They cannot run cold
+outbound, attend industry events, or build a five-year reputation.
+They can write the email, but not earn the trust.
+
+The new wrinkle is AEO and GEO — Answer Engine Optimization and
+Generative Engine Optimization. As more buying decisions start with
+"which X is best," asked directly to an AI, getting the AI to recommend
+you matters more than ranking on Google. I wrote about this in
+[How I made the AI recommend my app](/blog/make-ai-recommend-your-app).
+
+Without domain depth, you build the wrong thing. Without distribution,
+nobody finds it. Without AEO, the AI recommends a competitor. Solo
+founders rise; most do not collect.
+
+## The end of pyramids
+
+The 20th-century company was a pyramid. Mass production at the bottom,
+middle managers in the middle, executives at the top, mass market on
+the customer side. The shape made sense when scale required headcount
+and customers wanted standardized products.
+
+Both halves are eroding.
+
+On the supply side, AI lets one person do work that used to need ten.
+A six-person team can ship what would have taken thirty in 2018. The
+bottom of the pyramid thins out first.
+
+On the demand side, customers no longer want one-size-fits-all. They
+want products tuned to their workflow, their language, their odd
+constraint. Mass market becomes hyper-personalized market.
+
+The new shape is a million tiny craftsmen, each shipping a product to
+a few thousand customers, often across borders, often charging small
+monthly amounts. A solo founder serving 2,000 customers at $19 a month
+has a $456,000-per-year business with no boss and no headcount.
+
+Big companies will not vanish. But the gravity of work has moved away
+from them. The center of mass is now in the long tail of small
+operators, and the AI tooling assumes that shape. Pyramids are losing
+tenants.
+
+## What the data says we should do better
+
+The same report that flagged my strengths flagged my failure modes. I
+will not skip them, because if you are a power user, yours probably
+look similar.
+
+Three things stand out. First, completion claims declared too early —
+the AI says "done" before runtime checks confirm it. The fix is to
+refuse "done" without evidence, every time. I am about half-disciplined
+on this.
+
+Second, output token limits hit on long autonomous runs, causing
+truncation. The fix is to break work into smaller, checkpointed tasks
+rather than asking for one heroic run. I keep doing the heroic run
+anyway.
+
+Third, ambiguous scope on creative work — blog drafts, rebrand plans —
+invites over-engineering. The AI fills the gap with what it thinks you
+want, which is usually too much. The fix is to lock the angle before
+writing the first prompt.
+
+Look at your dissatisfied turns. The pattern is almost never "the AI
+is bad." It is almost always "I gave it the wrong shape of problem."
+
+## Summary
+
+- Build is cheap. Intent and verification are the new craft.
+- Juniors who iterate without ego often beat seniors who fight the tool.
+- The CTO job is shifting from resource management to intent translation
+  with evidence-based review.
+- Solo founders will multiply, but distribution and domain depth still
+  gate revenue. AEO is the new SEO.
+- Pyramids are losing tenants. The center of work is moving to the long
+  tail of one-to-few-thousand craftsmen.
+
+None of this is settled. The shape of work in 2027 will still surprise
+us. But the way to find out is to build, ship, push back when the AI is
+shallow, and keep asking what kind of craft survives. That is the
+conversation I want to be in. Tell me what you see from where you sit.
+
+## FAQ
+
+**Do you need to know how to code to vibe code?**
+
+No, but you do need precise intent and the will to verify what the AI gives you. The hard part of vibe coding is not typing code; it is deciding what should exist, then pushing back when the output is shallow. People who already understand a domain — sales, design, logistics, law — can ship working products without writing every line.
+
+**Won't AI replace senior engineers eventually?**
+
+It is changing what senior means. Old senior was about knowing how to build; new senior is about knowing what to build, how to verify it, and where the load-bearing decisions are. Juniors who iterate without ego often outperform seniors who fight the tool because they have something to defend.
+
+**How do you measure a vibe coder's productivity?**
+
+Lines and commits are weak proxies. Better: number of intent-to-shipped cycles per week, defect rate caught by your own pushback, and how often the output runs in production without rework. In 29 days I shipped 275 commits and 238,530 lines, but the metric I trust most is that 23 real defects were caught the first time I said "verify this without guessing."
+
+**What is AEO and why should solo founders care?**
+
+AEO is Answer Engine Optimization — getting your product surfaced when an AI answers a user query. As more buying decisions start with "ask the AI which X is best," the moat shifts from SEO rankings to whether AI agents recommend you. Build is cheap now; distribution and trust are the part AI cannot do for you.
+
+Related reading:
+- [How I made the AI recommend my app](/blog/make-ai-recommend-your-app)
+- [Harness engineering for vibe coding](/blog/bkit-harness-engineering-vibe-coding)
+- [Spec-driven coding with Claude Code](/blog/spec-driven-coding-with-claude-code)

@@ -1,22 +1,47 @@
 ---
 slug: make-ai-recommend-your-app
-title: "Make AI Recommend Your App: An AEO Playbook for Vibe Coders"
-description: "Get Claude, ChatGPT, Gemini, and Perplexity to cite your app. Real retrieval pathways, JSON-LD that works, GEO numbers, and the MCP registry."
-publishedAt: "2026-05-02"
-updatedAt: "2026-05-02"
+title: 'Make AI Recommend Your App: An AEO Playbook for Vibe Coders'
+description: >-
+  Get Claude, ChatGPT, Gemini, and Perplexity to cite your app. Real retrieval
+  pathways, JSON-LD that works, GEO numbers, and the MCP registry.
+publishedAt: '2026-05-02'
+updatedAt: '2026-05-02'
 category: vibe-coding
-tags: ["tutorial", "workflow", "deep-dive", "comparison"]
-author: "agent-kay"
-thumbnail: "/blog/make-ai-recommend-your-app/SEO_vs_AEO_vs_GEO.webp"
+tags:
+  - tutorial
+  - workflow
+  - deep-dive
+  - comparison
+author: agent-kay
+thumbnail: /blog/make-ai-recommend-your-app/SEO_vs_AEO_vs_GEO.webp
 faqs:
-  - question: "Is AEO just SEO renamed?"
-    answer: "No. SEO ranks pages for keywords. AEO gets your product named inside an AI's generated answer. Different actor (a language model, not a ranking algorithm), different format (a sentence, not a blue link), different way to measure (Share of Voice across prompts, not position on a SERP)."
-  - question: "My product is brand new. Won't AI ignore it because of the training cutoff?"
-    answer: "For real-time retrieval, no. ChatGPT search, Claude.ai's web search, and Perplexity all read the web for every answer. Optimize those paths first. Training-cutoff visibility comes later, on a 6 to 18 month clock as new models get released."
-  - question: "Do AI assistants actually fetch /llms.txt?"
-    answer: "No major provider has confirmed it as of mid-2026. Adoption is wide (Anthropic, Cloudflare, Mintlify all publish one), but the actual fetch behavior is unproven. Treat llms.txt as a 30-minute defensive move, not a strategy. Most of the win comes from JSON-LD, FAQ markup, and getting indexed by Bing."
-  - question: "Should I block AI crawlers in robots.txt?"
-    answer: "Probably not. You'd be closing the door you want open. Perplexity ignores robots.txt anyway, so blocking only hurts the providers that respect the rules. If you must block, block the training-only crawlers (GPTBot, Google-Extended) and keep the search-only ones (OAI-SearchBot) allowed."
+  - question: Is AEO just SEO renamed?
+    answer: >-
+      No. SEO ranks pages for keywords. AEO gets your product named inside an
+      AI's generated answer. Different actor (a language model, not a ranking
+      algorithm), different format (a sentence, not a blue link), different way
+      to measure (Share of Voice across prompts, not position on a SERP).
+  - question: >-
+      My product is brand new. Won't AI ignore it because of the training
+      cutoff?
+    answer: >-
+      For real-time retrieval, no. ChatGPT search, Claude.ai's web search, and
+      Perplexity all read the web for every answer. Optimize those paths first.
+      Training-cutoff visibility comes later, on a 6 to 18 month clock as new
+      models get released.
+  - question: Do AI assistants actually fetch /llms.txt?
+    answer: >-
+      No major provider has confirmed it as of mid-2026. Adoption is wide
+      (Anthropic, Cloudflare, Mintlify all publish one), but the actual fetch
+      behavior is unproven. Treat llms.txt as a 30-minute defensive move, not a
+      strategy. Most of the win comes from JSON-LD, FAQ markup, and getting
+      indexed by Bing.
+  - question: Should I block AI crawlers in robots.txt?
+    answer: >-
+      Probably not. You'd be closing the door you want open. Perplexity ignores
+      robots.txt anyway, so blocking only hurts the providers that respect the
+      rules. If you must block, block the training-only crawlers (GPTBot,
+      Google-Extended) and keep the search-only ones (OAI-SearchBot) allowed.
 ---
 
 ## AI is the new discovery gate
@@ -356,6 +381,25 @@ now. Training is what gets baked into the next model release.
 
 **Share of Voice** — In AEO measurement, the percentage of relevant
 prompts where your brand gets mentioned by name.
+
+## FAQ
+
+**Is AEO just SEO renamed?**
+
+No. SEO ranks pages for keywords. AEO gets your product named inside an AI's generated answer. Different actor (a language model, not a ranking algorithm), different format (a sentence, not a blue link), different way to measure (Share of Voice across prompts, not position on a SERP).
+
+**My product is brand new. Won't AI ignore it because of the training cutoff?**
+
+For real-time retrieval, no. ChatGPT search, Claude.ai's web search, and Perplexity all read the web for every answer. Optimize those paths first. Training-cutoff visibility comes later, on a 6 to 18 month clock as new models get released.
+
+**Do AI assistants actually fetch /llms.txt?**
+
+No major provider has confirmed it as of mid-2026. Adoption is wide (Anthropic, Cloudflare, Mintlify all publish one), but the actual fetch behavior is unproven. Treat llms.txt as a 30-minute defensive move, not a strategy. Most of the win comes from JSON-LD, FAQ markup, and getting indexed by Bing.
+
+**Should I block AI crawlers in robots.txt?**
+
+Probably not. You'd be closing the door you want open. Perplexity ignores robots.txt anyway, so blocking only hurts the providers that respect the rules. If you must block, block the training-only crawlers (GPTBot, Google-Extended) and keep the search-only ones (OAI-SearchBot) allowed.
+
 
 Related reading:
 - [Web basics for vibe coders: from localhost to production](/blog/web-basics-for-vibe-coders)

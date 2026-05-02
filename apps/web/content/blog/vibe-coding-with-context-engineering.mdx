@@ -1,23 +1,51 @@
 ---
 slug: vibe-coding-with-context-engineering
-title: "Vibe coding with context engineering: 1 person, 9 sprints, 1 day"
-description: "3,514 messages, 28 days, 9 sprints shipped in a single session — the 4-layer context stack a solo founder uses so AI does the execution and the human still owns the call."
-publishedAt: "2026-04-29"
-updatedAt: "2026-04-29"
+title: 'Vibe coding with context engineering: 1 person, 9 sprints, 1 day'
+description: >-
+  3,514 messages, 28 days, 9 sprints shipped in a single session — the 4-layer
+  context stack a solo founder uses so AI does the execution and the human still
+  owns the call.
+publishedAt: '2026-04-29'
+updatedAt: '2026-04-29'
 category: philosophy
-tags: ["bkit", "founder-story", "workflow", "claude-code"]
-author: "agent-kay"
-thumbnail: "/blog/vibe-coding-with-context-engineering/solo-orchestration.webp"
-canonicalUrl: "https://tene.sh/blog/vibe-coding-with-context-engineering"
+tags:
+  - bkit
+  - founder-story
+  - workflow
+  - claude-code
+author: agent-kay
+thumbnail: /blog/vibe-coding-with-context-engineering/solo-orchestration.webp
+canonicalUrl: 'https://tene.sh/blog/vibe-coding-with-context-engineering'
 faqs:
-  - question: "Doesn't this mean Claude does everything and you do nothing?"
-    answer: "It's the opposite. The more execution Claude takes over, the higher the share of work that is *judgment* — direction, quality bar, convention trade-offs, noticing what is missing. 25 person-weeks did not become 0.2 person-weeks because the code volume shrunk. It happened because the decision density was compressed into one head."
-  - question: "Why not just use Cursor or Copilot — why all this context engineering setup?"
-    answer: "Cursor and Copilot are turn-based assistants. The stack in this article assumes a long-horizon orchestrator — one session running 9 sprints × 7 PDCA phases = 63 phase transitions. That requires *project-scoped* context, not conversation-scoped context. They are different tools. You can run both."
-  - question: "What if my project has no docs, no rules, no .claude/ setup?"
-    answer: "Spend 70% of your first sprint building the stack itself. It feels wasteful. From the second sprint on, you get it back with interest. The 9-sprint-in-a-day speed is the compound result of six prior weeks of stack accumulation, not raw model speed. Context engineering is an asset that grows — not a tool you reach for once."
-  - question: "Did the 682GB recursion bug not break your trust in AI?"
-    answer: "It reinforced it. AI running solo will produce that class of bug — the data confirmed it. Which is exactly why the PDCA Check phase has automated gates and the human still asks 'are you really done?' three times. Pushback is not skepticism. It is protocol."
+  - question: Doesn't this mean Claude does everything and you do nothing?
+    answer: >-
+      It's the opposite. The more execution Claude takes over, the higher the
+      share of work that is *judgment* — direction, quality bar, convention
+      trade-offs, noticing what is missing. 25 person-weeks did not become 0.2
+      person-weeks because the code volume shrunk. It happened because the
+      decision density was compressed into one head.
+  - question: >-
+      Why not just use Cursor or Copilot — why all this context engineering
+      setup?
+    answer: >-
+      Cursor and Copilot are turn-based assistants. The stack in this article
+      assumes a long-horizon orchestrator — one session running 9 sprints × 7
+      PDCA phases = 63 phase transitions. That requires *project-scoped*
+      context, not conversation-scoped context. They are different tools. You
+      can run both.
+  - question: 'What if my project has no docs, no rules, no .claude/ setup?'
+    answer: >-
+      Spend 70% of your first sprint building the stack itself. It feels
+      wasteful. From the second sprint on, you get it back with interest. The
+      9-sprint-in-a-day speed is the compound result of six prior weeks of stack
+      accumulation, not raw model speed. Context engineering is an asset that
+      grows — not a tool you reach for once.
+  - question: Did the 682GB recursion bug not break your trust in AI?
+    answer: >-
+      It reinforced it. AI running solo will produce that class of bug — the
+      data confirmed it. Which is exactly why the PDCA Check phase has automated
+      gates and the human still asks 'are you really done?' three times.
+      Pushback is not skepticism. It is protocol.
 ---
 
 ## The lonely sprint
@@ -258,6 +286,25 @@ That's what `tene` and `bkit` are, in the end — opinionated context engineerin
 **Quality gate** — An automated check that blocks a phase from advancing until the result passes a threshold (e.g., 0 typecheck errors).
 
 **Multi-clauding** — Running several Claude sessions in parallel on different parts of the project at the same time.
+
+## FAQ
+
+**Doesn't this mean Claude does everything and you do nothing?**
+
+It's the opposite. The more execution Claude takes over, the higher the share of work that is *judgment* — direction, quality bar, convention trade-offs, noticing what is missing. 25 person-weeks did not become 0.2 person-weeks because the code volume shrunk. It happened because the decision density was compressed into one head.
+
+**Why not just use Cursor or Copilot — why all this context engineering setup?**
+
+Cursor and Copilot are turn-based assistants. The stack in this article assumes a long-horizon orchestrator — one session running 9 sprints × 7 PDCA phases = 63 phase transitions. That requires *project-scoped* context, not conversation-scoped context. They are different tools. You can run both.
+
+**What if my project has no docs, no rules, no .claude/ setup?**
+
+Spend 70% of your first sprint building the stack itself. It feels wasteful. From the second sprint on, you get it back with interest. The 9-sprint-in-a-day speed is the compound result of six prior weeks of stack accumulation, not raw model speed. Context engineering is an asset that grows — not a tool you reach for once.
+
+**Did the 682GB recursion bug not break your trust in AI?**
+
+It reinforced it. AI running solo will produce that class of bug — the data confirmed it. Which is exactly why the PDCA Check phase has automated gates and the human still asks 'are you really done?' three times. Pushback is not skepticism. It is protocol.
+
 
 Related reading:
 - [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)
