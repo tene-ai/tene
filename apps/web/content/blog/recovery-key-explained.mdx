@@ -1,24 +1,47 @@
 ---
 slug: recovery-key-explained
-title: "The 12-word recovery key: how a local vault survives a forgotten password"
-description: "How a 12-word BIP-39 mnemonic lets a local-first secret vault survive a forgotten master password — without a cloud account or email reset."
-publishedAt: "2026-04-27"
-updatedAt: "2026-04-27"
+title: 'The 12-word recovery key: how a local vault survives a forgotten password'
+description: >-
+  How a 12-word BIP-39 mnemonic lets a local-first secret vault survive a
+  forgotten master password — without a cloud account or email reset.
+publishedAt: '2026-04-27'
+updatedAt: '2026-04-27'
 category: engineering
-tags: ["cryptography", "deep-dive", "tene", "security"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/demo/recovery-flow-demo.gif"
-canonicalUrl: "https://tene.sh/blog/recovery-key-explained"
+tags:
+  - cryptography
+  - deep-dive
+  - tene
+  - security
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /demo/recovery-flow-demo.gif
+canonicalUrl: 'https://tene.sh/blog/recovery-key-explained'
 faqs:
-  - question: "Is a 12-word recovery key as strong as my master password?"
-    answer: "It encodes 128 bits of entropy by the BIP-39 standard, which is comparable to a long generated password. The strength is in the entropy, not the word count — fewer words means weaker. Most modern wallets and tene default to 12, which is the practical sweet spot between security and writeability."
-  - question: "What if my recovery key falls into the wrong hands?"
-    answer: "It grants full vault access, exactly like the master password. Treat the 12 words as you would your master credentials — never store them in the same place as the vault file, never paste them into a chat or AI agent, and never photograph them with a phone that auto-uploads to the cloud."
-  - question: "Why not just use a key-file backup instead?"
-    answer: "A key file is brittle: it lives on the same kind of disk that just failed, it has no checksum to detect bit-rot, and it cannot be split across locations easily. A 12-word phrase can be hand-written, printed, memorized, or stamped into metal — it survives hardware failure that a key file does not."
-  - question: "Does the recovery key still work after my laptop dies?"
-    answer: "Only if the vault file itself was backed up. The recovery key recovers access to a vault — it does not regenerate the encrypted data. Back up the encrypted vault file separately; ciphertext is safe to push anywhere, including a public bucket."
+  - question: Is a 12-word recovery key as strong as my master password?
+    answer: >-
+      It encodes 128 bits of entropy by the BIP-39 standard, which is comparable
+      to a long generated password. The strength is in the entropy, not the word
+      count — fewer words means weaker. Most modern wallets and tene default to
+      12, which is the practical sweet spot between security and writeability.
+  - question: What if my recovery key falls into the wrong hands?
+    answer: >-
+      It grants full vault access, exactly like the master password. Treat the
+      12 words as you would your master credentials — never store them in the
+      same place as the vault file, never paste them into a chat or AI agent,
+      and never photograph them with a phone that auto-uploads to the cloud.
+  - question: Why not just use a key-file backup instead?
+    answer: >-
+      A key file is brittle: it lives on the same kind of disk that just failed,
+      it has no checksum to detect bit-rot, and it cannot be split across
+      locations easily. A 12-word phrase can be hand-written, printed,
+      memorized, or stamped into metal — it survives hardware failure that a key
+      file does not.
+  - question: Does the recovery key still work after my laptop dies?
+    answer: >-
+      Only if the vault file itself was backed up. The recovery key recovers
+      access to a vault — it does not regenerate the encrypted data. Back up the
+      encrypted vault file separately; ciphertext is safe to push anywhere,
+      including a public bucket.
 ---
 
 ## A short answer up front
@@ -325,6 +348,25 @@ promise that for future you.
 **Vault key** — The 256-bit random key that actually encrypts your secrets. It's
   never stored in the clear; only the wrapped (locked) copies sit
   on disk.
+
+## FAQ
+
+**Is a 12-word recovery key as strong as my master password?**
+
+It encodes 128 bits of entropy by the BIP-39 standard, which is comparable to a long generated password. The strength is in the entropy, not the word count — fewer words means weaker. Most modern wallets and tene default to 12, which is the practical sweet spot between security and writeability.
+
+**What if my recovery key falls into the wrong hands?**
+
+It grants full vault access, exactly like the master password. Treat the 12 words as you would your master credentials — never store them in the same place as the vault file, never paste them into a chat or AI agent, and never photograph them with a phone that auto-uploads to the cloud.
+
+**Why not just use a key-file backup instead?**
+
+A key file is brittle: it lives on the same kind of disk that just failed, it has no checksum to detect bit-rot, and it cannot be split across locations easily. A 12-word phrase can be hand-written, printed, memorized, or stamped into metal — it survives hardware failure that a key file does not.
+
+**Does the recovery key still work after my laptop dies?**
+
+Only if the vault file itself was backed up. The recovery key recovers access to a vault — it does not regenerate the encrypted data. Back up the encrypted vault file separately; ciphertext is safe to push anywhere, including a public bucket.
+
 
 Related reading:
 - [XChaCha20-Poly1305 for developers](/blog/xchacha20-for-devs)

@@ -1,22 +1,39 @@
 ---
 slug: claude-code-safe-api-keys
-title: "Claude Code + API keys: the safe workflow"
-description: "A practical pattern for using Claude Code with real API keys without leaking them into the context window. Covers CLAUDE.md auto-generation, 'tene run --' subshell, and concrete Stripe / OpenAI examples."
-publishedAt: "2026-04-23"
-updatedAt: "2026-04-23"
+title: 'Claude Code + API keys: the safe workflow'
+description: >-
+  A practical pattern for using Claude Code with real API keys without leaking
+  them into the context window. Covers CLAUDE.md auto-generation, 'tene run --'
+  subshell, and concrete Stripe / OpenAI examples.
+publishedAt: '2026-04-23'
+updatedAt: '2026-04-23'
 category: vibe-coding
-tags: ["tene", "claude-code", "security", "tutorial"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/demo/claude-refuses-demo.gif"
-canonicalUrl: "https://tene.sh/blog/claude-code-safe-api-keys"
+tags:
+  - tene
+  - claude-code
+  - security
+  - tutorial
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /demo/claude-refuses-demo.gif
+canonicalUrl: 'https://tene.sh/blog/claude-code-safe-api-keys'
 faqs:
-  - question: "Does Claude Code really read .env?"
-    answer: "Yes, by default. Claude Code indexes project files to build context for reasoning. That includes .env unless you explicitly exclude it via the project's CLAUDE.md or similar mechanism."
-  - question: "What does 'tene init' change in my Claude Code project?"
-    answer: "It creates a CLAUDE.md at the project root that tells the agent to use 'tene run --' and 'tene list' instead of reading env files, and to avoid 'tene get KEY' in AI context since that prints plaintext to stdout."
-  - question: "Can I share the vault with a teammate using Claude Code?"
-    answer: "The free CLI is strictly local. For team sync there is an optional Pro plan that uses client-side encryption — the server only sees ciphertext. Each teammate gets the vault after 'tene pull' + master password verification."
+  - question: Does Claude Code really read .env?
+    answer: >-
+      Yes, by default. Claude Code indexes project files to build context for
+      reasoning. That includes .env unless you explicitly exclude it via the
+      project's CLAUDE.md or similar mechanism.
+  - question: What does 'tene init' change in my Claude Code project?
+    answer: >-
+      It creates a CLAUDE.md at the project root that tells the agent to use
+      'tene run --' and 'tene list' instead of reading env files, and to avoid
+      'tene get KEY' in AI context since that prints plaintext to stdout.
+  - question: Can I share the vault with a teammate using Claude Code?
+    answer: >-
+      The free CLI is strictly local. For team sync there is an optional Pro
+      plan that uses client-side encryption — the server only sees ciphertext.
+      Each teammate gets the vault after 'tene pull' + master password
+      verification.
 ---
 
 ## The pattern in one paragraph
@@ -171,3 +188,18 @@ password is for the vault only. Treat it like a recovery phrase.
 
 Deep dive on the threat model: [Your .env is not a secret](/blog/ai-reads-env).
 Moving from dotenv-vault: [dotenv-vault alternatives](/blog/dotenv-vault-alternatives).
+
+## FAQ
+
+**Does Claude Code really read .env?**
+
+Yes, by default. Claude Code indexes project files to build context for reasoning. That includes .env unless you explicitly exclude it via the project's CLAUDE.md or similar mechanism.
+
+**What does 'tene init' change in my Claude Code project?**
+
+It creates a CLAUDE.md at the project root that tells the agent to use 'tene run --' and 'tene list' instead of reading env files, and to avoid 'tene get KEY' in AI context since that prints plaintext to stdout.
+
+**Can I share the vault with a teammate using Claude Code?**
+
+The free CLI is strictly local. For team sync there is an optional Pro plan that uses client-side encryption — the server only sees ciphertext. Each teammate gets the vault after 'tene pull' + master password verification.
+

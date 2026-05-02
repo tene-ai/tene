@@ -7,62 +7,30 @@
 //
 // Site-wide entities (Organization, WebSite, SoftwareApplication) stay in
 // `layout.tsx` because they are `@id`-keyed and reused across pages.
+//
+// Source-of-truth note (2026-05-03): the FAQ Q&A list is imported from
+// `@/data/faq`, which is the SAME data used by the visible <FAQ /> UI
+// component on the home page. Hardcoding a separate set in this file used
+// to drift — UI showed 8 Q&A while JSON-LD emitted a different 6 Q&A,
+// triggering GSC's "FAQPage 입력란이 중복" / Schema-vs-content mismatch.
+// Per Google policy ("All FAQ markup must match visible content"), the
+// schema must reflect exactly what users see. Importing one array enforces
+// this at build time.
+import { faqs } from "@/data/faq";
 
 const homeJsonLd = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "FAQPage",
-      mainEntity: [
-        {
-          "@type": "Question",
-          name: "What is Tene?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Tene is a local-first, encrypted secret management CLI. It stores your API keys, tokens, and credentials in an encrypted SQLite vault on your device. No server, no signup, no cloud dependency.",
-          },
+      mainEntity: faqs.map((f) => ({
+        "@type": "Question",
+        name: f.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: f.answer,
         },
-        {
-          "@type": "Question",
-          name: "How does Claude Code auto-detection work?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "When you run tene init, it generates a CLAUDE.md file in your project root. Claude Code reads this file automatically and learns how to use tene to retrieve secrets.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Is Tene free?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Yes, Tene is 100% free and open source under the MIT license. All local features — encryption, runtime injection, multi-environment, AI editor rules — are free forever with no limits.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Will there be team features?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Team sync and collaboration features are being designed. The goal is encrypted team sync without a central server. Join the waitlist at tene.sh to get notified when it launches.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "How are my secrets encrypted?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Tene uses XChaCha20-Poly1305 encryption with 256-bit keys derived from your master password via Argon2id. Each secret gets a unique 192-bit nonce.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Does Tene work offline?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Tene is 100% offline. It makes zero network calls. Your secrets are encrypted and stored locally in a SQLite database.",
-          },
-        },
-      ],
+      })),
     },
     {
       "@type": "HowTo",

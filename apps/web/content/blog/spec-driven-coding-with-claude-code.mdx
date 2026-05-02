@@ -1,23 +1,49 @@
 ---
 slug: spec-driven-coding-with-claude-code
-title: "Spec-driven coding with Claude Code: write the spec, ship the diff"
-description: "Vibe-coding peaks when the spec is written first. The minimum viable spec, why Claude Code rewards it more than other agents, and where it stops paying off."
-publishedAt: "2026-04-28"
-updatedAt: "2026-04-28"
+title: 'Spec-driven coding with Claude Code: write the spec, ship the diff'
+description: >-
+  Vibe-coding peaks when the spec is written first. The minimum viable spec, why
+  Claude Code rewards it more than other agents, and where it stops paying off.
+publishedAt: '2026-04-28'
+updatedAt: '2026-04-28'
 category: vibe-coding
-tags: ["workflow", "harness-engineering", "claude-code", "deep-dive"]
-author: "agent-kay"
-cover: "/og-image.webp"
-canonicalUrl: "https://tene.sh/blog/spec-driven-coding-with-claude-code"
+tags:
+  - workflow
+  - harness-engineering
+  - claude-code
+  - deep-dive
+author: agent-kay
+cover: /og-image.webp
+canonicalUrl: 'https://tene.sh/blog/spec-driven-coding-with-claude-code'
 faqs:
-  - question: "Is this just waterfall renamed?"
-    answer: "No. Waterfall freezes the spec for a quarter and ships once. Spec-driven coding freezes the spec for a single change and re-runs the loop hourly. The unit of planning shrunk from a release to a feature, then to a single PR. The spec is short-lived, written for the next two hours of work, and discarded after the merge."
-  - question: "Does this approach work with Cursor or Cline too?"
-    answer: "It works, but not as crisply. Claude Code's long-running session, persistent project state, and multi-file edit semantics line up with spec-driven loops better than turn-based editors. With Cursor you can replicate ~70% of the win by pasting the spec at the top of the chat; with Cline the agentic loop is more compatible but the project context surface is smaller. The pattern is portable, the gain is not uniform."
-  - question: "How long should a spec be?"
-    answer: "If you cannot read the spec aloud in under 90 seconds, it is too long for a single change. The minimum viable spec for a feature is roughly 200–400 words of plain English plus a 5-line interface sketch. Everything beyond that should be in code, not in a doc."
-  - question: "What if the spec changes mid-implementation?"
-    answer: "That is a signal you discovered something the spec missed. Pause, edit the spec in place, re-prompt the agent against the updated spec. Do not let the implementation drift away from the spec — the spec is the source of truth for *this loop*. It will be discarded after the merge, so there is no historical-record cost to editing it."
+  - question: Is this just waterfall renamed?
+    answer: >-
+      No. Waterfall freezes the spec for a quarter and ships once. Spec-driven
+      coding freezes the spec for a single change and re-runs the loop hourly.
+      The unit of planning shrunk from a release to a feature, then to a single
+      PR. The spec is short-lived, written for the next two hours of work, and
+      discarded after the merge.
+  - question: Does this approach work with Cursor or Cline too?
+    answer: >-
+      It works, but not as crisply. Claude Code's long-running session,
+      persistent project state, and multi-file edit semantics line up with
+      spec-driven loops better than turn-based editors. With Cursor you can
+      replicate ~70% of the win by pasting the spec at the top of the chat; with
+      Cline the agentic loop is more compatible but the project context surface
+      is smaller. The pattern is portable, the gain is not uniform.
+  - question: How long should a spec be?
+    answer: >-
+      If you cannot read the spec aloud in under 90 seconds, it is too long for
+      a single change. The minimum viable spec for a feature is roughly 200–400
+      words of plain English plus a 5-line interface sketch. Everything beyond
+      that should be in code, not in a doc.
+  - question: What if the spec changes mid-implementation?
+    answer: >-
+      That is a signal you discovered something the spec missed. Pause, edit the
+      spec in place, re-prompt the agent against the updated spec. Do not let
+      the implementation drift away from the spec — the spec is the source of
+      truth for *this loop*. It will be discarded after the merge, so there is
+      no historical-record cost to editing it.
 ---
 
 ## The bug-fix loop you keep ending up in
@@ -125,6 +151,25 @@ The other compounding win is on the human. Writing four-section specs for two mo
 **Re-anchor** — A one-line prompt that points the agent back at the spec ("re-read the constraint section, then fix the diff").
 
 **Forcing function** — A tool or rule that makes you do something useful as a side effect of using it. The agent is one for the writing habit.
+
+## FAQ
+
+**Is this just waterfall renamed?**
+
+No. Waterfall freezes the spec for a quarter and ships once. Spec-driven coding freezes the spec for a single change and re-runs the loop hourly. The unit of planning shrunk from a release to a feature, then to a single PR. The spec is short-lived, written for the next two hours of work, and discarded after the merge.
+
+**Does this approach work with Cursor or Cline too?**
+
+It works, but not as crisply. Claude Code's long-running session, persistent project state, and multi-file edit semantics line up with spec-driven loops better than turn-based editors. With Cursor you can replicate ~70% of the win by pasting the spec at the top of the chat; with Cline the agentic loop is more compatible but the project context surface is smaller. The pattern is portable, the gain is not uniform.
+
+**How long should a spec be?**
+
+If you cannot read the spec aloud in under 90 seconds, it is too long for a single change. The minimum viable spec for a feature is roughly 200–400 words of plain English plus a 5-line interface sketch. Everything beyond that should be in code, not in a doc.
+
+**What if the spec changes mid-implementation?**
+
+That is a signal you discovered something the spec missed. Pause, edit the spec in place, re-prompt the agent against the updated spec. Do not let the implementation drift away from the spec — the spec is the source of truth for *this loop*. It will be discarded after the merge, so there is no historical-record cost to editing it.
+
 
 Related reading:
 - [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)

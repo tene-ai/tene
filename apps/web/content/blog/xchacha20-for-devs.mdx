@@ -1,22 +1,39 @@
 ---
 slug: xchacha20-for-devs
-title: "XChaCha20-Poly1305 for developers: why it is the right choice for local secrets"
-description: "A practical explanation of XChaCha20-Poly1305 and why tene picked it over AES-GCM for a local-first secret vault. No PhD required."
-publishedAt: "2026-04-21"
-updatedAt: "2026-04-21"
+title: >-
+  XChaCha20-Poly1305 for developers: why it is the right choice for local
+  secrets
+description: >-
+  A practical explanation of XChaCha20-Poly1305 and why tene picked it over
+  AES-GCM for a local-first secret vault. No PhD required.
+publishedAt: '2026-04-21'
+updatedAt: '2026-04-21'
 category: engineering
-tags: ["cryptography", "architecture", "security", "tene"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/demo/security-proof-demo.gif"
-canonicalUrl: "https://tene.sh/blog/xchacha20-for-devs"
+tags:
+  - cryptography
+  - architecture
+  - security
+  - tene
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /demo/security-proof-demo.gif
+canonicalUrl: 'https://tene.sh/blog/xchacha20-for-devs'
 faqs:
-  - question: "Is XChaCha20-Poly1305 better than AES-GCM?"
-    answer: "On a CPU without an AES hardware booster, ChaCha20 is faster and easier to write safely. For a local CLI vault on a developer laptop, XChaCha20-Poly1305 is the simpler, more portable pick."
-  - question: "Why not just use libsodium?"
-    answer: "tene uses golang.org/x/crypto/chacha20poly1305, a reviewed Go library. libsodium would force a C dependency, which makes it harder to ship tene as a single static binary."
-  - question: "What does 'extended nonce' buy you?"
-    answer: "XChaCha20 uses a 192-bit nonce instead of the regular 96. With 192 bits you can pick nonces at random and never have to think about clashes. With 96 bits you have to be careful."
+  - question: Is XChaCha20-Poly1305 better than AES-GCM?
+    answer: >-
+      On a CPU without an AES hardware booster, ChaCha20 is faster and easier to
+      write safely. For a local CLI vault on a developer laptop,
+      XChaCha20-Poly1305 is the simpler, more portable pick.
+  - question: Why not just use libsodium?
+    answer: >-
+      tene uses golang.org/x/crypto/chacha20poly1305, a reviewed Go library.
+      libsodium would force a C dependency, which makes it harder to ship tene
+      as a single static binary.
+  - question: What does 'extended nonce' buy you?
+    answer: >-
+      XChaCha20 uses a 192-bit nonce instead of the regular 96. With 192 bits
+      you can pick nonces at random and never have to think about clashes. With
+      96 bits you have to be careful.
 ---
 
 ## A short answer up front
@@ -256,6 +273,21 @@ tene repo if you want to read it.
 **Birthday bound** — A counting result. Roughly: with N possible nonces, you expect a
   random clash after about √N picks. For a 96-bit nonce that's 2⁴⁸,
   for a 192-bit nonce it's 2⁹⁶.
+
+## FAQ
+
+**Is XChaCha20-Poly1305 better than AES-GCM?**
+
+On a CPU without an AES hardware booster, ChaCha20 is faster and easier to write safely. For a local CLI vault on a developer laptop, XChaCha20-Poly1305 is the simpler, more portable pick.
+
+**Why not just use libsodium?**
+
+tene uses golang.org/x/crypto/chacha20poly1305, a reviewed Go library. libsodium would force a C dependency, which makes it harder to ship tene as a single static binary.
+
+**What does 'extended nonce' buy you?**
+
+XChaCha20 uses a 192-bit nonce instead of the regular 96. With 192 bits you can pick nonces at random and never have to think about clashes. With 96 bits you have to be careful.
+
 
 Related reading:
 - [How AI agents read your `.env`](/blog/ai-reads-env)

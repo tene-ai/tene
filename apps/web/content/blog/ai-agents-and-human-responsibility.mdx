@@ -1,21 +1,48 @@
 ---
 slug: ai-agents-and-human-responsibility
-title: "AI agents, human responsibility, and the harness in between"
-description: "Chatbots got good. Agents did not — not because the models aren't smart, but because the system around them isn't. Roles, responsibility, and why PDCA + L0–L4 control beats another model upgrade."
-publishedAt: "2026-04-24"
-updatedAt: "2026-04-24"
+title: 'AI agents, human responsibility, and the harness in between'
+description: >-
+  Chatbots got good. Agents did not — not because the models aren't smart, but
+  because the system around them isn't. Roles, responsibility, and why PDCA +
+  L0–L4 control beats another model upgrade.
+publishedAt: '2026-04-24'
+updatedAt: '2026-04-24'
 category: philosophy
-tags: ["bkit", "workflow", "harness-engineering", "founder-story"]
-author: "agent-kay"
-cover: "/og-image.webp"
-canonicalUrl: "https://tene.sh/blog/ai-agents-and-human-responsibility"
+tags:
+  - bkit
+  - workflow
+  - harness-engineering
+  - founder-story
+author: agent-kay
+cover: /og-image.webp
+canonicalUrl: 'https://tene.sh/blog/ai-agents-and-human-responsibility'
 faqs:
-  - question: "If 90% of Anthropic's code is AI-written, why are they still hiring engineers?"
-    answer: "Because execution and accountability are separate jobs. AI handles the coding, testing, and debugging; humans decide what to build, why, for whom, and sign off when it's done. As AI takes over more execution, human time shifts from typing to judging — and judging is the part that carries legal, product, and customer-facing responsibility. The job title survives; the daily activity changes."
-  - question: "Is 'fully autonomous AI agent' a realistic goal for my product?"
-    answer: "Not in 2026. Every AI team shipping at scale — Anthropic, Cursor, GitHub — runs with graduated automation: routine steps auto-approved, high-stakes decisions gated through a human. The gain is not 'zero humans' but 'humans only at the decisions that actually need a human.' Binary thinking (manual vs fully auto) is the most common failure mode."
-  - question: "How does bkit's L0–L4 automation level differ from a config flag?"
-    answer: "A config flag is static — you turn it on, it stays on. L0–L4 is earned. Escalating from L2 to L3 requires a Trust Score derived from your project's actual track record (match rate, destructive-op count, interrupt frequency). The system graduates trust per project, not per user or per model, and a cooldown prevents a lucky streak from unlocking autonomy prematurely. It's closer to a pilot's flight-hour certification than a toggle."
+  - question: >-
+      If 90% of Anthropic's code is AI-written, why are they still hiring
+      engineers?
+    answer: >-
+      Because execution and accountability are separate jobs. AI handles the
+      coding, testing, and debugging; humans decide what to build, why, for
+      whom, and sign off when it's done. As AI takes over more execution, human
+      time shifts from typing to judging — and judging is the part that carries
+      legal, product, and customer-facing responsibility. The job title
+      survives; the daily activity changes.
+  - question: Is 'fully autonomous AI agent' a realistic goal for my product?
+    answer: >-
+      Not in 2026. Every AI team shipping at scale — Anthropic, Cursor, GitHub —
+      runs with graduated automation: routine steps auto-approved, high-stakes
+      decisions gated through a human. The gain is not 'zero humans' but 'humans
+      only at the decisions that actually need a human.' Binary thinking (manual
+      vs fully auto) is the most common failure mode.
+  - question: How does bkit's L0–L4 automation level differ from a config flag?
+    answer: >-
+      A config flag is static — you turn it on, it stays on. L0–L4 is earned.
+      Escalating from L2 to L3 requires a Trust Score derived from your
+      project's actual track record (match rate, destructive-op count, interrupt
+      frequency). The system graduates trust per project, not per user or per
+      model, and a cooldown prevents a lucky streak from unlocking autonomy
+      prematurely. It's closer to a pilot's flight-hour certification than a
+      toggle.
 ---
 
 ## Chatbots are solved. Agents are not.
@@ -341,6 +368,21 @@ difference is the loop.
 
 **Match rate** — A measured number (target: 90%) for "how faithful is the build
   to the design doc?" Replaces vibes-based code review.
+
+## FAQ
+
+**If 90% of Anthropic's code is AI-written, why are they still hiring engineers?**
+
+Because execution and accountability are separate jobs. AI handles the coding, testing, and debugging; humans decide what to build, why, for whom, and sign off when it's done. As AI takes over more execution, human time shifts from typing to judging — and judging is the part that carries legal, product, and customer-facing responsibility. The job title survives; the daily activity changes.
+
+**Is 'fully autonomous AI agent' a realistic goal for my product?**
+
+Not in 2026. Every AI team shipping at scale — Anthropic, Cursor, GitHub — runs with graduated automation: routine steps auto-approved, high-stakes decisions gated through a human. The gain is not 'zero humans' but 'humans only at the decisions that actually need a human.' Binary thinking (manual vs fully auto) is the most common failure mode.
+
+**How does bkit's L0–L4 automation level differ from a config flag?**
+
+A config flag is static — you turn it on, it stays on. L0–L4 is earned. Escalating from L2 to L3 requires a Trust Score derived from your project's actual track record (match rate, destructive-op count, interrupt frequency). The system graduates trust per project, not per user or per model, and a cooldown prevents a lucky streak from unlocking autonomy prematurely. It's closer to a pilot's flight-hour certification than a toggle.
+
 
 Related reading:
 - [bkit + harness engineering: workflow beats model choice](/blog/bkit-harness-engineering-vibe-coding)

@@ -1,23 +1,52 @@
 ---
 slug: 9-day-msa-with-claude-code
-title: "9 days to ship bkamp.ai with Claude Code — and what became bkit"
-description: "One founder plus Claude Code shipped 11 microservices to production in 9 days. The playbook is now bkit, a CC plugin. A case study and method."
-publishedAt: "2026-04-29"
-updatedAt: "2026-04-29"
+title: 9 days to ship bkamp.ai with Claude Code — and what became bkit
+description: >-
+  One founder plus Claude Code shipped 11 microservices to production in 9 days.
+  The playbook is now bkit, a CC plugin. A case study and method.
+publishedAt: '2026-04-29'
+updatedAt: '2026-04-29'
 category: vibe-coding
-tags: ["bkit", "claude-code", "harness-engineering", "deep-dive"]
-author: "agent-kay"
-thumbnail: "/blog/bkamp-knowhow-to-bkit-plugin/bkamp-home.webp"
-canonicalUrl: "https://tene.sh/blog/9-day-msa-with-claude-code"
+tags:
+  - bkit
+  - claude-code
+  - harness-engineering
+  - deep-dive
+author: agent-kay
+thumbnail: /blog/bkamp-knowhow-to-bkit-plugin/bkamp-home.webp
+canonicalUrl: 'https://tene.sh/blog/9-day-msa-with-claude-code'
 faqs:
-  - question: "Could anyone reproduce the 9-day timeline?"
-    answer: "Not by typing faster. The compression came from work done before Day 1: a 159-line meta-rule file, a numbered design archive, and a habit of writing the spec before asking the model to scaffold. Without that scaffolding, even a faster model just produces 70% slop faster. With it, scaffolding eleven microservices in a day is a translation problem, not an authoring one."
-  - question: "Why turn a personal workflow (bkamp) into a public plugin (bkit)?"
-    answer: "Because the workflow that made bkamp possible was not in the code — it was in the conventions, the document numbering, the daily PDCA cadence, and the checkpoint-then-rewrite habit. None of that travels with a Git repo. bkit packages it as Claude Code Skills, Agents, Hooks, an MCP server, and a state machine, so the next person doesn't have to re-derive it from scratch."
-  - question: "Does bkit only work with Claude Code?"
-    answer: "Today, yes — the harness is built on CC's plugin surface (Skills, Agents, Hooks, MCP). The patterns it encodes — Plan/Design/Do/Check/Act, Match Rate gates, trust-graduated automation, port/adapter purity — are model-agnostic. A Codex- or Cursor-shaped fork would be feasible but does not exist yet."
-  - question: "Is 'vibe coding' just hype?"
-    answer: "Read literally — typing prompts and accepting whatever comes back — yes, it is hype, and it produces brittle code. Read as a discipline — context engineering, design-first, AI-evaluator loops, automatic checkpoints — it is just engineering with a new tool in the loop. The 9-day bkamp launch is empirical evidence that the disciplined version works. The seven patterns below are the rules of the disciplined version."
+  - question: Could anyone reproduce the 9-day timeline?
+    answer: >-
+      Not by typing faster. The compression came from work done before Day 1: a
+      159-line meta-rule file, a numbered design archive, and a habit of writing
+      the spec before asking the model to scaffold. Without that scaffolding,
+      even a faster model just produces 70% slop faster. With it, scaffolding
+      eleven microservices in a day is a translation problem, not an authoring
+      one.
+  - question: Why turn a personal workflow (bkamp) into a public plugin (bkit)?
+    answer: >-
+      Because the workflow that made bkamp possible was not in the code — it was
+      in the conventions, the document numbering, the daily PDCA cadence, and
+      the checkpoint-then-rewrite habit. None of that travels with a Git repo.
+      bkit packages it as Claude Code Skills, Agents, Hooks, an MCP server, and
+      a state machine, so the next person doesn't have to re-derive it from
+      scratch.
+  - question: Does bkit only work with Claude Code?
+    answer: >-
+      Today, yes — the harness is built on CC's plugin surface (Skills, Agents,
+      Hooks, MCP). The patterns it encodes — Plan/Design/Do/Check/Act, Match
+      Rate gates, trust-graduated automation, port/adapter purity — are
+      model-agnostic. A Codex- or Cursor-shaped fork would be feasible but does
+      not exist yet.
+  - question: Is 'vibe coding' just hype?
+    answer: >-
+      Read literally — typing prompts and accepting whatever comes back — yes,
+      it is hype, and it produces brittle code. Read as a discipline — context
+      engineering, design-first, AI-evaluator loops, automatic checkpoints — it
+      is just engineering with a new tool in the loop. The 9-day bkamp launch is
+      empirical evidence that the disciplined version works. The seven patterns
+      below are the rules of the disciplined version.
 ---
 
 In December 2025 I shipped a content platform called bkamp.ai. Eleven
@@ -420,6 +449,25 @@ And the platform that proved the method is live at
 **Terraform** — A tool that builds cloud infrastructure (servers, networks,
   databases) from text files. Edit the files, run the tool, the
   cloud changes to match.
+
+## FAQ
+
+**Could anyone reproduce the 9-day timeline?**
+
+Not by typing faster. The compression came from work done before Day 1: a 159-line meta-rule file, a numbered design archive, and a habit of writing the spec before asking the model to scaffold. Without that scaffolding, even a faster model just produces 70% slop faster. With it, scaffolding eleven microservices in a day is a translation problem, not an authoring one.
+
+**Why turn a personal workflow (bkamp) into a public plugin (bkit)?**
+
+Because the workflow that made bkamp possible was not in the code — it was in the conventions, the document numbering, the daily PDCA cadence, and the checkpoint-then-rewrite habit. None of that travels with a Git repo. bkit packages it as Claude Code Skills, Agents, Hooks, an MCP server, and a state machine, so the next person doesn't have to re-derive it from scratch.
+
+**Does bkit only work with Claude Code?**
+
+Today, yes — the harness is built on CC's plugin surface (Skills, Agents, Hooks, MCP). The patterns it encodes — Plan/Design/Do/Check/Act, Match Rate gates, trust-graduated automation, port/adapter purity — are model-agnostic. A Codex- or Cursor-shaped fork would be feasible but does not exist yet.
+
+**Is 'vibe coding' just hype?**
+
+Read literally — typing prompts and accepting whatever comes back — yes, it is hype, and it produces brittle code. Read as a discipline — context engineering, design-first, AI-evaluator loops, automatic checkpoints — it is just engineering with a new tool in the loop. The 9-day bkamp launch is empirical evidence that the disciplined version works. The seven patterns below are the rules of the disciplined version.
+
 
 Related reading:
 - [Harness engineering for vibe coding](/blog/bkit-harness-engineering-vibe-coding)

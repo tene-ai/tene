@@ -1,24 +1,48 @@
 ---
 slug: mcp-rce-and-the-process-layer-threat
-title: "MCP RCE: when an agent's tools become your attack surface"
-description: "Every MCP server you install is a local process with access to your filesystem, network, and env. The threat model — and how to scope it before it costs you."
-publishedAt: "2026-04-28"
-updatedAt: "2026-04-28"
+title: 'MCP RCE: when an agent''s tools become your attack surface'
+description: >-
+  Every MCP server you install is a local process with access to your
+  filesystem, network, and env. The threat model — and how to scope it before it
+  costs you.
+publishedAt: '2026-04-28'
+updatedAt: '2026-04-28'
 category: vibe-coding
-tags: ["claude-code", "security", "deep-dive", "devsecops"]
-author: "agent-kay"
-cover: "/og-image.webp"
-thumbnail: "/og-image.webp"
-canonicalUrl: "https://tene.sh/blog/mcp-rce-and-the-process-layer-threat"
+tags:
+  - claude-code
+  - security
+  - deep-dive
+  - devsecops
+author: agent-kay
+cover: /og-image.webp
+thumbnail: /og-image.webp
+canonicalUrl: 'https://tene.sh/blog/mcp-rce-and-the-process-layer-threat'
 faqs:
-  - question: "Is this a Claude Code-specific issue?"
-    answer: "No. The Model Context Protocol is host-agnostic. Claude Desktop, Claude Code, Cursor, Cline, Continue, and every other MCP host launches servers as local child processes. The risk surface is the protocol, not the client."
-  - question: "Does running MCP servers in Docker eliminate the risk?"
-    answer: "It reduces blast radius, but does not eliminate it. A containerized MCP server still receives whatever you mount, whatever env you pass, and whatever network you allow. A compromised server exfiltrates whatever it can see — and if you mounted your project directory with a `.env` in it, that is now data exfil-ready."
-  - question: "Can a malicious MCP server read my .env without me noticing?"
-    answer: "Yes. If the server has filesystem read on the project dir (which most do, for code understanding), `.env` and `.env.local` are just files. There is no audit log, no permission prompt, no syscall trace by default. The only protection is to keep secrets out of files the server is allowed to see."
-  - question: "What about read-only MCP servers — are those safe?"
-    answer: "Read-only filesystem ≠ harmless. Read is the entire attack surface for credential theft. The dangerous capability is *outbound network*, which most MCP servers also have. Read + send-out is the full kill chain. Treat read-only servers as reduced-write, not as low-risk."
+  - question: Is this a Claude Code-specific issue?
+    answer: >-
+      No. The Model Context Protocol is host-agnostic. Claude Desktop, Claude
+      Code, Cursor, Cline, Continue, and every other MCP host launches servers
+      as local child processes. The risk surface is the protocol, not the
+      client.
+  - question: Does running MCP servers in Docker eliminate the risk?
+    answer: >-
+      It reduces blast radius, but does not eliminate it. A containerized MCP
+      server still receives whatever you mount, whatever env you pass, and
+      whatever network you allow. A compromised server exfiltrates whatever it
+      can see — and if you mounted your project directory with a `.env` in it,
+      that is now data exfil-ready.
+  - question: Can a malicious MCP server read my .env without me noticing?
+    answer: >-
+      Yes. If the server has filesystem read on the project dir (which most do,
+      for code understanding), `.env` and `.env.local` are just files. There is
+      no audit log, no permission prompt, no syscall trace by default. The only
+      protection is to keep secrets out of files the server is allowed to see.
+  - question: What about read-only MCP servers — are those safe?
+    answer: >-
+      Read-only filesystem ≠ harmless. Read is the entire attack surface for
+      credential theft. The dangerous capability is *outbound network*, which
+      most MCP servers also have. Read + send-out is the full kill chain. Treat
+      read-only servers as reduced-write, not as low-risk.
 ---
 
 ## A short answer up front
@@ -168,6 +192,25 @@ You don't need all six on day one. Steps 1 and 2 alone cut the bulk of casual ex
 **Blast radius** — How much damage a compromise can do before something stops it. Smaller is better.
 
 **Supply-chain attack** — An attacker pushes bad code into a package you trust, so installing the package installs the attack.
+
+## FAQ
+
+**Is this a Claude Code-specific issue?**
+
+No. The Model Context Protocol is host-agnostic. Claude Desktop, Claude Code, Cursor, Cline, Continue, and every other MCP host launches servers as local child processes. The risk surface is the protocol, not the client.
+
+**Does running MCP servers in Docker eliminate the risk?**
+
+It reduces blast radius, but does not eliminate it. A containerized MCP server still receives whatever you mount, whatever env you pass, and whatever network you allow. A compromised server exfiltrates whatever it can see — and if you mounted your project directory with a `.env` in it, that is now data exfil-ready.
+
+**Can a malicious MCP server read my .env without me noticing?**
+
+Yes. If the server has filesystem read on the project dir (which most do, for code understanding), `.env` and `.env.local` are just files. There is no audit log, no permission prompt, no syscall trace by default. The only protection is to keep secrets out of files the server is allowed to see.
+
+**What about read-only MCP servers — are those safe?**
+
+Read-only filesystem ≠ harmless. Read is the entire attack surface for credential theft. The dangerous capability is *outbound network*, which most MCP servers also have. Read + send-out is the full kill chain. Treat read-only servers as reduced-write, not as low-risk.
+
 
 Related reading:
 - [Claude Code: keeping API keys out of the model context](/blog/claude-code-safe-api-keys)

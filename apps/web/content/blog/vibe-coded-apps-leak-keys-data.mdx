@@ -1,20 +1,36 @@
 ---
 slug: vibe-coded-apps-leak-keys-data
-title: "60% of vibe-coded apps leak API keys. Here's the missing step."
-description: "A Q1 2026 audit found 60%+ of vibe-coded apps ship API keys to public repos. Discipline isn't the fix — workflow is. The 60-second swap that ends it."
-publishedAt: "2026-04-30"
-updatedAt: "2026-04-30"
+title: 60% of vibe-coded apps leak API keys. Here's the missing step.
+description: >-
+  A Q1 2026 audit found 60%+ of vibe-coded apps ship API keys to public repos.
+  Discipline isn't the fix — workflow is. The 60-second swap that ends it.
+publishedAt: '2026-04-30'
+updatedAt: '2026-04-30'
 category: vibe-coding
-tags: [tene, security, devsecops, workflow]
-author: "agent-kay"
-thumbnail: "/demo/dotenv-gone-demo.gif"
+tags:
+  - tene
+  - security
+  - devsecops
+  - workflow
+author: agent-kay
+thumbnail: /demo/dotenv-gone-demo.gif
 faqs:
-  - question: "Does tene work with Cursor and Claude Code?"
-    answer: "Yes. tene injects secrets as environment variables, and both editors' agents inherit those values when they run your build, test, or dev commands. The agent never opens the vault file directly."
-  - question: "What if I already pushed `.env` to a public repo?"
-    answer: "Rotate every key shown in the leaked file at its provider (Stripe, OpenAI, AWS, etc.). Then run tene import .env from a fresh checkout and delete the .env file. Past leaks are permanent — only future commits are protected."
-  - question: "Where does the 60% number come from?"
-    answer: "It's from a Q1 2026 audit of vibe-coded apps cited by The Next Web and Threat Landscape after the Lovable BOLA disclosure in late April. Independent surveys from earlier in 2026 show similar magnitude (40–70% range across samples)."
+  - question: Does tene work with Cursor and Claude Code?
+    answer: >-
+      Yes. tene injects secrets as environment variables, and both editors'
+      agents inherit those values when they run your build, test, or dev
+      commands. The agent never opens the vault file directly.
+  - question: What if I already pushed `.env` to a public repo?
+    answer: >-
+      Rotate every key shown in the leaked file at its provider (Stripe, OpenAI,
+      AWS, etc.). Then run tene import .env from a fresh checkout and delete the
+      .env file. Past leaks are permanent — only future commits are protected.
+  - question: Where does the 60% number come from?
+    answer: >-
+      It's from a Q1 2026 audit of vibe-coded apps cited by The Next Web and
+      Threat Landscape after the Lovable BOLA disclosure in late April.
+      Independent surveys from earlier in 2026 show similar magnitude (40–70%
+      range across samples).
 ---
 
 ## The week 60% became a number
@@ -236,6 +252,21 @@ risks went away.
 
 If your project still has a `.env` next to its README this evening, you
 already know the next step.
+
+## FAQ
+
+**Does tene work with Cursor and Claude Code?**
+
+Yes. tene injects secrets as environment variables, and both editors' agents inherit those values when they run your build, test, or dev commands. The agent never opens the vault file directly.
+
+**What if I already pushed `.env` to a public repo?**
+
+Rotate every key shown in the leaked file at its provider (Stripe, OpenAI, AWS, etc.). Then run tene import .env from a fresh checkout and delete the .env file. Past leaks are permanent — only future commits are protected.
+
+**Where does the 60% number come from?**
+
+It's from a Q1 2026 audit of vibe-coded apps cited by The Next Web and Threat Landscape after the Lovable BOLA disclosure in late April. Independent surveys from earlier in 2026 show similar magnitude (40–70% range across samples).
+
 
 Related reading:
 - [How AI agents read your `.env` — and why it's not their fault](/blog/ai-reads-env)

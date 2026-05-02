@@ -14,6 +14,12 @@
 //      Results Test rejected date-only `datePublished` / `dateModified`)
 //      → catches the case where a future emission site forgets the
 //        toIsoDateTime() helper and ships date-only strings
+//   6. FAQPage schema-content mismatch (added 2026-05-03 after GSC flagged
+//      "FAQPage 입력란이 중복" caused by JSON-LD Q&A drifting from the
+//      visible <FAQ /> UI on `/`. Same risk class for /blog/{slug} where
+//      frontmatter `faqs:` could ship without a body ## FAQ section.)
+//      → ensures every Question/Answer in any FAQPage appears as visible
+//        text on the same page. See .claude/rules/blog-content.md §10.4.
 //
 // Runs as `npm run verify:blog` and as a postbuild step.
 // Exits non-zero on any violation.
@@ -156,10 +162,141 @@ function walkHtml(dir) {
   return out;
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// FAQPage schema-content mismatch guard. Catches the GSC "FAQPage 입력란이
+// 중복" warning at root cause: every Question/Answer that appears in
+// JSON-LD must also appear as visible text on the page. Otherwise either:
+//   - Google flags "FAQ markup not matching visible content", surfacing as
+//     duplicate-entry warning (multiple FAQPage interpretations)
+//   - Manual penalty for "hidden FAQ markup" — site-wide rich-result block
+// ──────────────────────────────────────────────────────────────────────
+
+// Strip <script>, <style>, all HTML tags, and decode the few HTML entities
+// our content actually uses, so substring matching against the JSON-LD
+// answer text works on the visible body.
+function htmlToText(html) {
+  let t = html;
+  t = t.replace(/<script[\s\S]*?<\/script>/gi, " ");
+  t = t.replace(/<style[\s\S]*?<\/style>/gi, " ");
+  t = t.replace(/<[^>]+>/g, " ");
+  t = t
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&mdash;/g, "—")
+    .replace(/&ndash;/g, "–")
+    .replace(/&hellip;/g, "…")
+    .replace(/&ldquo;/g, "“")
+    .replace(/&rdquo;/g, "”")
+    .replace(/&lsquo;/g, "‘")
+    .replace(/&rsquo;/g, "’");
+  // Collapse whitespace so JSON-LD literal "two   spaces" matches HTML
+  // text run with arbitrary whitespace.
+  return t.replace(/\s+/g, " ");
+}
+
+// Decode the `\u00xx` escapes Next.js emits inside JSON-LD strings so we
+// can substring-match them against the visible text (which uses the real
+// glyphs). Lightweight — only handles the cases we actually emit.
+function decodeJsonString(s) {
+  return s.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) =>
+    String.fromCharCode(parseInt(h, 16)),
+  );
+}
+
+function extractFaqs(html) {
+  const out = [];
+  const blocks = html.match(
+    /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g,
+  );
+  if (!blocks) return out;
+  for (const block of blocks) {
+    const m = block.match(
+      /<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/,
+    );
+    if (!m) continue;
+    let data;
+    try {
+      data = JSON.parse(m[1]);
+    } catch {
+      continue;
+    }
+    const graph = data["@graph"] ? data["@graph"] : [data];
+    for (const node of graph) {
+      if (node["@type"] !== "FAQPage") continue;
+      const entries = Array.isArray(node.mainEntity) ? node.mainEntity : [];
+      for (const q of entries) {
+        out.push({
+          question: decodeJsonString(q.name ?? ""),
+          answer: decodeJsonString(q.acceptedAnswer?.text ?? ""),
+        });
+      }
+    }
+  }
+  return out;
+}
+
+// Normalise text to a tolerant "search canonical" form. Inline markdown
+// formatting (backticks → <code>, bold/italic → <strong>/<em>) is stripped
+// out by htmlToText, so the rendered visible text loses the surrounding
+// markers. Frontmatter answers keep them. We normalise both sides by:
+//   1. Removing inline-formatting punctuation (` * _) so byte-shifts in
+//      formatting don't produce a false negative.
+//   2. Decoding the few entities that may survive ("&quot;", "&#x27;").
+//   3. Collapsing whitespace.
+// The Q&A semantic content is what Google evaluates for FAQPage matching,
+// not the markdown markup used to render it.
+function canon(s) {
+  return (
+    s
+      .replace(/[`*_]/g, "")
+      .replace(/&quot;/g, '"')
+      .replace(/&#x27;|&#39;/g, "'")
+      .replace(/\s+/g, " ")
+      // htmlToText replaces `<em>x</em>,` with ` x ,` — collapse the space
+      // it injects before punctuation so the substring match doesn't fail
+      // on inline-formatted phrases.
+      .replace(/\s+([,.!?;:])/g, "$1")
+      .trim()
+  );
+}
+
+function checkFaqMirror(htmlPath) {
+  const html = fs.readFileSync(htmlPath, "utf-8");
+  const rel = path.relative(path.resolve(__dirname, ".."), htmlPath);
+  const faqs = extractFaqs(html);
+  if (faqs.length === 0) return; // no FAQPage on this page → nothing to verify
+  const visibleCanon = canon(htmlToText(html));
+
+  for (const f of faqs) {
+    const qCanon = canon(f.question ?? "");
+    const aCanon = canon(f.answer ?? "");
+    if (qCanon && !visibleCanon.includes(qCanon)) {
+      errors.push(
+        `${rel}: FAQPage question NOT in visible body: "${f.question.slice(0, 80)}…"\n` +
+          `    Add it to the body (## FAQ section) with byte-identical text. ` +
+          `See blog-content.md §10.4.`,
+      );
+    }
+    if (aCanon && !visibleCanon.includes(aCanon)) {
+      errors.push(
+        `${rel}: FAQPage answer NOT in visible body for question "${f.question.slice(0, 60)}…"\n` +
+          `    Add the answer to the body (## FAQ section) with byte-identical text. ` +
+          `See blog-content.md §10.4.`,
+      );
+    }
+  }
+}
+
 if (fs.existsSync(buildDir)) {
   const htmlFiles = walkHtml(buildDir);
-  // Only the surfaces that emit datePublished/dateModified or OG article:*_time.
-  const relevant = htmlFiles.filter((p) => {
+  // Datetime check — only surfaces that emit datePublished/dateModified.
+  const datetimeRelevant = htmlFiles.filter((p) => {
     const rel = path.relative(buildDir, p);
     return (
       rel.startsWith("blog") ||
@@ -168,7 +305,11 @@ if (fs.existsSync(buildDir)) {
       rel.startsWith("vs.html")
     );
   });
-  for (const p of relevant) checkDatetimeFile(p);
+  for (const p of datetimeRelevant) checkDatetimeFile(p);
+
+  // FAQ-mirror check — every page that emits FAQPage. Includes index.html
+  // (`/`) which is the home FAQ surface alongside blog/cli/vs/.
+  for (const p of htmlFiles) checkFaqMirror(p);
 }
 
 if (warnings.length) {

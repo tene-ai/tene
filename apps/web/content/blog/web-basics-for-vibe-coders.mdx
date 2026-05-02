@@ -1,21 +1,42 @@
 ---
 slug: web-basics-for-vibe-coders
-title: "Web basics for vibe coders: from localhost to production"
-description: "AI wrote your code. Now how do you ship it to the internet? A plain-language tour of client/server, frontend/backend, database, deployment, and the security gap most AI tutorials skip."
-publishedAt: "2026-04-24"
-updatedAt: "2026-04-24"
+title: 'Web basics for vibe coders: from localhost to production'
+description: >-
+  AI wrote your code. Now how do you ship it to the internet? A plain-language
+  tour of client/server, frontend/backend, database, deployment, and the
+  security gap most AI tutorials skip.
+publishedAt: '2026-04-24'
+updatedAt: '2026-04-24'
 category: engineering
-tags: ["architecture", "tutorial", "security", "tene"]
-author: "agent-kay"
-cover: "/og-image.webp"
-canonicalUrl: "https://tene.sh/blog/web-basics-for-vibe-coders"
+tags:
+  - architecture
+  - tutorial
+  - security
+  - tene
+author: agent-kay
+cover: /og-image.webp
+canonicalUrl: 'https://tene.sh/blog/web-basics-for-vibe-coders'
 faqs:
-  - question: "I built an app with AI. Why can't my friends use it?"
-    answer: "Your app is running on localhost — a loopback address that only resolves on your own machine. 'Shipping' means running that code on a server that's reachable from the public internet at a stable URL. Vercel, Fly.io, Railway, and AWS all solve this in different ways; the one-click options are fine to start."
-  - question: "Do I really need a backend? My app only has a few pages."
-    answer: "No, not always. If your pages are purely static content (marketing site, blog, portfolio), a frontend on Vercel is enough. You need a backend the moment you store data per user, call a paid API that must keep its key secret, or process payments. The moment you have an API key that must not leak, you also inherit the secret-management problem."
-  - question: "Can my AI agent see my .env file while coding?"
-    answer: "Yes, by default. Claude Code, Cursor, Windsurf, and similar tools index project files to build context — .env at the project root is included unless explicitly excluded. This is the biggest security gap in the vibe-coder workflow, and the reason tene exists."
+  - question: I built an app with AI. Why can't my friends use it?
+    answer: >-
+      Your app is running on localhost — a loopback address that only resolves
+      on your own machine. 'Shipping' means running that code on a server that's
+      reachable from the public internet at a stable URL. Vercel, Fly.io,
+      Railway, and AWS all solve this in different ways; the one-click options
+      are fine to start.
+  - question: Do I really need a backend? My app only has a few pages.
+    answer: >-
+      No, not always. If your pages are purely static content (marketing site,
+      blog, portfolio), a frontend on Vercel is enough. You need a backend the
+      moment you store data per user, call a paid API that must keep its key
+      secret, or process payments. The moment you have an API key that must not
+      leak, you also inherit the secret-management problem.
+  - question: Can my AI agent see my .env file while coding?
+    answer: >-
+      Yes, by default. Claude Code, Cursor, Windsurf, and similar tools index
+      project files to build context — .env at the project root is included
+      unless explicitly excluded. This is the biggest security gap in the
+      vibe-coder workflow, and the reason tene exists.
 ---
 
 ## The moment AI finishes your app
@@ -372,6 +393,21 @@ learn them once and they apply to every future project.
 
 **Object storage** — A separate service for big binary files (images, videos). You
   store the file there and keep only the URL in your database.
+
+## FAQ
+
+**I built an app with AI. Why can't my friends use it?**
+
+Your app is running on localhost — a loopback address that only resolves on your own machine. 'Shipping' means running that code on a server that's reachable from the public internet at a stable URL. Vercel, Fly.io, Railway, and AWS all solve this in different ways; the one-click options are fine to start.
+
+**Do I really need a backend? My app only has a few pages.**
+
+No, not always. If your pages are purely static content (marketing site, blog, portfolio), a frontend on Vercel is enough. You need a backend the moment you store data per user, call a paid API that must keep its key secret, or process payments. The moment you have an API key that must not leak, you also inherit the secret-management problem.
+
+**Can my AI agent see my .env file while coding?**
+
+Yes, by default. Claude Code, Cursor, Windsurf, and similar tools index project files to build context — .env at the project root is included unless explicitly excluded. This is the biggest security gap in the vibe-coder workflow, and the reason tene exists.
+
 
 Related reading:
 - [Your .env is not a secret. AI can read it.](/blog/ai-reads-env)
