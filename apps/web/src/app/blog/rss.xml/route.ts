@@ -44,6 +44,13 @@ export async function GET(): Promise<Response> {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      // X-Robots-Tag: noindex — RSS is an XML feed, not an HTML document.
+      // Without this header, GSC indexes the URL as "Crawled — currently
+      // not indexed" because the bytes don't parse as a page. The header
+      // re-classifies it as "Excluded by 'noindex' tag", which is the
+      // correct bucket. See .claude/rules/blog-content.md §10.1 and
+      // verify-blog-indexability.mjs route-noindex assertion.
+      "X-Robots-Tag": "noindex",
     },
   });
 }

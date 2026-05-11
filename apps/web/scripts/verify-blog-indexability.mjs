@@ -312,6 +312,42 @@ if (fs.existsSync(buildDir)) {
   for (const p of htmlFiles) checkFaqMirror(p);
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// Route-noindex assertion. Non-HTML routes (OG image PNG endpoint, RSS
+// XML feed) MUST emit `X-Robots-Tag: noindex` so GSC reclassifies them
+// as "Excluded by 'noindex' tag" instead of the worrying "Crawled —
+// currently not indexed" bucket. Added 2026-05-11 after GSC dashboard
+// flagged /blog/{slug}/opengraph-image?... and /blog/rss.xml under
+// that category. See .claude/rules/blog-content.md §10.1.
+// ──────────────────────────────────────────────────────────────────────
+const noindexRoutes = [
+  {
+    file: "src/app/blog/[slug]/opengraph-image.tsx",
+    reason: "OG image returns image/png, not HTML; GSC indexes the URL otherwise",
+  },
+  {
+    file: "src/app/blog/rss.xml/route.ts",
+    reason: "RSS feed returns XML, not HTML; GSC indexes the URL otherwise",
+  },
+];
+for (const r of noindexRoutes) {
+  const p = path.resolve(__dirname, "..", r.file);
+  if (!fs.existsSync(p)) {
+    errors.push(`${r.file}: file missing — noindex route assertion cannot run`);
+    continue;
+  }
+  const src = fs.readFileSync(p, "utf-8");
+  // Allow some whitespace / quote style flexibility between header name and
+  // value. Examples that PASS: `"X-Robots-Tag": "noindex"`,
+  // `'X-Robots-Tag': 'noindex'`, `X-Robots-Tag: noindex` (inside a comment
+  // is fine — the assertion is per-file presence, not call-site).
+  if (!/X-Robots-Tag[\s\S]{0,60}noindex/i.test(src)) {
+    errors.push(
+      `${r.file}: missing 'X-Robots-Tag: noindex' header. ${r.reason}.`,
+    );
+  }
+}
+
 if (warnings.length) {
   console.warn("\n⚠️  blog indexability warnings:");
   for (const w of warnings) console.warn("  - " + w);

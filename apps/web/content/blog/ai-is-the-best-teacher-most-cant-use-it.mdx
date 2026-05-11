@@ -1,0 +1,383 @@
+---
+slug: ai-is-the-best-teacher-most-cant-use-it
+title: "AI is the best teacher. Most people can't use it."
+description: >-
+  Karpathy retired "vibe coding." Anthropic's own study says its product
+  made devs 17% worse at understanding. The hype isn't broken — the
+  classroom is. A field essay on context engineering as the new literacy.
+publishedAt: "2026-05-11"
+updatedAt: "2026-05-11"
+category: philosophy
+tags:
+  - harness-engineering
+  - claude-code
+  - bkit
+author: "tomo-kay"
+thumbnail: "/blog/ai-is-the-best-teacher-most-cant-use-it/problem-confusing.webp"
+faqs:
+  - question: "Is vibe coding dead?"
+    answer: >-
+      No, but Karpathy himself moved past the term. The framing was always
+      provisional; "agentic engineering" names the discipline the original
+      wording dismissed.
+  - question: "Do non-developers need to learn programming fundamentals first?"
+    answer: >-
+      They need to learn specification and verification, not syntax. The
+      skills that compound with AI are the ones AI cannot yet do for you:
+      deciding what "correct" means.
+  - question: "What is context engineering, in one sentence?"
+    answer: >-
+      Designing the persistent information environment — docs, rules,
+      tools, memory — that an AI agent operates inside, so its outputs
+      become reproducible instead of accidental.
+  - question: "Is bkit required to do any of this?"
+    answer: >-
+      No. bkit is one open-source operationalization. The principles
+      (spec-first, verify-against-spec, automate the loop) work in plain
+      CLAUDE.md with a checklist; bkit just enforces them by default.
+  - question: "Why does Korea matter to this story?"
+    answer: >-
+      Korea is the world's heaviest per-capita consumer of AI coding tools
+      but a methodology importer. The export opportunity is teaching
+      context engineering as literacy before the next foreign tool ships.
+---
+
+## The teacher who never sleeps
+
+Andrej Karpathy named "vibe coding" in February 2025. By 2026 he had
+retired the term, replacing it with "agentic engineering." Three months
+earlier, Anthropic — whose Claude Code now writes an estimated 4% of all
+public GitHub commits — quietly published a study showing AI assistance
+made programmers **17% worse** at understanding the libraries they had
+just used. The hype hasn't broken. The classroom has.
+
+This is an essay, not a benchmark. The thesis is short: **AI is the most
+accessible teacher we have ever built, and most people get worse using
+it.** Not because the model is wrong. Because the user can't amplify
+thought through it. Vibe coding was the gateway. Context engineering is
+the literacy. And our education has not caught up.
+
+## Karpathy retracts: from vibe coding to agentic engineering
+
+Karpathy's original tweet was a mood: "fully give in to the vibes,
+embrace exponentials, and forget that the code even exists." Twelve
+months later, the same author replaced it with this: "review with the
+same rigor you'd apply to a human teammate's PR. If you can't explain
+what a module does, it doesn't go in."
+
+That is not a small edit. It is a public concession that the original
+framing dropped a discipline the work always needed. Anthropic's CEO
+Dario Amodei told CNN in early 2025 that AI would write all the code in
+three to six months. Six months after that claim, Anthropic's own
+researchers published a paper showing devs who relied on the assistant
+scored 17% worse on conceptual questions about libraries they had just
+used.
+
+These are not opposing facts. They are the same fact stated twice. AI
+generates code faster than any human team. That speed exposes — it does
+not create — the gap between people who can verify what they shipped
+and people who cannot.
+
+<Callout type="info">
+**The renaming is the story.** "Vibe coding" promised democratization.
+"Agentic engineering" admits the discipline never went away. The label
+changed because the practice had to.
+</Callout>
+
+## The 80 percent wall
+
+A DEV Community audit of 1,764 vibe-coded apps in 2025 found **453 — about
+26% — with critical vulnerabilities.** Roughly **80% repeated the same
+Supabase row-level-security mistake**:
+
+```sql
+-- The bug that ships in 4 out of 5 vibe-coded apps.
+CREATE POLICY "user_read" ON profiles
+  FOR SELECT
+  USING (auth.role() = 'authenticated');
+-- "authenticated" means "any logged-in user." Not "the owner."
+-- Every account holder can now read every other account holder's row.
+```
+
+A non-developer running Lovable or Bolt does not know this bug exists.
+The AI does not flag it. The deploy succeeds. The app ships. The breach
+is silent until someone notices.
+
+Now hold that against two real cases. **Plinq**, built by a Brazilian
+non-developer named Sabrine Matos, shipped a women's-safety app in 45
+days on Lovable plus Supabase and reached $456K ARR in three months.
+**Friend.com**, built by a well-funded team with $8M raised and a $1.8M
+domain, shipped a fragile chatbot and died publicly.
+
+The difference between them is not coding skill. Both produced
+AI-generated code. One verified what the code did against a sharp
+problem and a sharp user; the other bought distribution before defining
+either. Speed without verification is survivorship, not method. The
+80% wall is real. It just isn't visible from inside the build.
+
+## The thinking-amplification gap
+
+The same tools that make seniors faster make average users slower. One
+2025 productivity study found the average AI-coding-tool user posted a
+**19% productivity decrease.** Anthropic's research found the 17% drop
+in conceptual understanding. A 2025 LeadDev survey found **54% of
+engineering leaders are planning to hire fewer juniors** because "AI
+handles the easy work."
+
+That last number is the dangerous one. The pipeline that traditionally
+cleaned up bad code — juniors learning to read, debug, and refactor
+under senior review — is being closed at exactly the moment when AI is
+producing more bad code than any junior army could clean. Forrester now
+expects 75% of tech leaders to face moderate-to-severe technical debt by
+2026. A separate study of 8.1 million pull requests found tech debt rose
+**30 to 41%** in repos that adopted AI coding tools.
+
+What separates the senior with a 10× claim from the average user with a
+19% loss is not access to tools. Both have Cursor. Both have Claude
+Code. The variable is the user's capacity to **amplify their own
+thinking through the model**: to brief it with intent, to spot when it
+is wrong, to redirect it before the wrong path becomes a buried bug.
+Most people cannot do this on day one. Some never learn.
+
+This is the gap our education does not name. We teach syntax to people
+who will never write a `for` loop unassisted. We teach prompts to
+people who will be writing specifications. We teach tools that will be
+obsolete in six months to a market that needs literacy for the next
+decade.
+
+<div className="grid gap-4 sm:grid-cols-2 my-8">
+  <GifEmbed
+    src="/blog/ai-is-the-best-teacher-most-cant-use-it/problem-confusing.webp"
+    alt="A solo builder slumped at a dark desk, staring at code on screen with an overwhelmed expression — the thinking-amplification gap visualized."
+    caption="Before — AI as overwhelming firehose. The user has access; they cannot direct it."
+  />
+  <GifEmbed
+    src="/blog/ai-is-the-best-teacher-most-cant-use-it/solution.webp"
+    alt="The same builder standing among floating context panels — code, diagrams, a globe — arranged around them as a structured environment."
+    caption="After — AI inside a designed context. Specifications, rules, tools, and feedback wired in."
+  />
+</div>
+
+## Context engineering is the new literacy
+
+The industry has already named the replacement. In 2026 surveys, **82%
+of IT and data leaders say prompt engineering alone is insufficient** to
+power AI at scale. **95% of data teams plan to invest in
+context-engineering training in 2026.** A European fintech that rolled
+it out across 50 developers saw a **40% drop in code-review
+corrections, 35% better security compliance, and 28% less time** spent
+reformulating queries to its AI agents.
+
+Context engineering is not a hot tool. It is a discipline:
+
+- **Prompt engineering** asks: how do I phrase one request?
+- **Context engineering** asks: what does the agent need to know,
+  remember, and reach, every time it acts on this codebase?
+
+```text
+A working context for a coding agent has four layers:
+  1. Project rules     CLAUDE.md / AGENTS.md / .cursor/rules
+  2. Design intent     a spec doc the agent reads before writing
+  3. Tools             MCP servers, scripts, type signatures it calls
+  4. Feedback          tests, lint, gap analysis, runtime logs
+```
+
+<Callout type="tip">
+A senior with 20 years of taste and no context layer underperforms a
+non-developer with all four layers wired correctly. The senior brings
+judgment; the layers translate that judgment into something the agent
+can keep using across sessions.
+</Callout>
+
+One framing has stuck: "if you're building agents in 2026, you are a
+data engineer — an architect of context." That sentence does not
+survive in a curriculum that still teaches "how to write a good
+prompt." It needs a curriculum that teaches **how to design the
+environment the agent operates inside.**
+
+## bkit: one attempt to operationalize the discipline
+
+I built [bkit](https://github.com/tomo-kay/bkit-claude-code) because the
+gap was personal. I wanted my partner — who has never written a
+`git rebase` in her life — to ship a working web app and have it
+survive the second feature. The first try collapsed at the 80% wall.
+The second try did too. The third try, with a spec doc, a verification
+loop, and a fixed cadence, shipped.
+
+bkit is one operationalization of the principles above:
+
+- **43 skills + 36 agents + 142 lib modules + 21-event hook system.**
+  Not a chatbot wrapper. A harness.
+- **A `gap-detector` agent measures Match Rate** between the design
+  document and the shipped code. If Match Rate < 90%, an iterator runs
+  up to 5 cycles to close the gap before the user is even asked for
+  review.
+- **Three philosophies that name the gap as methodology, not skill.**
+  *Automation First*: PDCA is applied even when the user has never
+  heard of PDCA. *No Guessing*: if the spec doesn't say it, the agent
+  asks; it does not hallucinate. *Docs = Code*: the design and the
+  implementation are kept in sync by the harness, not by hope.
+
+I am not pitching this. I am reporting it. bkit is one attempt — among
+many that need to exist — at turning the discipline juniors used to
+absorb across years of mentorship into something a harness enforces in
+minutes. The principles do not require bkit. They require a curriculum
+that teaches them as the default mode of working with an AI agent.
+
+## Korea's consumption paradox
+
+Anthropic's leadership pointed at Korea twice between 2025 and 2026.
+Korea is top-5 globally in Claude usage and top-5 per capita. The single
+highest individual Claude Code user worldwide is a Korean software
+engineer. Anthropic opened a Gangnam office. Korean Claude Code monthly
+active users grew roughly 6× in four months; Korean revenue grew 10× in
+a year.
+
+And yet every dominant tool — Cursor, Claude Code, Copilot, Lovable, v0
+— is foreign. 패스트캠퍼스 sells a 17-hour "바이브코딩 바이블" package.
+노마드코더 markets directly to "바이브 코딩 실패자" — vibe-coding
+failures. A 더스쿠프 survey reported **53.1% of 571 Korean office
+workers have done a side project.** The demand is overwhelming.
+
+What is being taught is still mostly which prompt to type and which
+button to click. The half-life of an "AI coding" course on Inflearn has
+collapsed to six to twelve months. The only sustained domestic
+methodology contribution visible right now is Toss's "harness
+engineering" framing — a Korean fintech publishing what it learned
+about raising the floor of org productivity through a structured AI
+harness, not a faster model.
+
+That is the export opportunity hidden in the consumption paradox. Korea
+has both the user base and the operator depth. What it does not yet
+have is education that treats context engineering as **literacy before
+tool-of-the-month** — that prepares Korean builders to ship methodology,
+not just consume infrastructure.
+
+## A curriculum for the next decade
+
+If AI is the best teacher, what does the curriculum look like? Not as a
+course outline — as a literacy stack:
+
+- **Day 1: Specification before prompt.** Three lines on a sticky note:
+  *what the system must do, what it must never do, what proves it's
+  done.* The non-developer who learns this on day one ships safer code
+  than the senior who skips it. This is the only skill that compounds
+  with every model upgrade.
+- **Week 1: Design-doc fluency.** Read and write one-page design
+  documents that machines can re-read. Not for the architect — for the
+  agent. A spec the agent re-loads is a spec that survives a hundred AI
+  rewrites.
+- **Month 1: Feedback-loop literacy.** Match Rate, gap analysis, test
+  signal, runtime logs. Treat the AI's output the way a senior treats
+  a junior's PR: respect and skepticism in equal measure. Build the
+  muscle to say "this is wrong" before the bug ships.
+- **Quarter 1: Harness composition.** Skills, agents, state, hooks. Not
+  as bkit features — as a generic literacy. Pick a tool, but learn the
+  pattern. The tool will be replaced; the pattern will not.
+
+<Callout type="tip">
+What the curriculum stops teaching: tool of the month, prompt tricks,
+model trivia. What it starts teaching: thinking that compounds with AI —
+specification, verification, harness composition, and the humility to
+say "I do not understand what just shipped."
+</Callout>
+
+The endpoint of this curriculum is not a generation of vibe coders who
+ship faster. It is a generation that uses AI the way the best students
+have always used the best teachers: as a force multiplier on thought
+they were already doing the work of having. Anthropic dropped a hint
+when it eased "vibe coding" out of its own product framing in early
+2026. Karpathy dropped a louder one when he replaced the term he had
+coined. The signal is the same: speed is not the bottleneck anymore.
+The literacy is.
+
+## Summary
+
+- Karpathy retired "vibe coding" within a year of coining it;
+  Anthropic's own research found AI assistance worsens conceptual
+  understanding by 17%. The framing was always provisional.
+- 26% of audited vibe-coded apps ship critical vulnerabilities, and
+  80% repeat the same RLS bug. Speed without verification is
+  survivorship, not method.
+- The gap between a senior with a 10× claim and an average user with a
+  19% productivity loss is not access to tools. It is the capacity to
+  amplify thought through the model.
+- 82% of IT leaders now say prompt engineering alone is insufficient.
+  Context engineering — the design of the agent's persistent
+  environment — is the literacy that closes the gap.
+- bkit is one operationalization (spec-first, verify-against-spec,
+  automate the loop). The principles do not require bkit; they require
+  a curriculum that teaches them as default.
+- Korea over-consumes AI coding tools but under-produces methodology.
+  The export opportunity is teaching context engineering as literacy
+  before the next foreign tool ships.
+
+For adjacent reading: see [vibe coding with context engineering](/blog/vibe-coding-with-context-engineering)
+for the 29-day execution proof, [intent is the new craft](/blog/intent-is-the-new-craft)
+for the essay on what craft means now, and [bkit + harness engineering](/blog/bkit-harness-engineering-vibe-coding)
+for the technical positioning behind the case study above.
+
+## FAQ
+
+**Is vibe coding dead?**
+
+No, but Karpathy himself moved past the term. The framing was always
+provisional; "agentic engineering" names the discipline the original
+wording dismissed.
+
+**Do non-developers need to learn programming fundamentals first?**
+
+They need to learn specification and verification, not syntax. The
+skills that compound with AI are the ones AI cannot yet do for you:
+deciding what "correct" means.
+
+**What is context engineering, in one sentence?**
+
+Designing the persistent information environment — docs, rules,
+tools, memory — that an AI agent operates inside, so its outputs
+become reproducible instead of accidental.
+
+**Is bkit required to do any of this?**
+
+No. bkit is one open-source operationalization. The principles
+(spec-first, verify-against-spec, automate the loop) work in plain
+CLAUDE.md with a checklist; bkit just enforces them by default.
+
+**Why does Korea matter to this story?**
+
+Korea is the world's heaviest per-capita consumer of AI coding tools
+but a methodology importer. The export opportunity is teaching
+context engineering as literacy before the next foreign tool ships.
+
+## Terms used in this post
+
+**Agentic engineering** — Karpathy's 2026 replacement for "vibe
+coding." Working with an AI agent the way you'd work with a teammate:
+define the task, review the diff, refuse the work if you can't
+explain what it does.
+
+**Context engineering** — Designing the persistent information
+environment an AI agent operates inside: project rules, design docs,
+tools it can call, and feedback signals. The discipline that replaced
+prompt engineering as the skill that decides outcomes in 2026.
+
+**Harness engineering** — The Toss-coined sibling of context
+engineering. Treats the workflow around the AI (the harness — skills,
+agents, hooks, state) as the main lever for org productivity, not
+the choice of model.
+
+**Match Rate** — A bkit metric: the percentage of a shipped
+implementation that matches its design document. Below 90% triggers
+up to five automated improvement cycles before the user is asked to
+review.
+
+**RLS** — Row-Level Security. A Supabase / Postgres feature that
+decides which rows a logged-in user can see. The most-broken setting
+in vibe-coded apps: writing `auth.role() = 'authenticated'` lets
+every logged-in user read every other user's rows, a silent breach
+that ships with the deploy.
+
+Related reading:
+- [Vibe coding with context engineering](/blog/vibe-coding-with-context-engineering)
+- [Intent is the new craft](/blog/intent-is-the-new-craft)
+- [bkit + harness engineering](/blog/bkit-harness-engineering-vibe-coding)

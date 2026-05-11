@@ -6,7 +6,7 @@ import { InteractiveGrid } from "@/components/interactive-grid";
 import { PostMasonry } from "@/components/blog/post-masonry";
 import { BlogIndexJsonLd } from "@/components/seo/blog-index-jsonld";
 import { getAllTags, getPostsByTag, isIndexableTag } from "@/lib/blog";
-import { getTagLabel, isValidTag } from "@/lib/tags";
+import { getTagDescription, getTagLabel, isValidTag } from "@/lib/tags";
 
 export const dynamic = "error";
 
@@ -24,6 +24,7 @@ export async function generateMetadata({
   const { tag } = await params;
   if (!isValidTag(tag)) return {};
   const label = getTagLabel(tag);
+  const description = getTagDescription(tag);
   const canonical = `https://tene.sh/blog/tag/${tag}`;
   // Thin-tag protection: tag pages with < INDEXABLE_TAG_THRESHOLD articles
   // render normally for UX but emit noindex so Google's helpful-content
@@ -34,11 +35,11 @@ export async function generateMetadata({
 
   return {
     title: `${label} articles — tene Tech Blog`,
-    description: `Articles tagged ${label} from the tene Tech Blog.`,
+    description,
     alternates: { canonical },
     openGraph: {
       title: `${label} — tene Tech Blog`,
-      description: `Articles tagged ${label}.`,
+      description,
       url: canonical,
       siteName: "Tene",
       type: "website",
@@ -63,6 +64,7 @@ export default async function TagPage({
   if (posts.length === 0) notFound();
 
   const label = getTagLabel(tag);
+  const description = getTagDescription(tag);
 
   return (
     <>
@@ -88,7 +90,13 @@ export default async function TagPage({
               <span className="text-accent">#</span>
               {label}
             </h1>
-            <p className="mt-4 text-muted">
+            {/* Tag intro — gives the page unique visible content per tag, the
+                visible-body half of the 2026-05-11 fix that reduces Google's
+                "thin content" signal for indexable tag archives. */}
+            <p className="mt-5 mx-auto max-w-2xl text-base leading-relaxed text-muted">
+              {description}
+            </p>
+            <p className="mt-3 text-sm text-muted">
               {posts.length} article{posts.length > 1 ? "s" : ""}
             </p>
           </div>
