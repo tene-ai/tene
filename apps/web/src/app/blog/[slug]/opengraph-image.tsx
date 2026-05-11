@@ -40,7 +40,7 @@ export default async function Image({
           color: "#ededed",
           fontFamily: "sans-serif",
         }}
-      >
+      >{/* noindex header is set on the ImageResponse options below */}
         {/* Dot grid background overlay (subtle) */}
         <div
           style={{
@@ -141,6 +141,16 @@ export default async function Image({
         </div>
       </div>
     ),
-    { ...size },
+    {
+      ...size,
+      // X-Robots-Tag: noindex — this route returns an image/png stream,
+      // not an HTML document. Without this header, GSC indexes the URL
+      // as a "Crawled — currently not indexed" page (the dashboard
+      // surfaces it under /blog/{slug}/opengraph-image?... entries).
+      // The header re-classifies it as "Excluded by 'noindex' tag",
+      // which is the correct bucket. See .claude/rules/blog-content.md
+      // §10.1 and verify-blog-indexability.mjs route-noindex assertion.
+      headers: { "X-Robots-Tag": "noindex" },
+    },
   );
 }
