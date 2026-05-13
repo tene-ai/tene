@@ -1,0 +1,485 @@
+---
+slug: bkit-sprint-orchestration
+title: 'bkit Sprint Orchestration: Multi-Feature LLM Workflows for Claude Code'
+description: >-
+  bkit v2.1.13 adds Sprint Management on top of PDCA. One sprint wraps many
+  feature loops, with eight phases, fourteen quality gates, and four auto-pause
+  triggers that stop runaway AI sessions.
+publishedAt: '2026-05-13'
+updatedAt: '2026-05-13'
+category: vibe-coding
+tags:
+  - bkit
+  - claude-code
+  - deep-dive
+  - architecture
+author: agent-kay
+thumbnail: /blog/bkit-sprint-orchestration/sprint-and-pdca-layer.webp
+canonicalUrl: 'https://tene.sh/blog/bkit-sprint-orchestration'
+faqs:
+  - question: Can I use Sprint without PDCA?
+    answer: >-
+      No. Sprint orchestrates PDCAs. The sprint qa phase reads from each
+      feature's PDCA check results. Sprint provides the multi-feature
+      container; PDCA provides the per-feature loop. They are designed to
+      work together, not as alternatives.
+  - question: Why does Sprint run features one at a time instead of in parallel?
+    answer: >-
+      LLM cache misses. Calling the model in parallel with overlapping context
+      can multiply token cost by about ten times. bkit's ENH-292 rule enforces
+      sequential dispatch so the model can reuse cached context between calls.
+      It is slower on the wall clock but much cheaper.
+  - question: What does Trust Level L4 do that L3 does not?
+    answer: >-
+      L4 auto-archives the sprint when the report is done. L3 stops at the
+      report phase for a human to read it first. Use L4 only when your Trust
+      Score is 85 or higher in /control. Below that, L3 is the safe default.
+  - question: Can I split a sprint mid-flight if it goes off the rails?
+    answer: >-
+      Yes. Run /sprint fork to create a new sprint that carries forward only
+      the unfinished features. The original sprint stays paused so you can
+      review what went wrong. Most teams archive the original after the fork.
+  - question: How is this different from a Jira sprint?
+    answer: >-
+      Jira sprints are calendar-based and human-driven. bkit sprints are
+      match-rate driven with four auto-pause triggers and built-in awareness
+      of LLM cost. Resume always re-checks the triggers before continuing,
+      which Jira does not do.
+---
+
+## The nineteen-feature problem
+
+A few weeks ago I sat down with a plan that had nineteen features in it.
+Each feature had its own PDCA loop — plan, do, check, act. I knew how to
+run one loop. I had never run nineteen at once. There was no rule for
+which one comes first. No rule for what to do when one feature breaks
+another. No way to set a budget for the whole effort and stop when I
+hit it.
+
+bkit v2.1.13 adds a layer that handles all three. It is called Sprint.
+A sprint is a container that wraps many feature loops at once. It has
+its own eight phases. It has its own quality gates. And it has four
+"safety pins" that pause the work when something goes wrong.
+
+This post is a tour of how that container is built. It is meant for
+people who already use [bkit's PDCA loop](/blog/bkit-pdca-for-claude-code)
+and want to know what is new in v2.1.13. If you have not read about
+PDCA yet, start there. The terms PDCA, harness, and matchRate all show
+up below, and they are explained at the end in the Glossary.
+
+## Sprint wraps PDCA — not the other way around
+
+<GifEmbed
+  src="/blog/bkit-sprint-orchestration/sprint-and-pdca-layer.webp"
+  alt="Five stacked translucent rectangular layers glowing in blue, purple, and pink, illustrating how bkit's sprint container sits above the PDCA loop with four code layers in between."
+  caption="Sprint sits on top of PDCA. The four code layers — Domain, Application, Infrastructure, Presentation — hold the eight phases between them."
+/>
+
+The first thing to know is the shape. A sprint does not replace PDCA.
+It sits on top of it. Inside one sprint, each feature runs its own
+PDCA loop. The sprint just keeps score.
+
+<Callout type="info">
+**Sprint ⊃ PDCA**. One sprint, many features. Each feature has its
+own PDCA. Sprint phases read from feature phases — they never
+overwrite them.
+</Callout>
+
+This inverted nesting is on purpose. If sprint sat inside PDCA, every
+feature would carry the weight of cross-feature scheduling. By putting
+sprint on top, the per-feature code stays simple. The sprint layer
+holds the cross-feature concerns: who depends on whom, what the total
+budget is, which features should ship together.
+
+## Eight phases, in a fixed order
+
+A sprint moves through eight phases. The order is frozen at the code
+level — you cannot skip ahead.
+
+```text
+prd → plan → design → do → iterate → qa → report → archived
+```
+
+Each step has a job. `prd` writes down what the sprint is for. `plan`
+breaks it into features. `design` decides the shape of the work. `do`
+is where the code gets written. `iterate` runs only when the work does
+not match the design — it loops until it does, with a five-cycle cap.
+`qa` checks how data flows between features. `report` writes up what
+happened. `archived` is the final, read-only state.
+
+Each phase can only move to certain other phases. The list lives in a
+file called `SPRINT_TRANSITIONS`:
+
+```text
+prd      → plan, archived
+plan     → design, archived
+design   → do, archived
+do       → iterate, qa, archived
+iterate  → qa, do, archived
+qa       → report, do, archived
+report   → archived
+archived → (none — terminal)
+```
+
+The `archived → (none)` row is the important one. A sprint can never
+come back from archived. If you decide a sprint is done, that decision
+is permanent. If you want to keep working on its leftover features,
+you fork the sprint instead. Forward-only design avoids a whole class
+of bugs about "wait, which version of this sprint is current?"
+
+## Four layers, each replaceable
+
+bkit's sprint code lives in four layers. Each layer has one job and
+talks to the layer below it through small, named contracts. This is
+boring on purpose. Boring code is easy to test and easy to swap out.
+
+```text
+Presentation   (Sprint 4)  ← scripts/sprint-handler.js + agents/*
+   ↓
+Application    (Sprint 2)  ← use cases: start, advance, iterate, qa, ...
+   ↓
+Infrastructure (Sprint 3)  ← state store, event emitter, doc scanner
+   ↓
+Domain         (Sprint 1)  ← Sprint entity, events, validators
+```
+
+The Domain layer is the heart. It holds the Sprint entity, the eight
+events that can happen to it, and the rules about which phases can
+follow which. None of this code reads from disk or calls the network.
+That makes it easy to test — you can run every domain rule without
+spinning anything up.
+
+Mutations are immutable. Every change returns a new object instead of
+editing the old one:
+
+```ts
+function cloneSprint(sprint, updates) {
+  return {
+    ...sprint,
+    ...updates,
+    autoRun: { ...sprint.autoRun, ...updates.autoRun },
+    phaseHistory: updates.phaseHistory || sprint.phaseHistory,
+    kpi: { ...sprint.kpi, ...updates.kpi },
+  };
+}
+```
+
+The old object stays untouched. The new object holds the change. This
+gives you a free audit log: every state in the sprint's life is
+preserved in `phaseHistory`. If something goes wrong, you can walk back
+through it.
+
+The Infrastructure layer is where disk and network finally show up.
+The state store writes JSON files atomically — it writes to a `.tmp`
+file first, then renames it. If the process dies mid-write, you do
+not get a half-written file. You either get the old file or the new
+one. Never garbage.
+
+## Quality gates — fourteen ways to fail safely
+
+Each phase has a list of "gates" that must pass before the sprint can
+move on. There are ten **M gates** (per-feature, inherited from PDCA)
+and four **S gates** (sprint-wide, new in v2.1.13).
+
+| Gate | What it checks | Pass when |
+|------|---------------|-----------|
+| M1 | matchRate (design vs code) | ≥ 90% |
+| M2 | code quality score | ≥ 80 |
+| M3 | critical issue count | = 0 |
+| M4 | API compliance | ≥ 95% |
+| M5 | runtime error rate | ≤ 1% |
+| M7 | convention compliance | ≥ 90% |
+| M8 | design completeness | ≥ 85 |
+| M10 | PDCA cycle time | ≤ 40 hours |
+| S1 | data flow integrity (7 layer) | = 100 |
+| S2 | feature completion | = 100% |
+| S3 | sprint velocity | informational |
+| S4 | archive readiness (composite) | true |
+
+S1 is the most interesting one. It walks data across seven layers:
+UI → Client → API → Validation → DB → Response → Client → UI. If
+any hop drops or corrupts the data, S1 falls below 100 and the
+sprint cannot move from `qa` to `report`. This is what catches the
+nasty bugs where two features look fine on their own but break when
+they talk to each other.
+
+The gate check itself returns a structured result:
+
+```ts
+type GateResult = {
+  allPassed: boolean;
+  results: Record<string, {
+    current: number;
+    threshold: number;
+    passed: boolean;
+    reason: string;
+  }>;
+};
+```
+
+`reason` is the field that tells you *why* a gate failed. Not just
+"M3 failed" but "critical issues count is 3, threshold is 0, found in
+files X, Y, Z." Good error messages are the difference between a tool
+you trust and a tool you fight.
+
+## Four auto-pause triggers
+
+The sprint does not fail. It pauses. There are four triggers that
+fire automatically, and each one gives the user a small set of
+choices.
+
+| Trigger | Fires when | Choices |
+|---------|-----------|---------|
+| QUALITY_GATE_FAIL | M3 > 0 or S1 < 100 | fix & resume / forward fix / abort |
+| ITERATION_EXHAUSTED | 5 iterations, still under 90% match | forward fix / carry / abort |
+| BUDGET_EXCEEDED | token use > budget | raise budget / abort / partial archive |
+| PHASE_TIMEOUT | phase ran longer than its cap | extend / force-advance / abort |
+
+The "pause then ask" pattern is the heart of this design. The sprint
+never silently breaks. Pausing writes an entry to the audit log and
+emits a `SprintPaused` event:
+
+```ts
+function pauseSprint(sprint, triggers, deps) {
+  const pauseEntry = {
+    triggerId: triggers[0].triggerId,
+    timestamp: deps.clock(),
+    severity: triggers[0].severity,
+    message: triggers[0].message,
+    resolvedAt: null,
+  };
+  return {
+    sprint: cloneSprint(sprint, {
+      status: 'paused',
+      autoPause: {
+        ...sprint.autoPause,
+        pauseHistory: [...sprint.autoPause.pauseHistory, pauseEntry],
+      },
+    }),
+  };
+}
+```
+
+When you resume, the triggers are re-checked. If `BUDGET_EXCEEDED`
+fired, raising the budget and running `/sprint resume` will work.
+But if you do not raise the budget, the resume call refuses. The
+trigger is still hot. This is by design — silent resume past a hot
+trigger would defeat the whole safety mechanism.
+
+## Trust Level — a permission boundary, not a speed knob
+
+bkit has five Trust Levels, L0 through L4. The most common mistake
+is to think L4 means "fast" and L0 means "slow." That is wrong. Trust
+Level controls **where the user is asked to approve**, not how fast
+the machine moves.
+
+```ts
+const SPRINT_AUTORUN_SCOPE = Object.freeze({
+  L0: { manual: true,  requireApproval: true,  stopAfter: 'prd' },
+  L1: { manual: true,  requireApproval: true,  stopAfter: 'prd' },
+  L2: { manual: false, requireApproval: true,  stopAfter: 'design' },
+  L3: { manual: false, requireApproval: true,  stopAfter: 'report' },
+  L4: { manual: false, requireApproval: false, stopAfter: 'archived' },
+});
+```
+
+Read the `stopAfter` field. At L2, the sprint runs automatically up
+through `design`, then waits for human approval to enter `do`. At L3,
+it runs up through `report`, then waits for approval to archive. At
+L4, nothing waits — the sprint runs all the way to `archived` on its
+own.
+
+<Callout type="warn">
+L4 is meant for sprints you have already done many times. Use it
+only when your Trust Score in `/control` is 85 or higher. For a new
+domain, stay at L2 or L3. The boundary check is enforced — trying
+to auto-advance past `stopAfter` returns
+`requires_user_approval` and stops the loop.
+</Callout>
+
+The non-obvious choice here is that "permission" is the unit of
+trust, not "speed." A team that trusts the machine 100% still needs
+to know when humans get a vote. Trust Level encodes that contract.
+
+## Master plan — Kahn topological sort meets greedy bin-packing
+
+The sixteenth and newest sub-command is `/sprint master-plan`. You
+give it a list of features and (optionally) a dependency graph. It
+gives you back a multi-sprint roadmap split by token budget.
+
+The algorithm has two halves. First, it runs a **Kahn topological
+sort** on the dependency graph. That puts features with no
+dependencies first, then features that only depend on those, and so
+on. If the graph has a cycle, the algorithm refuses — you cannot
+have a feature that depends on a feature that depends on it.
+
+```ts
+const inDegree = {};
+for (const n of Object.keys(graph)) {
+  inDegree[n] = (graph[n] || []).length;
+}
+// Process nodes with 0 in-degree first.
+```
+
+Second, it walks the sorted list and packs features into sprints
+greedily. The effective budget per sprint is 75,000 tokens
+(100,000 cap minus a 25% safety margin). If the current sprint
+already holds 60,000 tokens and the next feature wants 20,000, that
+feature starts a new sprint.
+
+For tene CLI v2.0, I gave the master plan 19 features and a 13-week
+window. It came back with six sprints and a clear dependency chain:
+
+```text
+s1 (crypto + sync) → s2 (vault v2) → s3 (CI matrix) → s5 (signing)
+                                  ↘                ↗
+                                    s4 (biometric)
+                                                     → s6 (launch)
+```
+
+Six sprints, eleven-week critical path, fifty-eight pull requests.
+The plan was deterministic — same input, same output. That made it
+easy to share, easy to argue with, and easy to update.
+
+## When to reach for Sprint vs PDCA
+
+Use PDCA when you have one feature. Use Sprint when you have a
+collection of features that share a deadline, a budget, or a
+release date. Use Sprint when you need to know who blocks whom.
+Use PDCA when you do not.
+
+<Callout type="tip">
+Rule of thumb: if you can describe the work in one sentence, use
+PDCA. If you need a bullet list, use Sprint.
+</Callout>
+
+The two are not competitors. They are layers. The sprint knows the
+shape of the whole; the PDCA knows the shape of each part. Both
+keep going only as long as the gates say to. Both pause loudly when
+something is off. Both leave a paper trail you can read months
+later.
+
+If you are building one of those "AI did the whole thing" demos for
+a hackathon, you probably do not need Sprint. If you are shipping a
+product update with five features over a sprint of three weeks,
+this is the layer that keeps the work honest.
+
+## Summary
+
+- Sprint v2.1.13 is a meta-container above PDCA. One sprint wraps
+  many feature loops.
+- Eight phases, fixed order, forward-only. Archived is terminal.
+- Four layers — Domain, Application, Infrastructure, Presentation
+  — each replaceable, each with a single job.
+- Ten M gates (per-feature) plus four S gates (sprint-wide) total
+  fourteen ways the sprint can refuse to advance.
+- Four auto-pause triggers (gate fail, iter exhausted, budget over,
+  phase timeout) write to the audit log and ask the user what
+  to do.
+- Trust Level L0–L4 is a **permission boundary**, not a speed
+  knob. The `stopAfter` field is what changes.
+- The `/sprint master-plan` action uses Kahn topological sort plus
+  greedy bin-packing to split features into sprints within a token
+  budget.
+
+## FAQ
+
+**Can I use Sprint without PDCA?**
+
+No. Sprint orchestrates PDCAs. The sprint qa phase reads from each
+feature's PDCA check results. Sprint provides the multi-feature
+container; PDCA provides the per-feature loop. They are designed to
+work together, not as alternatives.
+
+**Why does Sprint run features one at a time instead of in parallel?**
+
+LLM cache misses. Calling the model in parallel with overlapping
+context can multiply token cost by about ten times. bkit's ENH-292
+rule enforces sequential dispatch so the model can reuse cached
+context between calls. It is slower on the wall clock but much
+cheaper.
+
+**What does Trust Level L4 do that L3 does not?**
+
+L4 auto-archives the sprint when the report is done. L3 stops at
+the report phase for a human to read it first. Use L4 only when
+your Trust Score is 85 or higher in /control. Below that, L3 is
+the safe default.
+
+**Can I split a sprint mid-flight if it goes off the rails?**
+
+Yes. Run /sprint fork to create a new sprint that carries forward
+only the unfinished features. The original sprint stays paused so
+you can review what went wrong. Most teams archive the original
+after the fork.
+
+**How is this different from a Jira sprint?**
+
+Jira sprints are calendar-based and human-driven. bkit sprints are
+match-rate driven with four auto-pause triggers and built-in
+awareness of LLM cost. Resume always re-checks the triggers before
+continuing, which Jira does not do.
+
+## Terms used in this post
+
+**PDCA** — A four-step loop: Plan, Do, Check, Act. bkit turns it
+into a nine-phase state machine for one feature at a time. Sprint
+sits on top and orchestrates many of these loops together.
+
+**Harness** — The wrapper around an AI model that decides when to
+call it, what context to send, and how to check the answer. bkit
+is one such harness for Claude Code. See
+[the harness post](/blog/bkit-harness-engineering-vibe-coding)
+for more.
+
+**matchRate** — A percentage from 0 to 100 that measures how
+closely the code matches the design document. bkit's gap-detector
+agent computes it by comparing the design file to the source
+files. Below 90% blocks the sprint from leaving the do phase.
+
+**Kahn topological sort** — A way to order a list of items where
+some depend on others, so that anything you depend on comes first.
+Useful for figuring out which feature should be built first in a
+project with a dependency graph.
+
+**Greedy bin-packing** — A method for splitting a list of items
+into the smallest number of buckets, where each bucket has a size
+limit. "Greedy" means it takes one item at a time and puts it in
+the current bucket if it fits, otherwise opens a new bucket. Not
+optimal, but very fast and good enough for sprint planning.
+
+**ENH-292** — A rule in bkit that says all agent dispatch must be
+sequential, never parallel. The number is an internal enhancement
+ID. The reason is LLM cache friendliness: parallel calls cause
+cache misses that multiply cost.
+
+**Trust Score** — A 0-to-100 number that lives in `/control` and
+measures how often bkit's automation has been correct on your
+project. Higher score allows higher Trust Level (L0 to L4) and
+therefore more auto-advancing of sprint phases.
+
+**stopAfter** — A field in the Trust Level scope map that says
+which phase the sprint pauses at for user approval. L2's
+`stopAfter` is `design`, L3's is `report`, L4's is `archived`.
+
+**Auto-pause trigger** — A condition that, when true, freezes the
+sprint and writes an entry to the audit log. There are four:
+quality gate fail, iteration exhausted, budget exceeded, phase
+timeout. The user has to act before the sprint can resume.
+
+**Cumulative tokens** — The total number of tokens (units of LLM
+input or output) the sprint has used so far. Tracked against the
+sprint's budget. Going over fires the BUDGET_EXCEEDED trigger.
+
+**Forward-only** — A property of the sprint state machine where
+once a sprint is archived, it cannot un-archive. To continue work,
+you fork it. This avoids ambiguity about which version is current.
+
+## Related reading
+
+- [bkit: PDCA methodology for Claude Code](/blog/bkit-pdca-for-claude-code)
+  — the per-feature loop that Sprint orchestrates.
+- [Harness engineering for vibe coding](/blog/bkit-harness-engineering-vibe-coding)
+  — why the wrapper around the model matters more than the model.
+- [Spec-driven coding with Claude Code](/blog/spec-driven-coding-with-claude-code)
+  — how design docs feed into both PDCA and Sprint.
