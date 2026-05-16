@@ -145,7 +145,7 @@ brews:
 #   1. A public GitHub repo `tomo-kay/homebrew-tene` to exist.
 #   2. A fine-grained PAT with `Contents: Read/Write` on that repo,
 #      stored as the `HOMEBREW_TAP_GITHUB_TOKEN` secret on this repo
-#      (tomo-kay/tene).
+#      (agent-kay-it/tene).
 #
 # Neither is set up yet, and three consecutive stable releases
 # (v1.0.5, v1.0.6, v1.0.7) failed on this block with a 401 that
@@ -155,7 +155,7 @@ brews:
 # To re-enable:
 #   1. Create https://github.com/tomo-kay/homebrew-tene (public, MIT).
 #   2. Create the PAT and run:
-#        gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo tomo-kay/tene
+#        gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene
 #   3. Uncomment the block below.
 #
 # brews:
@@ -186,7 +186,7 @@ brews:
 #         tene init
 #
 #       Documentation:
-#         https://github.com/tomo-kay/tene#readme
+#         https://github.com/agent-kay-it/tene#readme
 #
 #       For AI agents using this project:
 #         https://tene.sh/llms.txt

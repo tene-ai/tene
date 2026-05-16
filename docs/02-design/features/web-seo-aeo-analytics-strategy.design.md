@@ -468,7 +468,7 @@ export default function robots(): MetadataRoute.Robots {
 Contact: mailto:security@tene.sh
 Expires: 2027-04-22T00:00:00.000Z
 Preferred-Languages: en
-Policy: https://github.com/tomo-kay/tene/blob/main/SECURITY.md
+Policy: https://github.com/agent-kay-it/tene/blob/main/SECURITY.md
 # Encryption: https://tene.sh/.well-known/pgp-key.txt  # Uncomment when PGP key added (Q3)
 ```
 
@@ -534,7 +534,7 @@ export function organizationSchema(): SchemaOrg {
       url: 'https://tene.sh/logo.svg',
     },
     sameAs: [
-      'https://github.com/tomo-kay/tene',
+      'https://github.com/agent-kay-it/tene',
     ],
     founder: {
       '@id': 'https://tene.sh/#person-kay-kim',
@@ -961,7 +961,7 @@ interface PostFrontmatter {
 // src/lib/analytics.ts — extend with event catalog
 export const GA4_EVENTS = {
   INSTALL_SCRIPT_COPY:  'install_script_copy',    // hero/CTA copy button
-  GITHUB_REPO_CLICK:   'github_repo_click',       // any github.com/tomo-kay/tene link
+  GITHUB_REPO_CLICK:   'github_repo_click',       // any github.com/agent-kay-it/tene link
   GITHUB_RELEASE_CLICK:'github_release_click',    // link to /releases specifically (C from Q10)
   CTA_CLICK:           'cta_click',               // any CTA button; params: { cta_name }
   CLAWHUB_LINK_CLICK:  'clawhub_link_click',      // footer ClawHub badge (pending Q9 decision)
@@ -1159,7 +1159,7 @@ These 10 questions must be resolved before `/pdca do` begins. Answers drive impl
 
 **Q3 — PGP Key for security.txt**: Skip the `Encryption:` field for v1 (recommended — valid per RFC 9116), use an existing PGP key (provide fingerprint + key URL), or generate a new key for security@tene.sh?
 
-**Q4 — package.json Field Values**: Confirm: `homepage: "https://tene.sh"`, `repository: "https://github.com/tomo-kay/tene"`, `author: "Kay Kim <kay@popupstudio.ai>"`, `description: "Landing page for Tene — local-first encrypted secret manager"`. Any corrections?
+**Q4 — package.json Field Values**: Confirm: `homepage: "https://tene.sh"`, `repository: "https://github.com/agent-kay-it/tene"`, `author: "Kay Kim <kay@popupstudio.ai>"`, `description: "Landing page for Tene — local-first encrypted secret manager"`. Any corrections?
 
 **Q5 — Person Schema sameAs URLs**: `name: "Kay Kim"` and `url: "https://github.com/tomo-kay"` are confirmed from PRD C-4. Should `sameAs` also include LinkedIn, X/Twitter, or a personal site? Provide URLs if yes.
 

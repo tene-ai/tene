@@ -61,13 +61,13 @@ Paste raw outputs into `snapshots/YYYY-MM-DD-ai-test.md` for audit.
 
 ```bash
 # T1 — metadata
-gh api repos/tomo-kay/tene --jq '{topics, description}'
-gh api repos/tomo-kay/tene --jq '.topics | length'   # expect 20
+gh api repos/agent-kay-it/tene --jq '{topics, description}'
+gh api repos/agent-kay-it/tene --jq '.topics | length'   # expect 20
 
 # T2 — llms.txt routes (post-deploy)
 curl -fsS -o /dev/null -w 'llms.txt=%{http_code}\n'       https://tene.sh/llms.txt
 curl -fsS -o /dev/null -w 'llms-full.txt=%{http_code}\n'  https://tene.sh/llms-full.txt
-curl -fsS https://raw.githubusercontent.com/tomo-kay/tene/main/llms.txt \
+curl -fsS https://raw.githubusercontent.com/agent-kay-it/tene/main/llms.txt \
   | head -5   # must contain 'tene'
 
 # T3 — comparison pages (post-deploy)

@@ -58,7 +58,7 @@
 - **노력**: S (3-4시간).
 
 ### P0-3. `pkg/errors`가 stdlib `errors` 패키지를 그림자처리 — A4
-- **근거**: `pkg/errors/errors.go:1`이 `package errors`로 선언. 모든 호출자가 alias 강제 (`teneerr "github.com/tomo-kay/tene/pkg/errors"`).
+- **근거**: `pkg/errors/errors.go:1`이 `package errors`로 선언. 모든 호출자가 alias 강제 (`teneerr "github.com/agent-kay-it/tene/pkg/errors"`).
 - **위험**: 교과서적인 stutter 안티패턴; 모든 contributor에게 영구 마찰; `%w` 래핑 후 `*TeneError` 타입 어서션은 `errors.Is/As`와 함께 작동하지 않음.
 - **수정**: `pkg/teneerr` (또는 `pkg/errs`) 로 rename; 모든 alias 제거. 저장소 전체 단일 rename + import 업데이트.
 - **노력**: S (반나절).
@@ -251,7 +251,7 @@
 
 #### 개선점
 - **P0** Linter 커버리지 너무 좁음. `.golangci.yml:8-14`가 6개 linter 만 활성화. 누락: **gofumpt, revive, gocritic, gosec, errorlint, bodyclose, noctx, wrapcheck, gocyclo, prealloc**. crypto + HTTP 다루는 Go 1.25 CLI 에 이건 단일 최대 갭.
-- **P0** `pkg/errors` 가 stdlib `errors` 그림자처리. `pkg/errors/errors.go:1` → 모든 호출자가 alias 강제 (`teneerr "github.com/tomo-kay/tene/pkg/errors"`). `pkg/teneerr` 또는 `pkg/errs` 로 rename.
+- **P0** `pkg/errors` 가 stdlib `errors` 그림자처리. `pkg/errors/errors.go:1` → 모든 호출자가 alias 강제 (`teneerr "github.com/agent-kay-it/tene/pkg/errors"`). `pkg/teneerr` 또는 `pkg/errs` 로 rename.
 - **P1** `TeneError` 가 `errors.As` 가 아닌 타입 어서션 사용. `pkg/errors/errors.go:54-59`의 `IsTeneError` 가 raw `err.(*TeneError)` 사용 — `%w` 래핑 후 silent 실패.
 - **P1** `internal/cli` 의 패키지 레벨 mutable state (`root.go:16-20, 41-48`, `get.go:12`, `set.go:14-17`, `init.go:34-40`) + 명령어 등록하는 9개 분리된 `init()` 함수. 테스트 표면이 사실상 reset 불가. **전체에 `t.Parallel()` 0개.** `newRootCmd()` 팩토리 + struct 에 바인딩된 flag 로 이동.
 - **P1** `context.Context` 가 vault/crypto 레이어로 전파되지 않음. `vault.Vault.SetMeta/GetSecret/ListSecrets/DeleteSecret` 모두 `ctx` first arg 없이 SQLite I/O. CLI 트리 전체에 `context.Background()` 가 단 1회 등장.

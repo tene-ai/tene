@@ -80,11 +80,11 @@ them.
 
 This skill (documentation only) is published on ClawHub under **MIT-0**
 (no attribution required, commercial use allowed). The underlying
-[tene CLI](https://github.com/tomo-kay/tene) is **MIT**.
+[tene CLI](https://github.com/agent-kay-it/tene) is **MIT**.
 
 ## Links
 
 - Tene homepage: https://tene.sh
-- Source: https://github.com/tomo-kay/tene
+- Source: https://github.com/agent-kay-it/tene
 - ClawHub skill page: https://clawhub.ai/tene-cli _(after publish)_
-- Issue tracker: https://github.com/tomo-kay/tene/issues
+- Issue tracker: https://github.com/agent-kay-it/tene/issues

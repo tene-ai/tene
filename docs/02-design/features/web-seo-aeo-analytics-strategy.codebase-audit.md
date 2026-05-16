@@ -228,7 +228,7 @@ Plan §8 references `@next/third-parties/google` for `<GoogleAnalytics>`. Packag
 | P0-10 | | MOD | `apps/web/package.json` | Add `"prebuild": "tsx scripts/gen-llms-full.ts"` OR `"build": "tsx scripts/gen-llms-full.ts && next build"` (decision in §4) |
 | P0-10 | | DEP | `apps/web/package.json` (dev) | `tsx` (to run TS script without compile) |
 | P0-11 | security.txt (RFC 9116) | NEW | `apps/web/public/.well-known/security.txt` | Plain text with `Contact: mailto:security@tene.sh`, `Expires: <ISO date 1y out>`, `Preferred-Languages: en`, optional `Encryption:` (PGP key URL), `Policy:` (URL). User provides contact/PGP per D-6 |
-| P0-12 | package.json metadata | MOD | `apps/web/package.json` | Add `"homepage": "https://tene.sh"`, `"repository": { "type": "git", "url": "https://github.com/tomo-kay/tene" }`, `"description": "Landing page for Tene — local-first encrypted secret manager"`, `"license": "MIT"`, `"author": "Kay Kim <kay@popupstudio.ai>"` (per PRD §7 Open Q) |
+| P0-12 | package.json metadata | MOD | `apps/web/package.json` | Add `"homepage": "https://tene.sh"`, `"repository": { "type": "git", "url": "https://github.com/agent-kay-it/tene" }`, `"description": "Landing page for Tene — local-first encrypted secret manager"`, `"license": "MIT"`, `"author": "Kay Kim <kay@popupstudio.ai>"` (per PRD §7 Open Q) |
 | P0-13 | Answer capsule rewrites | MOD | `apps/web/src/data/hero.ts:7` | Rewrite `sub` to 40-60 word self-contained "what is Tene" capsule |
 | P0-13 | | MOD | `apps/web/src/data/faq.ts` (top 3 items, lines 4-19) | Rewrite first 3 answers to 40-60 word capsules. Candidates to rewrite: "Why is .env dangerous with AI agents?", "How does Tene keep secrets from AI?", "What is Tene?". See §4.6 for proposed rewrites |
 
@@ -573,7 +573,7 @@ Answers drive Design decisions. Present these at Design Checkpoint 1 (Requiremen
 ### Q4 — package.json Metadata
 **Confirm**:
 - `homepage: "https://tene.sh"` — OK?
-- `repository: "https://github.com/tomo-kay/tene"` — OK?
+- `repository: "https://github.com/agent-kay-it/tene"` — OK?
 - `author: "Kay Kim <kay@popupstudio.ai>"` — OK?
 - `description`: propose "Landing page for Tene — local-first encrypted secret manager"
 

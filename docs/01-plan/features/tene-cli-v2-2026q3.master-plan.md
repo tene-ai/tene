@@ -519,7 +519,7 @@ v2 adds:
 Local-only by default. No server, no telemetry. MIT. brew install tene.
 
 Threat model + crypto self-audit: tene.sh/threat-model
-Repo: github.com/tomo-kay/tene
+Repo: github.com/agent-kay-it/tene
 ```
 
 (HN 발사 시간: 화요일 9am ET = 수요일 22:00 KST. growth-routine `agent-kay` 계정 사용; karma 50+ 도달 후)

@@ -2,14 +2,14 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)](https://go.dev)
-[![Version](https://img.shields.io/github/v/release/tomo-kay/tene?color=green)](https://github.com/tomo-kay/tene/releases)
-[![CI](https://github.com/tomo-kay/tene/actions/workflows/ci.yml/badge.svg)](https://github.com/tomo-kay/tene/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/github/v/release/agent-kay-it/tene?color=green)](https://github.com/agent-kay-it/tene/releases)
+[![CI](https://github.com/agent-kay-it/tene/actions/workflows/ci.yml/badge.svg)](https://github.com/agent-kay-it/tene/actions/workflows/ci.yml)
 
 <p align="center">
   <img src="examples/demo/the-full-story/the-full-story-demo.gif" alt="Tene — from .env danger to AI-safe vault in 70 seconds" width="800">
 </p>
 
-**Your .env is not a secret. AI can read it.** | [Website](https://tene.sh) | [For AI Agents ↓](#for-ai-agents) | [Releases](https://github.com/tomo-kay/tene/releases) | [More demos ↓](#-more-demos)
+**Your .env is not a secret. AI can read it.** | [Website](https://tene.sh) | [For AI Agents ↓](#for-ai-agents) | [Releases](https://github.com/agent-kay-it/tene/releases) | [More demos ↓](#-more-demos)
 
 Tene is a local-first, encrypted secret management CLI. It encrypts your secrets and injects them at runtime -- so AI agents can use them without ever seeing the values.
 
@@ -80,7 +80,7 @@ Auto-detects your OS and architecture, downloads the latest binary from GitHub R
 <summary>With Go</summary>
 
 ```bash
-go install github.com/tomo-kay/tene/cmd/tene@latest
+go install github.com/agent-kay-it/tene/cmd/tene@latest
 ```
 
 </details>
@@ -88,7 +88,7 @@ go install github.com/tomo-kay/tene/cmd/tene@latest
 <details>
 <summary>Download binary manually</summary>
 
-Download from [GitHub Releases](https://github.com/tomo-kay/tene/releases), then:
+Download from [GitHub Releases](https://github.com/agent-kay-it/tene/releases), then:
 
 ```bash
 tar xzf tene_*.tar.gz
@@ -101,7 +101,7 @@ sudo mv tene /usr/local/bin/
 <summary>Build from source</summary>
 
 ```bash
-git clone https://github.com/tomo-kay/tene.git
+git clone https://github.com/agent-kay-it/tene.git
 cd tene && go build -o tene ./cmd/tene
 sudo mv tene /usr/local/bin/
 ```
@@ -460,7 +460,7 @@ steps:
 Tene is open source under the [MIT License](LICENSE).
 
 ```bash
-git clone https://github.com/tomo-kay/tene.git
+git clone https://github.com/agent-kay-it/tene.git
 cd tene
 go build -o tene ./cmd/tene
 go test ./...

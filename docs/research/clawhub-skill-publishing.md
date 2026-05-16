@@ -189,7 +189,7 @@ metadata:
         - tene
     install:
       - kind: brew
-        formula: tomo-kay/tene/tene
+        formula: agent-kay-it/tene/tene
         bins: [tene]
         label: "Install tene via Homebrew tap"
       - kind: download
@@ -272,7 +272,7 @@ Note: in `tene run`, `--env` must come **before** `--` (tene disables flag parsi
 
 ```bash
 # macOS / Linux (recommended)
-brew install tomo-kay/tene/tene
+brew install agent-kay-it/tene/tene
 
 # Alternative
 curl -fsSL https://get.tene.sh | sh
@@ -295,7 +295,7 @@ After install, `tene init` bootstraps a vault per project. Run it once in each p
 ## Further reading
 
 - Homepage: https://tene.sh
-- Source: https://github.com/tomo-kay/tene
+- Source: https://github.com/agent-kay-it/tene
 - Security model: XChaCha20-Poly1305 + Argon2id + HKDF + X25519
 - Recovery: 12-word BIP-39 mnemonic generated at `tene init`
 ````
@@ -494,7 +494,7 @@ tene run --env prod -- gh secret set CLAWHUB_TOKEN --body "$CLAWHUB_TOKEN"
 ## 6. 다음 액션 (체크리스트)
 
 - [ ] `skills/tene-cli/` 폴더 생성 + 본 문서 §3의 파일 배치
-- [ ] Homebrew tap formula 최종 이름 확인 (`tomo-kay/tene/tene` 검증)
+- [ ] Homebrew tap formula 최종 이름 확인 (`agent-kay-it/tene/tene` 검증)
 - [ ] `.clawhubignore` 추가 (`.tene/`, `.env*`, `dist/`, `node_modules/`)
 - [ ] `clawhub login`으로 토큰 발급 → `tene set CLAWHUB_TOKEN ...`으로 저장
 - [ ] 로컬에서 `clawhub skill publish ./skills/tene-cli --version 1.0.0 --tags latest`로 최초 발행

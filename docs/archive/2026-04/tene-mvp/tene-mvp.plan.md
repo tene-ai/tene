@@ -192,7 +192,7 @@ MVP에서는 Claude Code만 지원한다. Cursor(`.cursorrules`), Windsurf(`.win
 ```markdown
 # Secrets Management
 
-This project uses [tene](https://github.com/tomo-kay/tene) for secret management.
+This project uses [tene](https://github.com/agent-kay-it/tene) for secret management.
 
 ## Usage
 - Get a secret: `tene get <KEY>`
@@ -1047,10 +1047,10 @@ brew install tomo-kay/tap/tene
 curl -fsSL https://tene.sh/install.sh | sh
 
 # Go 사용자
-go install github.com/tomo-kay/tene@latest
+go install github.com/agent-kay-it/tene@latest
 
 # GitHub Releases에서 직접 다운로드
-# https://github.com/tomo-kay/tene/releases
+# https://github.com/agent-kay-it/tene/releases
 ```
 
 ### 13.3 CI/CD 파이프라인

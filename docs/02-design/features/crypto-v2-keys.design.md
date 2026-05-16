@@ -548,7 +548,7 @@ import (
     "golang.org/x/crypto/hkdf"
 
     // 3. Internal
-    teneerr "github.com/tomo-kay/tene/pkg/errors"
+    teneerr "github.com/agent-kay-it/tene/pkg/errors"
 )
 ```
 

@@ -80,7 +80,7 @@ export const heroData = {
   sub: "Tene encrypts your secrets so AI agents can use them — without ever seeing them.",
   cta: {
     install: "curl -sSfL https://tene.sh/install.sh | sh",
-    primary: { label: "View on GitHub", href: "https://github.com/tomo-kay/tene" },
+    primary: { label: "View on GitHub", href: "https://github.com/agent-kay-it/tene" },
   },
 };
 ```

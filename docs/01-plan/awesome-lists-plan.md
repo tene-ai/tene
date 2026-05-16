@@ -35,7 +35,7 @@
 **Line to add** (one line, keep leading `* `):
 
 ```
-* [tene](https://github.com/tomo-kay/tene) — Local-first AI-safe secret manager CLI. XChaCha20-Poly1305 encryption, runtime env-var injection, auto-generates rules for Claude Code, Cursor, Windsurf.
+* [tene](https://github.com/agent-kay-it/tene) — Local-first AI-safe secret manager CLI. XChaCha20-Poly1305 encryption, runtime env-var injection, auto-generates rules for Claude Code, Cursor, Windsurf.
 ```
 
 **Commands**:

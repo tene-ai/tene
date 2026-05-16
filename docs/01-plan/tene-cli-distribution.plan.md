@@ -31,7 +31,7 @@
 ## 2. Tene CLI 배포 전략
 
 ### Phase 1 — MVP (지금 즉시)
-- `go install github.com/tomo-kay/tene/cmd/tene@latest`
+- `go install github.com/agent-kay-it/tene/cmd/tene@latest`
 - GitHub Releases (GoReleaser로 자동화)
 - 크로스 컴파일 바이너리 + 체크섬
 
@@ -121,7 +121,7 @@ release:
 # Phase 2: Homebrew tap (주석 해제하여 활성화)
 # brews:
 #   - name: tene
-#     homepage: "https://github.com/tomo-kay/tene"
+#     homepage: "https://github.com/agent-kay-it/tene"
 #     description: "Agentic Secret Runtime Platform - Secure secret management for AI agents"
 #     license: "MIT"
 #     directory: Formula
@@ -326,28 +326,28 @@ GoReleaser가 자동으로 생성하는 `Formula/tene.rb`:
 ```ruby
 class Tene < Formula
   desc "Agentic Secret Runtime Platform - Secure secret management for AI agents"
-  homepage "https://github.com/tomo-kay/tene"
+  homepage "https://github.com/agent-kay-it/tene"
   version "0.1.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/tomo-kay/tene/releases/download/v0.1.0/tene_0.1.0_darwin_arm64.tar.gz"
+      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_darwin_arm64.tar.gz"
       sha256 "<자동생성>"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/tomo-kay/tene/releases/download/v0.1.0/tene_0.1.0_darwin_amd64.tar.gz"
+      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_darwin_amd64.tar.gz"
       sha256 "<자동생성>"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/tomo-kay/tene/releases/download/v0.1.0/tene_0.1.0_linux_arm64.tar.gz"
+      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_linux_arm64.tar.gz"
       sha256 "<자동생성>"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/tomo-kay/tene/releases/download/v0.1.0/tene_0.1.0_linux_amd64.tar.gz"
+      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_linux_amd64.tar.gz"
       sha256 "<자동생성>"
     end
   end
@@ -371,11 +371,11 @@ end
 ```bash
 #!/bin/sh
 # Tene CLI 설치 스크립트
-# 사용법: curl -fsSL https://raw.githubusercontent.com/tomo-kay/tene/main/install.sh | sh
+# 사용법: curl -fsSL https://raw.githubusercontent.com/agent-kay-it/tene/main/install.sh | sh
 
 set -e
 
-REPO="tomo-kay/tene"
+REPO="agent-kay-it/tene"
 BINARY_NAME="tene"
 INSTALL_DIR="/usr/local/bin"
 
@@ -573,13 +573,13 @@ git push origin v0.2.0-beta.1
 ### 8.1 현재 상태
 
 ```bash
-go install github.com/tomo-kay/tene/cmd/tene@latest
+go install github.com/agent-kay-it/tene/cmd/tene@latest
 ```
 
 이 명령어가 동작하려면:
 1. `go.mod`에 **`replace` directive가 없어야 한다** (현재 없음 -- OK)
 2. GitHub에 **Git 태그가 있어야 한다** (`v0.1.0` 등)
-3. 모듈 경로가 정확해야 한다 (`github.com/tomo-kay/tene`)
+3. 모듈 경로가 정확해야 한다 (`github.com/agent-kay-it/tene`)
 
 ### 8.2 주의사항
 
@@ -607,16 +607,16 @@ go install github.com/tomo-kay/tene/cmd/tene@latest
 ## Installation
 
 ### Pre-built binaries (recommended)
-Download from [GitHub Releases](https://github.com/tomo-kay/tene/releases/latest).
+Download from [GitHub Releases](https://github.com/agent-kay-it/tene/releases/latest).
 
 ### Go developers
 ```bash
-go install github.com/tomo-kay/tene/cmd/tene@latest
+go install github.com/agent-kay-it/tene/cmd/tene@latest
 ```
 
 ### Build from source
 ```bash
-git clone https://github.com/tomo-kay/tene.git
+git clone https://github.com/agent-kay-it/tene.git
 cd tene
 make build
 # Binary: ./bin/tene
@@ -633,7 +633,7 @@ brew install tomo-kay/tap/tene
 
 ### Quick install (macOS / Linux)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/tomo-kay/tene/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/agent-kay-it/tene/main/install.sh | sh
 ```
 ```
 
@@ -669,7 +669,7 @@ scoop install tene
 
 현재 Makefile의 ldflags:
 ```
--X github.com/tomo-kay/tene/internal/cli.version=$(VERSION)
+-X github.com/agent-kay-it/tene/internal/cli.version=$(VERSION)
 ```
 
 GoReleaser의 ldflags:

@@ -138,7 +138,7 @@ All 18 P0 tasks complete AND every one of these automated/manual checks passes:
 | SC-14 | `/blog` renders | `/blog` returns 200, lists ≥1 post |
 | SC-15 | Launch post live | `/blog/introducing-tene` returns 200, ≥1,500 words, Article schema present |
 | SC-16 | RSS feed valid | `/feed.xml` validates on feed validator; `<content:encoded>` non-truncated |
-| SC-17 | package.json fields | `apps/web/package.json` has `homepage: "https://tene.sh"` and `repository` pointing to tomo-kay/tene |
+| SC-17 | package.json fields | `apps/web/package.json` has `homepage: "https://tene.sh"` and `repository` pointing to agent-kay-it/tene |
 | SC-18 | ≥1 page indexed | GSC URL Inspection for homepage returns "URL is on Google" within 8-12 weeks |
 
 SC-18 is deferred (Google indexing lag); SC-1 through SC-17 are **required before Track 1 merge to main**.

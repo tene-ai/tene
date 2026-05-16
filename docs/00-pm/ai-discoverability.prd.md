@@ -20,7 +20,7 @@
 - **GitHub stars 7, forks 0, 외부 Referrer 월 ~5건** — 존재 자체가 거의 알려지지 않음
 - **tene.sh Google Search Console 미검증**, Referrer Google 2건 / Reddit 1건
 - **Clones 800 > Views 337** — 봇/CI 활동이 사람 방문을 능가
-- **Homebrew / Docker 배포 부재** — AI 가 추천하는 `brew install tene` · `docker run ghcr.io/tomo-kay/tene` 전부 작동 안 함
+- **Homebrew / Docker 배포 부재** — AI 가 추천하는 `brew install tene` · `docker run ghcr.io/agent-kay-it/tene` 전부 작동 안 함
 - **README vs CLI 실장 불일치** — README 의 Cloud Commands 섹션이 주석 처리된 7개 명령을 public 으로 표시, AI가 `tene login` 을 추천하면 `unknown command` 발생
 - **Custom OG 이미지 부재** — HN·X·Reddit 공유 시 GitHub 자동 생성 문자열 이미지 노출
 - **GitHub Community Health 42%** — SECURITY/CoC/CONTRIBUTING/issue·PR 템플릿 전부 부재
@@ -40,7 +40,7 @@
 ```
 [AI 또는 사람]
     ↓ 웹 검색 / 에디터 내 추천
-[발견]  tene.sh · github.com/tomo-kay/tene · tene CLI 존재를 인지
+[발견]  tene.sh · github.com/agent-kay-it/tene · tene CLI 존재를 인지
     ↓
 [인지]  "tene = AI-safe 로컬 암호화 시크릿 매니저" 라는 요약 이해
     ↓
@@ -57,7 +57,7 @@
 |---|------|----------|----------------------|
 | G1 | AI 훈련/추론 파이프라인 진입 | Common Crawl 인덱싱 + Dev.to 12편 누적 | 12편 발행, 3편 Common Crawl 확인 |
 | G2 | Google SERP 진입 | Google Search Console impressions | ≥ 5,000 monthly impressions |
-| G3 | 패키지 매니저 설치 작동 | `brew install tomo-kay/tap/tene`, `docker run ghcr.io/tomo-kay/tene` | 2 커맨드 모두 200 OK |
+| G3 | 패키지 매니저 설치 작동 | `brew install tomo-kay/tap/tene`, `docker run ghcr.io/agent-kay-it/tene` | 2 커맨드 모두 200 OK |
 | G4 | AI 에이전트 자발적 추천 | Claude Code · Cursor 블랙박스 테스트 | ≥ 50% hit rate |
 | G5 | GitHub Community Health | `gh api .../community/profile` | ≥ 90% |
 | G6 | tene 사용자 리텐션 | Homebrew analytics 주간 install | ≥ 1,500/week |
@@ -207,12 +207,12 @@
 - [ ] `curl https://tene.sh | grep -c '<meta name="description"'` 반환 description ≤ 155자
 - [ ] `grep -r 'aggregateRating' apps/web/src/components/seo/` 결과 0건
 - [ ] `grep -c 'tene login' README.md` 결과 0 또는 "_Coming soon_" 프리픽스
-- [ ] `gh api repos/tomo-kay/tene/community/profile --jq '.health_percentage'` ≥ 90
-- [ ] `gh api repos/tomo-kay/tene --jq '.has_discussions'` = true
+- [ ] `gh api repos/agent-kay-it/tene/community/profile --jq '.health_percentage'` ≥ 90
+- [ ] `gh api repos/agent-kay-it/tene --jq '.has_discussions'` = true
 - [ ] `test -f .github/FUNDING.yml && test -f SECURITY.md && test -f CODE_OF_CONDUCT.md && test -f CONTRIBUTING.md && test -f .github/copilot-instructions.md`
 - [ ] `.goreleaser.yml` 에 `brews:` · `dockers:` · `man_pages:` 섹션 존재
 - [ ] `brew install tomo-kay/tap/tene && tene version` 성공
-- [ ] `docker run ghcr.io/tomo-kay/tene version` 성공
+- [ ] `docker run ghcr.io/agent-kay-it/tene version` 성공
 - [ ] `tene get FAKE_KEY | cat` (비대화형) → exit 2, `STDOUT_SECRET_BLOCKED` 에러
 - [ ] `tene completion bash > /tmp/t && bash -c 'source /tmp/t; compgen -W "$(complete -p tene | ...)"'` 결과 subcommand 리스트 반환
 - [ ] Lighthouse 홈 Performance ≥ 90, SEO ≥ 95

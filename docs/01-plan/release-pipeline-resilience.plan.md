@@ -24,7 +24,7 @@
 
 ```bash
 # main v1.0.7 Auto Tag & Release (2026-04-24 12:27) 로그 마지막:
-• release published url=https://github.com/tomo-kay/tene/releases/tag/v1.0.7
+• release published url=https://github.com/agent-kay-it/tene/releases/tag/v1.0.7
 • homebrew formula
 • error checking for default branch projectID=tomo-kay/homebrew-tene statusCode=401
 ⨯ release failed after 1m47s

@@ -62,7 +62,7 @@
 ### 2.1 go.mod
 
 ```go
-module github.com/tomo-kay/tene
+module github.com/agent-kay-it/tene
 
 go 1.22
 
@@ -379,7 +379,7 @@ package main
 
 import (
     "os"
-    "github.com/tomo-kay/tene/internal/cli"
+    "github.com/agent-kay-it/tene/internal/cli"
 )
 
 // version, commit, date are set by goreleaser ldflags
@@ -498,7 +498,7 @@ brew install tomo-kay/tap/tene
 # tene installer - https://tene.sh/install.sh
 set -e
 
-REPO="tomo-kay/tene"
+REPO="agent-kay-it/tene"
 INSTALL_DIR="/usr/local/bin"
 
 # OS/아키텍처 감지
@@ -523,7 +523,7 @@ echo "Run 'tene init' to get started."
 ### 5.4 go install
 
 ```bash
-go install github.com/tomo-kay/tene@latest
+go install github.com/agent-kay-it/tene@latest
 ```
 
 ### 5.5 GitHub Actions CI (.github/workflows/ci.yml)

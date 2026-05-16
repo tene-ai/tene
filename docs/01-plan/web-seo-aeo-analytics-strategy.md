@@ -375,8 +375,8 @@ const organizationJsonLd = {
   url: 'https://tene.sh',
   logo: 'https://tene.sh/favicon.svg',
   sameAs: [
-    'https://github.com/tomo-kay/tene',
-    'https://clawhub.ai/tomo-kay/tene-cli',
+    'https://github.com/agent-kay-it/tene',
+    'https://clawhub.ai/agent-kay-it/tene-cli',
   ],
   founder: {
     '@type': 'Person',

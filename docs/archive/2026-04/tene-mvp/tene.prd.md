@@ -118,7 +118,7 @@
    $ curl -fsSL https://tene.sh/install.sh | sh
    
    # Go 사용자
-   $ go install github.com/tomo-kay/tene@latest
+   $ go install github.com/agent-kay-it/tene@latest
 
 2. 프로젝트 초기화 + Claude Code 자동 인식 설정
    $ cd my-project
@@ -398,7 +398,7 @@ Cloud 구축: ECS Fargate + NLB + RDS PostgreSQL + S3
 | **macOS** | `brew install tomo-kay/tap/tene` | Homebrew tap |
 | **Linux** | `curl -fsSL https://tene.sh/install.sh \| sh` | 단일 바이너리 다운로드 |
 | **Windows** | WSL에서 curl 설치 | WSL 권장 |
-| **Go 사용자** | `go install github.com/tomo-kay/tene@latest` | 소스 빌드 |
+| **Go 사용자** | `go install github.com/agent-kay-it/tene@latest` | 소스 빌드 |
 
 ### 8.3 수요 검증 방법
 

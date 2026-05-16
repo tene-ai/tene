@@ -298,7 +298,7 @@ Layer mapping:
 
 ### 8.1 Existing Project Conventions
 
-- [x] Go module: `github.com/tomo-kay/tene`
+- [x] Go module: `github.com/agent-kay-it/tene`
 - [x] `pkg/crypto/` 패키지 (10 파일 + 5 test)
 - [x] `golang.org/x/crypto/hkdf` 의존성 (이미 use)
 - [x] `golang.org/x/crypto/argon2` 의존성 (이미 use)
