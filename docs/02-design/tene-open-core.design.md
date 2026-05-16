@@ -733,7 +733,7 @@ changelog:
 
 release:
   github:
-    owner: tomo-kay
+    owner: agent-kay-it
     name: tene
   draft: false
   prerelease: auto
@@ -1075,7 +1075,7 @@ module "iam" {
   environment      = local.environment
   vault_bucket_arn = module.s3.vault_bucket_arn
   secrets_arn      = module.secrets.secrets_arn
-  github_org       = "tomo-kay"
+  github_org       = "agent-kay-it"
   github_repo      = "tene"
 
   # CLI release upload 권한 (추가)

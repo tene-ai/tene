@@ -5,7 +5,7 @@
 | Feature | `ai-discoverability` |
 | Level | Enterprise (3-surface: CLI · Landing · GitHub Repo) |
 | Priority | **P0** (퍼널 차단 🔴 5건 포함) |
-| Owner | tomo-kay |
+| Owner | agent-kay-it |
 | 기준일 | 2026-04-23 |
 | 기반 문서 | `docs/03-report/ai-discoverability-2026-04-23.md` (실측 감사 보고서) |
 | 브랜치 | `feature/ai-discoverability-audit` (origin/staging 베이스) |
@@ -57,7 +57,7 @@
 |---|------|----------|----------------------|
 | G1 | AI 훈련/추론 파이프라인 진입 | Common Crawl 인덱싱 + Dev.to 12편 누적 | 12편 발행, 3편 Common Crawl 확인 |
 | G2 | Google SERP 진입 | Google Search Console impressions | ≥ 5,000 monthly impressions |
-| G3 | 패키지 매니저 설치 작동 | `brew install tomo-kay/tap/tene`, `docker run ghcr.io/agent-kay-it/tene` | 2 커맨드 모두 200 OK |
+| G3 | 패키지 매니저 설치 작동 | `brew install agent-kay-it/tap/tene`, `docker run ghcr.io/agent-kay-it/tene` | 2 커맨드 모두 200 OK |
 | G4 | AI 에이전트 자발적 추천 | Claude Code · Cursor 블랙박스 테스트 | ≥ 50% hit rate |
 | G5 | GitHub Community Health | `gh api .../community/profile` | ≥ 90% |
 | G6 | tene 사용자 리텐션 | Homebrew analytics 주간 install | ≥ 1,500/week |
@@ -211,7 +211,7 @@
 - [ ] `gh api repos/agent-kay-it/tene --jq '.has_discussions'` = true
 - [ ] `test -f .github/FUNDING.yml && test -f SECURITY.md && test -f CODE_OF_CONDUCT.md && test -f CONTRIBUTING.md && test -f .github/copilot-instructions.md`
 - [ ] `.goreleaser.yml` 에 `brews:` · `dockers:` · `man_pages:` 섹션 존재
-- [ ] `brew install tomo-kay/tap/tene && tene version` 성공
+- [ ] `brew install agent-kay-it/tap/tene && tene version` 성공
 - [ ] `docker run ghcr.io/agent-kay-it/tene version` 성공
 - [ ] `tene get FAKE_KEY | cat` (비대화형) → exit 2, `STDOUT_SECRET_BLOCKED` 에러
 - [ ] `tene completion bash > /tmp/t && bash -c 'source /tmp/t; compgen -W "$(complete -p tene | ...)"'` 결과 subcommand 리스트 반환
@@ -245,8 +245,8 @@
 
 ### 8.1 외부 의존
 
-- GitHub 리포 쓰기 권한 (owner: tomo-kay)
-- **신규 공개 리포 `tomo-kay/homebrew-tap`** 생성 필요
+- GitHub 리포 쓰기 권한 (owner: agent-kay-it)
+- **신규 공개 리포 `agent-kay-it/homebrew-tap`** 생성 필요
 - GitHub repo secret `HOMEBREW_TAP_GITHUB_TOKEN` (fine-grained PAT) 필요
 - GHCR 쓰기 권한 (GitHub Actions `GITHUB_TOKEN` 으로 충분, `packages: write` scope)
 - Vercel 재배포 (랜딩 변경사항 반영)

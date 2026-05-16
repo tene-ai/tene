@@ -2078,12 +2078,12 @@ Then:
 
 ### US-12: brew 설치
 
-> 바이브코더로서, `brew install tomo-kay/tap/tene` 한 줄로 설치할 수 있다.
+> 바이브코더로서, `brew install agent-kay-it/tap/tene` 한 줄로 설치할 수 있다.
 
 **AC-12-01: Homebrew 설치**
 ```
 Given: macOS 환경이다
-When: brew install tomo-kay/tap/tene
+When: brew install agent-kay-it/tap/tene
 Then:
   - tene 바이너리가 설치된다
   - tene version 출력 성공

@@ -221,7 +221,7 @@ gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
   "contact": "https://github.com/agent-kay-it/tene/issues",
   "install": {
     "curl": "curl -sSfL https://tene.sh/install.sh | sh",
-    "brew": "brew install tomo-kay/tap/tene",
+    "brew": "brew install agent-kay-it/tap/tene",
     "go": "go install github.com/agent-kay-it/tene/cmd/tene@latest",
     "docker": "docker run ghcr.io/agent-kay-it/tene:latest"
   }
@@ -243,7 +243,7 @@ gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
 
 ```yaml
 # These are supported funding model platforms
-github: [tomo-kay]
+github: [agent-kay-it]
 # ko_fi: tomokay  # Enable when ko-fi account ready
 # buy_me_a_coffee: tomokay
 # custom: ["https://tene.sh/sponsor"]
@@ -430,7 +430,7 @@ aggregateRating:
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   author: {
     "@type": "Person",
-    name: "tomo-kay",
+    name: "agent-kay-it",
     url: "https://github.com/agent-kay-it",
   },
   // aggregateRating 필드 삭제
@@ -500,7 +500,7 @@ const jsonLd = {
       },
       founder: {
         "@type": "Person",
-        name: "tomo-kay",
+        name: "agent-kay-it",
         url: "https://github.com/agent-kay-it",
       },
     },
@@ -545,7 +545,7 @@ const jsonLd = {
   license: "https://opensource.org/licenses/MIT",
   author: {
     "@type": "Person",
-    name: "tomo-kay",
+    name: "agent-kay-it",
     url: "https://github.com/agent-kay-it",
   },
   publisher: { "@id": "https://tene.sh/#organization" },
@@ -626,7 +626,7 @@ never sends data to any server by default.
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email: **security@tene.sh** (or `tomo-kay` at GitHub via
+Instead, please email: **security@tene.sh** (or `agent-kay-it` at GitHub via
 private message if the email alias is not yet live).
 
 Include:
@@ -684,7 +684,7 @@ identity and orientation.
 
 ## Enforcement
 
-Report concerns to: **conduct@tene.sh** (or `tomo-kay` at GitHub).
+Report concerns to: **conduct@tene.sh** (or `agent-kay-it` at GitHub).
 
 ## Attribution
 
@@ -753,7 +753,7 @@ golangci-lint run
 5. **Commit messages**: Conventional Commits format preferred
    (`feat(cli):`, `fix(vault):`, `docs(readme):`, `chore(deps):`).
 6. **Open a PR to `staging`**. CI must pass.
-7. **Security-sensitive** changes: tag `@tomo-kay` for review.
+7. **Security-sensitive** changes: tag `@agent-kay-it` for review.
 
 ## Code Style
 
@@ -1044,7 +1044,7 @@ export function Trust() {
               rel="noopener noreferrer"
               className="text-accent hover:underline"
             >
-              @tomo-kay
+              @agent-kay-it
             </a>
             , a developer tired of leaking API keys to AI agents.
           </p>
@@ -1206,11 +1206,11 @@ export function Breadcrumb({ items }: Props) {
 
 ### 설계
 
-#### S-1a: 신규 리포 `tomo-kay/homebrew-tap` 생성
+#### S-1a: 신규 리포 `agent-kay-it/homebrew-tap` 생성
 
 **사람 작업** (1 분):
 ```bash
-gh repo create tomo-kay/homebrew-tap --public --description "Homebrew tap for tene — AI-safe secret manager CLI"
+gh repo create agent-kay-it/homebrew-tap --public --description "Homebrew tap for tene — AI-safe secret manager CLI"
 cd homebrew-tap
 mkdir Formula
 touch README.md
@@ -1221,7 +1221,7 @@ git add -A && git commit -m "chore: initial tap repo" && git push
 #### S-1b: PAT 시크릿 생성 + tene 리포에 등록
 
 1. GitHub Settings → Developer settings → Fine-grained PAT
-2. Resource: `tomo-kay/homebrew-tap` (Contents: Read/Write)
+2. Resource: `agent-kay-it/homebrew-tap` (Contents: Read/Write)
 3. Token 복사 후:
 ```bash
 gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene --body '<token>'
@@ -1240,7 +1240,7 @@ brews:
     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
     license: "MIT"
     repository:
-      owner: tomo-kay
+      owner: agent-kay-it
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
@@ -1281,9 +1281,9 @@ env:
 ```
 
 ### 수용 기준
-- [ ] 다음 릴리스 (v1.0.5 또는 v1.1.0) 시 `tomo-kay/homebrew-tap/Formula/tene.rb` 자동 생성
-- [ ] `brew tap tomo-kay/tap && brew install tene && tene version` 성공 (macOS arm64 + amd64 · Linux 양쪽)
-- [ ] `brew uninstall tene && brew install tomo-kay/tap/tene` 재설치 성공
+- [ ] 다음 릴리스 (v1.0.5 또는 v1.1.0) 시 `agent-kay-it/homebrew-tap/Formula/tene.rb` 자동 생성
+- [ ] `brew tap agent-kay-it/tap && brew install tene && tene version` 성공 (macOS arm64 + amd64 · Linux 양쪽)
+- [ ] `brew uninstall tene && brew install agent-kay-it/tap/tene` 재설치 성공
 
 ### Homebrew Core PR (M2-M3, 추가 작업)
 Tap 안정 30일 + stars ≥ 75 후:
@@ -1328,7 +1328,7 @@ CMD ["--help"]
 LABEL org.opencontainers.image.source="https://github.com/agent-kay-it/tene"
 LABEL org.opencontainers.image.description="Local-first encrypted secret manager CLI for AI-safe workflows"
 LABEL org.opencontainers.image.license="MIT"
-LABEL org.opencontainers.image.vendor="tomo-kay"
+LABEL org.opencontainers.image.vendor="agent-kay-it"
 ```
 
 #### S-2b: `.goreleaser.yml` 에 `dockers:` 섹션
@@ -1709,7 +1709,7 @@ signs:
 
 #### S-5b: 공개키 배포
 
-GPG key fingerprint 를 `SECURITY.md` + `tene.sh` 푸터에 게시. `https://tene.sh/tomo-kay.asc` 엔드포인트 생성.
+GPG key fingerprint 를 `SECURITY.md` + `tene.sh` 푸터에 게시. `https://tene.sh/agent-kay-it.asc` 엔드포인트 생성.
 
 #### S-5c: `install.sh` GPG 검증 추가
 
@@ -1717,8 +1717,8 @@ GPG key fingerprint 를 `SECURITY.md` + `tene.sh` 푸터에 게시. `https://ten
 # After SHA-256 verification:
 if command -v gpg > /dev/null 2>&1; then
   download "${RELEASE_BASE}/v${version}/checksums.txt.sig" "${tmpdir}/checksums.txt.sig"
-  download "https://tene.sh/tomo-kay.asc" "${tmpdir}/tomo-kay.asc"
-  gpg --import "${tmpdir}/tomo-kay.asc" 2>/dev/null
+  download "https://tene.sh/agent-kay-it.asc" "${tmpdir}/agent-kay-it.asc"
+  gpg --import "${tmpdir}/agent-kay-it.asc" 2>/dev/null
   if gpg --verify "${tmpdir}/checksums.txt.sig" "${tmpdir}/checksums.txt" 2>/dev/null; then
     info "  GPG signature verified"
   else
@@ -1730,7 +1730,7 @@ fi
 ### 수용 기준 (M1+)
 - [ ] `.goreleaser.yml signs:` 섹션 활성
 - [ ] Next release `checksums.txt.sig` publish
-- [ ] `curl https://tene.sh/tomo-kay.asc` 200
+- [ ] `curl https://tene.sh/agent-kay-it.asc` 200
 - [ ] `gpg --verify checksums.txt.sig checksums.txt` 성공
 
 ---
@@ -2011,7 +2011,7 @@ func TestGet_JSON_EmitsWarningToStderr(t *testing.T) {
 - `tene completion [bash|zsh|fish|powershell]` — generate shell completion scripts
 - `.github/copilot-instructions.md`, `.github/FUNDING.yml`
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`
-- Homebrew tap (`brew install tomo-kay/tap/tene`)
+- Homebrew tap (`brew install agent-kay-it/tap/tene`)
 - Docker image (`docker run ghcr.io/agent-kay-it/tene`)
 - Man page (`man tene`)
 
@@ -2472,7 +2472,7 @@ feat(release): GPG-sign checksums.txt (S-5)
 
 ```bash
 # Homebrew (new!)
-brew install tomo-kay/tap/tene
+brew install agent-kay-it/tap/tene
 
 # Docker (new!)
 docker run ghcr.io/agent-kay-it/tene:v1.1.0 version
@@ -2519,7 +2519,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 ```bash
 # 5분짜리 스모크 테스트
 set -e
-brew tap tomo-kay/tap
+brew tap agent-kay-it/tap
 brew install tene
 tene version | grep v1.1.0
 tene --help | grep "llms.txt"
@@ -2599,7 +2599,7 @@ go build -o tene ./cmd/tene
 - `https://goreportcard.com/badge/...` (Trust Section 배지)
 - `https://img.shields.io/...` (다수 배지)
 - GHCR (`ghcr.io/agent-kay-it/tene`)
-- Homebrew tap (`tomo-kay/homebrew-tap`)
+- Homebrew tap (`agent-kay-it/homebrew-tap`)
 - Contributor Covenant v2.1 markdown 원문
 - (선택) GPG keyserver
 

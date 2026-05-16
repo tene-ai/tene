@@ -66,7 +66,7 @@ brews:
   - name: tene
     ...
     repository:
-      owner: tomo-kay
+      owner: agent-kay-it
       name: homebrew-tene                      # ← 존재하지 않는 리포
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # ← secret 미설정
     skip_upload: auto                           # ← stable 릴리스에서는 skip 안 함
@@ -164,7 +164,7 @@ brews:
 #     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
 #     license: "MIT"
 #     repository:
-#       owner: tomo-kay
+#       owner: agent-kay-it
 #       name: homebrew-tene
 #       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 #     directory: Formula
