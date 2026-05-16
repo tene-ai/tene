@@ -17,9 +17,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/tomo-kay/tene/pkg/crypto"
-	"github.com/tomo-kay/tene/pkg/domain"
-	"github.com/tomo-kay/tene/internal/vault"
+	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/agent-kay-it/tene/pkg/domain"
+	"github.com/agent-kay-it/tene/internal/vault"
 )
 
 // PushOptions configures a push operation.

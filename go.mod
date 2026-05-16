@@ -1,4 +1,4 @@
-module github.com/tomo-kay/tene
+module github.com/agent-kay-it/tene
 
 go 1.25.0
 

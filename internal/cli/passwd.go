@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/pkg/crypto"
-	teneerr "github.com/tomo-kay/tene/pkg/errors"
-	"github.com/tomo-kay/tene/internal/recovery"
+	"github.com/agent-kay-it/tene/pkg/crypto"
+	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/agent-kay-it/tene/internal/recovery"
 )
 
 var passwdCmd = &cobra.Command{

@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/internal/claudemd"
-	"github.com/tomo-kay/tene/internal/config"
-	"github.com/tomo-kay/tene/pkg/crypto"
-	"github.com/tomo-kay/tene/internal/keychain"
-	"github.com/tomo-kay/tene/internal/recovery"
-	"github.com/tomo-kay/tene/internal/vault"
+	"github.com/agent-kay-it/tene/internal/claudemd"
+	"github.com/agent-kay-it/tene/internal/config"
+	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/agent-kay-it/tene/internal/keychain"
+	"github.com/agent-kay-it/tene/internal/recovery"
+	"github.com/agent-kay-it/tene/internal/vault"
 )
 
 var initCmd = &cobra.Command{

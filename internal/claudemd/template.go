@@ -4,7 +4,7 @@ const SectionHeader = "# Secrets Management"
 
 const SecretsMdTemplate = `# Secrets Management — tene
 
-This project uses [tene](https://github.com/tomo-kay/tene) for secret management.
+This project uses [tene](https://github.com/agent-kay-it/tene) for secret management.
 Secrets are encrypted locally with XChaCha20-Poly1305. No server, no cloud.
 
 ## Quick Reference
@@ -66,7 +66,7 @@ tene run -- python main.py     # Python
 
 - Concise agent-readable summary: https://tene.sh/llms.txt
 - Extended reference (all commands, security model, FAQ): https://tene.sh/llms-full.txt
-- Repository: https://github.com/tomo-kay/tene
+- Repository: https://github.com/agent-kay-it/tene
 - Website: https://tene.sh
 `
 

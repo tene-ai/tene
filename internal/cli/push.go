@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/tomo-kay/tene/pkg/crypto"
-	"github.com/tomo-kay/tene/internal/sync"
+	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/agent-kay-it/tene/internal/sync"
 )
 
 func newPushCmd() *cobra.Command {

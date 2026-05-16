@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	teneerr "github.com/tomo-kay/tene/pkg/errors"
-	"github.com/tomo-kay/tene/internal/keychain"
-	"github.com/tomo-kay/tene/internal/vault"
+	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/agent-kay-it/tene/internal/keychain"
+	"github.com/agent-kay-it/tene/internal/vault"
 	"golang.org/x/term"
 )
 
@@ -63,9 +63,9 @@ Typical workflow:
 Resources:
   AI index:    https://tene.sh/llms.txt
   CLI ref:     https://tene.sh/cli
-  Docs:        https://github.com/tomo-kay/tene#readme
-  Issues:      https://github.com/tomo-kay/tene/issues
-  Discussions: https://github.com/tomo-kay/tene/discussions
+  Docs:        https://github.com/agent-kay-it/tene#readme
+  Issues:      https://github.com/agent-kay-it/tene/issues
+  Discussions: https://github.com/agent-kay-it/tene/discussions
 `,
 	Version:       version,
 	SilenceErrors: true,

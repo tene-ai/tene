@@ -71,11 +71,11 @@ func TestGenerate_ExistingWithSection(t *testing.T) {
 }
 
 func TestTemplate_URL(t *testing.T) {
-	if !strings.Contains(SecretsMdTemplate, "github.com/tomo-kay/tene") {
-		t.Error("template should contain tomo-kay URL")
+	if !strings.Contains(SecretsMdTemplate, "github.com/agent-kay-it/tene") {
+		t.Error("template should contain agent-kay-it URL")
 	}
-	if strings.Contains(SecretsMdTemplate, "agentkay") {
-		t.Error("template should not contain agentkay URL")
+	if strings.Contains(SecretsMdTemplate, "tomo-kay") {
+		t.Error("template should not contain legacy tomo-kay URL")
 	}
 }
 

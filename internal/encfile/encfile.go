@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/tomo-kay/tene/pkg/crypto"
+	"github.com/agent-kay-it/tene/pkg/crypto"
 )
 
 var (
