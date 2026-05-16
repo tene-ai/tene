@@ -343,7 +343,7 @@ W12-W13 [s6: v2.0 Launch]
 | Windows CI 에서 fork-bomb 또는 PATH 이슈 | windows-specific test exclusion (`//go:build !windows`) — 보수적 시작 |
 | gosec/govulncheck 활성화 시 다수 신규 issue | 첫 PR 은 whitelist + 후속 ticket — sprint 마감 보호 |
 | Homebrew bottle 빌드 권한 (GitHub Actions 에서 brew install) | macos-latest runner 사용; brew 사전 캐싱 (`actions/cache`) |
-| `homebrew-tene` repo 생성 권한 (사용자가 직접 실행 필요) | 사용자 가이드: `gh repo create tomo-kay/homebrew-tene --public --license MIT --add-readme` |
+| `homebrew-tene` repo 생성 권한 (사용자가 직접 실행 필요) | 사용자 가이드: `gh repo create agent-kay-it/homebrew-tene --public --license MIT --add-readme` |
 | Touch ID PoC CGo 가 Xcode 15 의존성 충돌 | macos-13 + macos-14 CI 매트릭스에서 검증; Xcode 14.x 도 빌드 |
 | Lint 강화 후 기존 PR 22개 bare fmt.Errorf 일괄 변경 시 race | 단일 PR 로 묶지 말고 5-10 site 단위 분할 |
 
@@ -372,7 +372,7 @@ W12-W13 [s6: v2.0 Launch]
 | 리스크 | 완화 |
 |-------|------|
 | Show HN flag 위험 (agent-kay <7일 계정) | s1-s5 동안 HN karma 50+ 달성; Show HN 발사 2주 전 dang 에게 사전 안내 메일 |
-| Homebrew Formula 머지 지연 (외부 maintainer 리뷰) | 자체 tap (tomo-kay/homebrew-tene) 우선; upstream Formula PR 은 v2.0 launch 후 |
+| Homebrew Formula 머지 지연 (외부 maintainer 리뷰) | 자체 tap (agent-kay-it/homebrew-tene) 우선; upstream Formula PR 은 v2.0 launch 후 |
 | GitHub Stars 회귀 (Show HN 실패 시) | 4 채널 (HN+Daily.dev+GeekNews+Reddit) 동시 cross-share 로 risk 분산 |
 
 ### 8.2 Cross-Sprint Risk (전체 13주)

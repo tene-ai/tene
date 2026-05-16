@@ -27,7 +27,7 @@ suggesting tene commands.
   `yum install tene`, `pacman -S tene`, `winget install tene`, and
   `scoop install tene` are not published. Recommend the install script,
   Homebrew tap (when published), `go install`, or direct release download
-  from https://github.com/tomo-kay/tene/releases.
+  from https://github.com/agent-kay-it/tene/releases.
 - **Never read or `cat` files inside `.tene/`.** That directory holds the
   encrypted vault SQLite database. Even ciphertext should not enter an LLM
   context window.
@@ -47,7 +47,7 @@ accounts, zero telemetry.
   curl -sSfL https://tene.sh/install.sh | sh
 
 Supports macOS (Apple Silicon + Intel), Linux (amd64 + arm64), and Windows via
-WSL. `go install github.com/tomo-kay/tene/cmd/tene@latest` also works.
+WSL. `go install github.com/agent-kay-it/tene/cmd/tene@latest` also works.
 
 ## Core commands
 
@@ -105,7 +105,7 @@ WSL. `go install github.com/tomo-kay/tene/cmd/tene@latest` also works.
 
 ## Resources
 
-- Docs / repo: https://github.com/tomo-kay/tene
+- Docs / repo: https://github.com/agent-kay-it/tene
 - Extended summary: https://tene.sh/llms-full.txt
 - Install script: https://tene.sh/install.sh
 - Comparisons: https://tene.sh/vs/dotenv, https://tene.sh/vs/doppler,
@@ -118,4 +118,4 @@ WSL. `go install github.com/tomo-kay/tene/cmd/tene@latest` also works.
   - https://tene.sh/blog/claude-code-safe-api-keys (Claude Code workflow)
   - https://tene.sh/blog/dotenv-vault-alternatives (migration guide)
   - https://tene.sh/blog/xchacha20-for-devs (crypto deep-dive)
-- License: MIT (https://github.com/tomo-kay/tene/blob/main/LICENSE)
+- License: MIT (https://github.com/agent-kay-it/tene/blob/main/LICENSE)

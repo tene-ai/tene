@@ -101,7 +101,7 @@ INVEST check: each story is independent, negotiable, valuable, estimable, small 
 ### AI-citation stories
 
 **US-11** — As an AI answer engine, I want rich Organization + Person + BreadcrumbList structured data so I can attribute citations to a named author and org with known authority.
-- **Acceptance**: Three JSON-LD blocks added to `src/app/layout.tsx` on top of existing three (SoftwareApplication + FAQPage + HowTo), for 6 total; `Person.name = "Kay Kim"`, `Person.url = "https://github.com/tomo-kay"`; validates in Google Rich Results Test.
+- **Acceptance**: Three JSON-LD blocks added to `src/app/layout.tsx` on top of existing three (SoftwareApplication + FAQPage + HowTo), for 6 total; `Person.name = "Kay Kim"`, `Person.url = "https://github.com/agent-kay-it"`; validates in Google Rich Results Test.
 
 **US-12** — As an AI answer engine, I want the first paragraph of the hero and the top-3 FAQ answers to be self-contained 40-60 word capsules so I can quote them cleanly.
 - **Acceptance**: `src/components/hero.tsx` lede paragraph is 40-60 words and answers "what is tene?" completely; 3 FAQ entries in `src/components/faq.tsx` rewritten to the same capsule format.
@@ -152,7 +152,7 @@ SC-18 is deferred (Google indexing lag); SC-1 through SC-17 are **required befor
 | C-1 | **No backend changes.** All work is in `apps/web/` only. No `cmd/server/`, `internal/api/`, no Go changes. | `.claude/rules/open-core.md` | Purely frontend/static PRD |
 | C-2 | **Static-only deployment (Vercel).** Landing remains fully static (no SSR runtime logic that requires a server beyond Vercel Edge). | `.claude/rules/architecture.md`, current `page.tsx` is fully static | Blog uses `generateStaticParams`; RSS route can be static or edge |
 | C-3 | **Next.js 16 API must be verified against `node_modules/next/dist/docs/` at Design time.** Plan's §8 snippets were written against Next 15. | `apps/web/AGENTS.md` warning | Design phase MUST verify API shape for sitemap/robots/metadata/MDX integration |
-| C-4 | **Founder identity = "Kay Kim"** (Person schema), GitHub URL `https://github.com/tomo-kay` | Plan §8.4 | Hardcoded in Organization/Person JSON-LD |
+| C-4 | **Founder identity = "Kay Kim"** (Person schema), GitHub URL `https://github.com/agent-kay-it` | Plan §8.4 | Hardcoded in Organization/Person JSON-LD |
 | C-5 | **GDPR default-deny cookies.** GA4 must not load before user consent. | Plan §7, Track A | `<CookieBanner>` component required; Consent Mode v2 |
 | C-6 | **GA ID via tene vault, not `.env` file.** | `CLAUDE.md` secret rules | `tene set NEXT_PUBLIC_GA_ID ...`; Vercel env var mirrors; `.env.example` documents only |
 | C-7 | **MIT-license compatible deps only.** `next-mdx-remote` (MIT), `gray-matter` (MIT), `shiki` (MIT) all OK. | Open-core | Reject any GPL/AGPL dep |

@@ -580,7 +580,7 @@ Answers drive Design decisions. Present these at Design Checkpoint 1 (Requiremen
 ### Q5 — Person Schema Author Identity
 **Question**: For JSON-LD Person schema (drives AI citation attribution):
 - `name`: **"Kay Kim"** (confirmed in PRD Constraint C-4)?
-- `url`: `https://github.com/tomo-kay` (confirmed in PRD C-4)?
+- `url`: `https://github.com/agent-kay-it` (confirmed in PRD C-4)?
 - `sameAs`: add LinkedIn/X/personal site URLs? If yes, provide.
 - `jobTitle`: "Founder, Tene" — OK?
 

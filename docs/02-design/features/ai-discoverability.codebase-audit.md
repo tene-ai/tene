@@ -188,7 +188,7 @@ export const metadata: Metadata = {
     "Your .env is not a secret — AI can read it. Tene encrypts secrets locally and injects them at runtime so AI agents never see the values. XChaCha20-Poly1305 encryption. No server, no signup, free and open source.",
   //   ^^^ 211자 — Google SERP 155자 컷오프 초과 ⚠️
   keywords: [ /* 15 items */ ],
-  authors: [{ name: "tomo-kay", url: "https://github.com/tomo-kay" }],
+  authors: [{ name: "tomo-kay", url: "https://github.com/agent-kay-it" }],
   // ... canonical, icons, openGraph, twitter, robots 완비
 };
 

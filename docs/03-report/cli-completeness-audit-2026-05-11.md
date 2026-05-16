@@ -424,7 +424,7 @@
 | # | 이슈 | P |
 |---|---|:---:|
 | 1 | **코드 서명 전무.** macOS unsigned → Gatekeeper 벽 + 격리. Windows unsigned → SmartScreen 경고. artifact 나 GHCR 에 Sigstore/cosign 없음. | **P0** |
-| 2 | **Homebrew tap 비활성** (`.goreleaser.yml:89-140` 주석처리; 누락된 `tomo-kay/homebrew-tene` repo + PAT 인용 TODO). README 가 curl-pipe + `go install` 만 광고. v1.0.5-1.0.7 실패한 3개 릴리스가 이것 때문. | **P0** |
+| 2 | **Homebrew tap 비활성** (`.goreleaser.yml:89-140` 주석처리; 누락된 `agent-kay-it/homebrew-tene` repo + PAT 인용 TODO). README 가 curl-pipe + `go install` 만 광고. v1.0.5-1.0.7 실패한 3개 릴리스가 이것 때문. | **P0** |
 | 3 | **SBOM 내보내기 없음.** GoReleaser 의 `sboms:` (syft → CycloneDX/SPDX) 지원이 사소함. #1 결합 시 다운스트림 소비자 (기업, GovCloud, distro) 가 수용 불가. | **P1** |
 | 4 | **SLSA provenance 없음.** Workflow 가 이미 `id-token: write` 보유 (AWS OIDC). `slsa-framework/slsa-github-generator` 내보내기는 ~10줄. | **P1** |
 | 5 | **재현 가능 빌드 위생 없음.** `mod_timestamp: '{{ .CommitTimestamp }}'` 없음. 동일 커밋에서 재실행이 다른 해시 생성. | **P1** |
@@ -439,7 +439,7 @@
 - artifact 당 syft CycloneDX + SPDX 내보내는 `sboms:` 블록 (~6줄).
 - `checksums.txt` 에 연결된 SLSA 생성기 워크플로 (`slsa-framework/slsa-github-generator@v2.0.0`) (~30줄).
 - 모든 `actions/*` 를 commit SHA pin + `github-actions` 용 Dependabot 활성화.
-- Homebrew tap 재활성화 (`gh repo create tomo-kay/homebrew-tene --public`, `HOMEBREW_TAP_GITHUB_TOKEN` 설정, `.goreleaser.yml:109-140` 주석 해제). 블록 이미 작성되고 테스트됨.
+- Homebrew tap 재활성화 (`gh repo create agent-kay-it/homebrew-tene --public`, `HOMEBREW_TAP_GITHUB_TOKEN` 설정, `.goreleaser.yml:109-140` 주석 해제). 블록 이미 작성되고 테스트됨.
 - 비어있는 `packages/{cli,crypto,types}/` 비우거나 삭제.
 
 #### Big bets

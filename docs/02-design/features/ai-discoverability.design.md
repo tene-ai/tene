@@ -431,7 +431,7 @@ aggregateRating:
   author: {
     "@type": "Person",
     name: "tomo-kay",
-    url: "https://github.com/tomo-kay",
+    url: "https://github.com/agent-kay-it",
   },
   // aggregateRating 필드 삭제
 },
@@ -491,7 +491,7 @@ const jsonLd = {
       },
       sameAs: [
         "https://github.com/agent-kay-it/tene",
-        "https://github.com/tomo-kay",
+        "https://github.com/agent-kay-it",
       ],
       contactPoint: {
         "@type": "ContactPoint",
@@ -501,7 +501,7 @@ const jsonLd = {
       founder: {
         "@type": "Person",
         name: "tomo-kay",
-        url: "https://github.com/tomo-kay",
+        url: "https://github.com/agent-kay-it",
       },
     },
     {
@@ -546,7 +546,7 @@ const jsonLd = {
   author: {
     "@type": "Person",
     name: "tomo-kay",
-    url: "https://github.com/tomo-kay",
+    url: "https://github.com/agent-kay-it",
   },
   publisher: { "@id": "https://tene.sh/#organization" },
   // aggregateRating 미사용 (A-3 와 일관성)
@@ -1039,7 +1039,7 @@ export function Trust() {
           <p className="text-sm text-muted">
             Built by{" "}
             <a
-              href="https://github.com/tomo-kay"
+              href="https://github.com/agent-kay-it"
               target="_blank"
               rel="noopener noreferrer"
               className="text-accent hover:underline"

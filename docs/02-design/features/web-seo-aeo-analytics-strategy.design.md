@@ -547,10 +547,10 @@ export function personSchema(): SchemaOrg {
     '@type': 'Person',
     '@id': 'https://tene.sh/#person-kay-kim',
     name: 'Kay Kim',
-    url: 'https://github.com/tomo-kay',
+    url: 'https://github.com/agent-kay-it',
     jobTitle: 'Founder, Tene',
     sameAs: [
-      'https://github.com/tomo-kay',
+      'https://github.com/agent-kay-it',
       // Add LinkedIn, X/Twitter URLs when answered in Q5
     ],
     worksFor: {
@@ -1145,7 +1145,7 @@ These are the proposed rewrites from Audit §4.6. User approves at Design Checkp
 | R-7 | Events fire before consent | `trackEvent()` wrapper in `lib/analytics.ts` checks `localStorage['tene-consent'] === 'granted'` before calling `sendGAEvent`. No-op pre-consent. Beforeinteractive consent-default shim sets `analytics_storage: denied` before GA script loads. |
 | R-8 | `NEXT_PUBLIC_GA_ID` absent in preview | `layout.tsx` conditionally mounts `<GoogleAnalytics>` only when env var is present (`{gaId && <GoogleAnalytics gaId={gaId} />}`). Fails silently in preview without breaking the page. |
 | R-9 | RSS `<content:encoded>` XML-escaping | `cdata()` helper wraps content in `CDATA` sections. `escapeXml()` used for URLs and other attributes. Validate against W3C Feed Validator in SC-16. |
-| R-10 | Founder name / bio not finalized | "Kay Kim" + `https://github.com/tomo-kay` used as minimum viable Person schema. Bio page deferred to P1 (PRD §6 Out of Scope). |
+| R-10 | Founder name / bio not finalized | "Kay Kim" + `https://github.com/agent-kay-it` used as minimum viable Person schema. Bio page deferred to P1 (PRD §6 Out of Scope). |
 
 ---
 
@@ -1161,7 +1161,7 @@ These 10 questions must be resolved before `/pdca do` begins. Answers drive impl
 
 **Q4 — package.json Field Values**: Confirm: `homepage: "https://tene.sh"`, `repository: "https://github.com/agent-kay-it/tene"`, `author: "Kay Kim <kay@popupstudio.ai>"`, `description: "Landing page for Tene — local-first encrypted secret manager"`. Any corrections?
 
-**Q5 — Person Schema sameAs URLs**: `name: "Kay Kim"` and `url: "https://github.com/tomo-kay"` are confirmed from PRD C-4. Should `sameAs` also include LinkedIn, X/Twitter, or a personal site? Provide URLs if yes.
+**Q5 — Person Schema sameAs URLs**: `name: "Kay Kim"` and `url: "https://github.com/agent-kay-it"` are confirmed from PRD C-4. Should `sameAs` also include LinkedIn, X/Twitter, or a personal site? Provide URLs if yes.
 
 **Q6 — "Introducing tene" Post Drafting**: (A) Claude drafts 1,500 words based on PRD/Plan, user reviews and edits; (B) user writes, Claude only scaffolds MDX frontmatter + H2 outline; (C) co-draft — Claude proposes outline now, prose drafted collaboratively in Do session. Recommended: C.
 

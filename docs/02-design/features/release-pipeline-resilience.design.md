@@ -142,7 +142,7 @@ brews:
 # Homebrew tap — currently disabled.
 #
 # Publishing to a Homebrew tap requires:
-#   1. A public GitHub repo `tomo-kay/homebrew-tene` to exist.
+#   1. A public GitHub repo `agent-kay-it/homebrew-tene` to exist.
 #   2. A fine-grained PAT with `Contents: Read/Write` on that repo,
 #      stored as the `HOMEBREW_TAP_GITHUB_TOKEN` secret on this repo
 #      (agent-kay-it/tene).
@@ -153,7 +153,7 @@ brews:
 # install.sh pointing at a stale version.
 #
 # To re-enable:
-#   1. Create https://github.com/tomo-kay/homebrew-tene (public, MIT).
+#   1. Create https://github.com/agent-kay-it/homebrew-tene (public, MIT).
 #   2. Create the PAT and run:
 #        gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene
 #   3. Uncomment the block below.
@@ -213,7 +213,7 @@ brews:
   skip this step and leave `install.sh` users on a stale version —
   v1.0.5, v1.0.6, and v1.0.7 each required a manual S3 hotfix.
 - Homebrew publishing disabled in `.goreleaser.yml` until the
-  `tomo-kay/homebrew-tene` tap repository and `HOMEBREW_TAP_GITHUB_TOKEN`
+  `agent-kay-it/homebrew-tene` tap repository and `HOMEBREW_TAP_GITHUB_TOKEN`
   secret are set up. Re-enable instructions are preserved inline in the
   `brews:` comment block.
 ```
@@ -276,7 +276,7 @@ brews:
 
 ### 6.2 Homebrew 재활성 (사용자 결정 시)
 이 fix와 관계없이 독립적으로:
-1. `gh repo create tomo-kay/homebrew-tene --public --license MIT --add-readme`
+1. `gh repo create agent-kay-it/homebrew-tene --public --license MIT --add-readme`
 2. Fine-grained PAT 발급 + `gh secret set HOMEBREW_TAP_GITHUB_TOKEN`
 3. `.goreleaser.yml` brews 블록 주석 제거
 4. 다음 stable 릴리스에서 자동 publish 확인
