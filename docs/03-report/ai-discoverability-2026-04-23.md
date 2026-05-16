@@ -237,7 +237,7 @@
 - **현황**: `fundingLinks: []`.
 - **개선**: `.github/FUNDING.yml` 생성.
   ```yaml
-  github: [tomo-kay]
+  github: [agent-kay-it]
   ko_fi: tomokay
   ```
 - **임팩트**: GitHub UI "Sponsor" 버튼 활성화 = "이 프로젝트는 유지보수되는가" 신호.
@@ -371,7 +371,7 @@
 #### S-1 🔴 **Homebrew tap 활성화** (`.goreleaser.yml`)
 - **현황**: `brews:` 섹션 **없음**. AI가 Mac 사용자에게 가장 먼저 추천하는 `brew install tene` 이 존재하지 않음.
 - **개선**:
-  1. 신규 public repo `tomo-kay/homebrew-tap` 생성 (formulae/ 디렉토리 포함).
+  1. 신규 public repo `agent-kay-it/homebrew-tap` 생성 (formulae/ 디렉토리 포함).
   2. `.goreleaser.yml` 에 `brews:` 섹션 추가:
      ```yaml
      brews:
@@ -380,7 +380,7 @@
          description: "Local-first encrypted secret manager CLI for AI-safe workflows"
          license: "MIT"
          repository:
-           owner: tomo-kay
+           owner: agent-kay-it
            name: homebrew-tap
          directory: Formula
          test: |
@@ -390,7 +390,7 @@
            Full docs: https://tene.sh/llms.txt
      ```
   3. GitHub repo secret `HOMEBREW_TAP_GITHUB_TOKEN` (fine-grained PAT, tap 리포 쓰기 권한).
-- **임팩트**: `brew install tomo-kay/tap/tene` 작동. 30 일 안정 + ≥ 75 stars 확보 후 `Homebrew/homebrew-core` PR → `brew install tene` 도 작동.
+- **임팩트**: `brew install agent-kay-it/tap/tene` 작동. 30 일 안정 + ≥ 75 stars 확보 후 `Homebrew/homebrew-core` PR → `brew install tene` 도 작동.
 - **액션**: 30 분 (tap) · 1 주(core PR 검토 대기).
 
 #### S-2 🔴 **Docker 이미지 (GHCR) 배포**

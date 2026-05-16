@@ -342,7 +342,7 @@ terraform apply
 # release 섹션 변경
 release:
   github:
-    owner: tomo-kay
+    owner: agent-kay-it
     name: tene
   draft: false
   prerelease: auto

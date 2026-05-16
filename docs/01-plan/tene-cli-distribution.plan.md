@@ -36,7 +36,7 @@
 - 크로스 컴파일 바이너리 + 체크섬
 
 ### Phase 2 — 안정화 후 (v0.5.0+)
-- Homebrew tap (`brew install tomo-kay/tap/tene`)
+- Homebrew tap (`brew install agent-kay-it/tap/tene`)
 - install.sh 스크립트 (curl 한 줄 설치)
 
 ### Phase 3 — 인기 후 (v1.0.0+)
@@ -112,7 +112,7 @@ changelog:
 
 release:
   github:
-    owner: tomo-kay
+    owner: agent-kay-it
     name: tene
   draft: false
   prerelease: auto
@@ -126,11 +126,11 @@ release:
 #     license: "MIT"
 #     directory: Formula
 #     commit_author:
-#       name: tomo-kay
-#       email: tomo-kay@users.noreply.github.com
+#       name: agent-kay-it
+#       email: agent-kay-it@users.noreply.github.com
 #     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
 #     repository:
-#       owner: tomo-kay
+#       owner: agent-kay-it
 #       name: homebrew-tap
 #       branch: main
 #       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
@@ -283,7 +283,7 @@ jobs:
 ### 5.1 homebrew-tap 리포지토리 생성
 
 ```bash
-# 1. GitHub에 새 리포 생성: tomo-kay/homebrew-tap
+# 1. GitHub에 새 리포 생성: agent-kay-it/homebrew-tap
 # 2. 리포에 빈 Formula 디렉토리 생성
 mkdir -p Formula
 touch Formula/.gitkeep
@@ -301,19 +301,19 @@ git add . && git commit -m "Initial commit" && git push
 위 `.goreleaser.yml`의 `brews` 섹션 주석을 해제하면, 태그 push 시 자동으로:
 1. GoReleaser가 바이너리 빌드 + GitHub Release 생성
 2. Homebrew Formula 파일을 자동 생성
-3. `tomo-kay/homebrew-tap` 리포에 Formula를 커밋
+3. `agent-kay-it/homebrew-tap` 리포에 Formula를 커밋
 
 ### 5.4 사용자 설치 플로우
 
 ```bash
 # 최초 1회: tap 등록
-brew tap tomo-kay/tap
+brew tap agent-kay-it/tap
 
 # 설치
-brew install tomo-kay/tap/tene
+brew install agent-kay-it/tap/tene
 
 # 또는 한 줄로
-brew install tomo-kay/tap/tene
+brew install agent-kay-it/tap/tene
 
 # 업그레이드
 brew upgrade tene
@@ -628,7 +628,7 @@ make build
 ```markdown
 ### macOS / Linux (Homebrew)
 ```bash
-brew install tomo-kay/tap/tene
+brew install agent-kay-it/tap/tene
 ```
 
 ### Quick install (macOS / Linux)
@@ -683,7 +683,7 @@ GoReleaser의 ldflags:
 
 ### v0.5.0 이후 해야 할 것
 
-- [ ] `tomo-kay/homebrew-tap` 리포지토리 생성
+- [ ] `agent-kay-it/homebrew-tap` 리포지토리 생성
 - [ ] Personal Access Token 생성 및 시크릿 등록
 - [ ] `.goreleaser.yml`의 brews 섹션 주석 해제
 - [ ] `install.sh` 스크립트 프로젝트 루트에 추가
