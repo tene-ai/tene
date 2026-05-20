@@ -28,3 +28,23 @@ type AuditEntry struct {
 	Details      string
 	Timestamp    time.Time
 }
+
+// SecretWrite is the payload for SetSecretBatchWithPreview: name, ciphertext
+// (base64-encoded), and the already-derived preview substring. The caller
+// (cli/import) is responsible for invoking pkg/crypto.DerivePreview to fill
+// Preview from the plaintext before encryption.
+type SecretWrite struct {
+	Name           string
+	EncryptedValue string
+	Preview        string
+}
+
+// SecretBackfill is returned by ListSecretsForBackfill: the name and
+// ciphertext of a secret whose preview column is empty and is therefore a
+// candidate for `tene migrate fill-previews`. We deliberately do not embed
+// this into Secret to keep the no-decrypt and decrypt code paths visually
+// distinct at every call site.
+type SecretBackfill struct {
+	Name           string
+	EncryptedValue string
+}

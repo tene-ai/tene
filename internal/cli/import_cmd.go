@@ -7,13 +7,16 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/agent-kay-it/tene/internal/vaultcfg"
 	"github.com/agent-kay-it/tene/pkg/crypto"
 	teneerr "github.com/agent-kay-it/tene/pkg/errors"
 )
 
 var (
-	importFlagOverwrite  bool
-	importFlagEncrypted  bool
+	importFlagOverwrite bool
+	importFlagEncrypted bool
 )
 
 var importCmd = &cobra.Command{
@@ -105,9 +108,21 @@ func importDotEnv(app *App, filePath, env string, encKey []byte) error {
 		return fmt.Errorf("no secrets found in %q", filePath)
 	}
 
-	// Check for existing secrets
+	// Load preview settings once for the whole batch -- they cannot change
+	// mid-import (the same vault is locked for the duration), so it would
+	// be wasteful to re-read them per row.
+	settings, err := vaultcfg.GetPreviewSettings(app.Vault)
+	if err != nil {
+		return fmt.Errorf("failed to read preview settings: %w", err)
+	}
+
+	// Check for existing secrets and assemble the batch of new writes.
+	// We accumulate into a SecretWrite slice so the actual DB writes happen
+	// inside one transaction via SetSecretBatchWithPreview, ensuring all
+	// (ciphertext, preview) pairs land atomically.
 	var names []string
 	imported, skipped, overwritten := 0, 0, 0
+	writes := make([]vault.SecretWrite, 0, len(secrets))
 
 	for key, value := range secrets {
 		names = append(names, key)
@@ -120,15 +135,27 @@ func importDotEnv(app *App, filePath, env string, encKey []byte) error {
 			overwritten++
 		}
 
-		// Encrypt and store
+		preview := ""
+		if settings.Enabled {
+			preview = crypto.DerivePreview(value, settings.Front, settings.Back)
+		}
+
 		ct, err := crypto.Encrypt(encKey, []byte(value), []byte(key))
 		if err != nil {
 			return fmt.Errorf("failed to encrypt %s: %w", key, err)
 		}
-		if err := app.Vault.SetSecret(key, encodeBase64(ct), env); err != nil {
+		writes = append(writes, vault.SecretWrite{
+			Name:           key,
+			EncryptedValue: encodeBase64(ct),
+			Preview:        preview,
+		})
+		imported++
+	}
+
+	if len(writes) > 0 {
+		if err := app.Vault.SetSecretBatchWithPreview(writes, env); err != nil {
 			return err
 		}
-		imported++
 	}
 
 	// Audit log
@@ -171,9 +198,15 @@ func importEncrypted(app *App, filePath, env string, masterKey, encKey []byte) e
 		return teneerr.ErrDecryptFailed
 	}
 
-	// Parse as .env format
+	// Same preview-settings load as the .env path; one read for the batch.
+	settings, err := vaultcfg.GetPreviewSettings(app.Vault)
+	if err != nil {
+		return fmt.Errorf("failed to read preview settings: %w", err)
+	}
+
+	// Parse as .env format and assemble the atomic batch.
 	lines := strings.Split(string(plaintext), "\n")
-	count := 0
+	writes := make([]vault.SecretWrite, 0, len(lines))
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -186,14 +219,27 @@ func importEncrypted(app *App, filePath, env string, masterKey, encKey []byte) e
 		key := parts[0]
 		value := parts[1]
 
+		preview := ""
+		if settings.Enabled {
+			preview = crypto.DerivePreview(value, settings.Front, settings.Back)
+		}
+
 		ct, err := crypto.Encrypt(encKey, []byte(value), []byte(key))
 		if err != nil {
 			return err
 		}
-		if err := app.Vault.SetSecret(key, encodeBase64(ct), env); err != nil {
+		writes = append(writes, vault.SecretWrite{
+			Name:           key,
+			EncryptedValue: encodeBase64(ct),
+			Preview:        preview,
+		})
+	}
+
+	count := len(writes)
+	if count > 0 {
+		if err := app.Vault.SetSecretBatchWithPreview(writes, env); err != nil {
 			return err
 		}
-		count++
 	}
 
 	// Audit log

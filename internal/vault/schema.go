@@ -1,5 +1,11 @@
 package vault
 
+// schemaSQL is the schema v1 baseline used by initSchema() for a brand-new
+// vault.db. The v2 ALTER (preview column on secrets) is applied separately
+// by migrate(): when a vault is created fresh we run initSchema then bump
+// the version, but the v2 ADD COLUMN is also run unconditionally so the
+// preview column is always present regardless of whether the user came from
+// init (v1) or from an existing v1 vault (upgrade path).
 const schemaSQL = `
 CREATE TABLE IF NOT EXISTS vault_meta (
     key   TEXT PRIMARY KEY,
@@ -37,7 +43,16 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
 `
 
-const currentSchemaVersion = 1
+// currentSchemaVersion is the schema_version vault_meta value that a
+// fully-migrated vault.db must report. Bumped from 1 -> 2 by the
+// cli-ux-permission-model sprint (Q2 decision) to introduce the
+// `secrets.preview` column.
+const currentSchemaVersion = 2
+
+// schemaMetaKey is the vault_meta key under which the schema version is
+// stored. Centralized as a constant so migration code and tests cannot
+// drift on the spelling.
+const schemaMetaKey = "schema_version"
 
 func (v *Vault) initSchema() error {
 	_, err := v.db.Exec(schemaSQL)

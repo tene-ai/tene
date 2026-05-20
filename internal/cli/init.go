@@ -7,13 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/agent-kay-it/tene/internal/claudemd"
 	"github.com/agent-kay-it/tene/internal/config"
-	"github.com/agent-kay-it/tene/pkg/crypto"
 	"github.com/agent-kay-it/tene/internal/keychain"
 	"github.com/agent-kay-it/tene/internal/recovery"
 	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
@@ -104,10 +104,13 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 	defer func() { _ = v.Close() }()
 
-	// 6. Store metadata
-	if err := v.SetMeta("schema_version", "1"); err != nil {
-		return err
-	}
+	// 6. Store metadata.
+	//
+	// schema_version is intentionally NOT written here: vault.New has
+	// already stamped it via runMigrations() to currentSchemaVersion.
+	// Overwriting it would clobber the v2 stamp (sprint
+	// cli-ux-permission-model, F1) and trip the migration system on the
+	// next open.
 	if err := v.SetMeta("vault_version", "1"); err != nil {
 		return err
 	}

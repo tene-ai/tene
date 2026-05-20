@@ -6,10 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/spf13/cobra"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
 	"github.com/agent-kay-it/tene/internal/keychain"
 	"github.com/agent-kay-it/tene/internal/vault"
+	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
 
@@ -95,6 +95,8 @@ func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(completionCmd)
+	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(migrateCmd)
 
 	// Cloud commands — removed from CLI while being redesigned.
 	// Code preserved in: login.go, logout.go, push.go, pull.go,
@@ -226,7 +228,6 @@ func printJSON(v any) error {
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
 }
-
 
 // envOrDefault returns the environment variable value or a fallback default.
 // Used for CLI flag defaults that should respect tene-injected env vars.

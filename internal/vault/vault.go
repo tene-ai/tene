@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 
+	"github.com/agent-kay-it/tene/pkg/domain"
 	_ "modernc.org/sqlite"
 )
 
@@ -26,12 +26,19 @@ func New(dbPath string) (*Vault, error) {
 		return nil, fmt.Errorf("vault: failed to create directory: %w", err)
 	}
 
-	db, err := sql.Open("sqlite", dbPath)
+	// busy_timeout is appended to the DSN so it is set on every connection
+	// the database/sql pool opens, not just on the first one. Without this,
+	// a second tene process arriving while the first holds a write lock
+	// would get SQLITE_BUSY immediately. 5000ms is enough for a schema-v2
+	// ALTER TABLE to complete on any realistic vault.db.
+	db, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout(5000)")
 	if err != nil {
 		return nil, fmt.Errorf("vault: failed to open database: %w", err)
 	}
 
-	// Enable WAL mode for better concurrency
+	// Enable WAL mode for better concurrency. PRAGMA journal_mode=WAL
+	// requires an exclusive lock; with busy_timeout set above, concurrent
+	// callers wait instead of failing.
 	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("vault: failed to set WAL mode: %w", err)
@@ -66,33 +73,45 @@ func (v *Vault) Close() error {
 	return nil
 }
 
-// migrate checks the schema version and runs migrations if needed.
+// migrate ensures vault.db's schema is at currentSchemaVersion. For a fresh
+// database it runs initSchema() to create the baseline tables, then delegates
+// to runMigrations() to apply forward-step migrations (see migration.go).
+//
+// For an already-initialized database it skips initSchema (the CREATE TABLE
+// statements are IF NOT EXISTS so the call would be safe, but skipping
+// avoids an unnecessary write txn) and goes straight to runMigrations(),
+// which uses readSchemaVersion + per-step transactions to bring the database
+// up to date without losing data.
 func (v *Vault) migrate() error {
-	// Try to get schema version - if it fails, initialize schema
-	version, err := v.getSchemaVersion()
+	fresh, err := v.isFreshVault()
 	if err != nil {
-		// First run: initialize schema
+		return fmt.Errorf("vault: detect fresh vault: %w", err)
+	}
+	if fresh {
 		if err := v.initSchema(); err != nil {
 			return fmt.Errorf("vault: init schema: %w", err)
 		}
-		return v.SetMeta("schema_version", strconv.Itoa(currentSchemaVersion))
 	}
-
-	// Future migrations would go here
-	_ = version
-	return nil
+	return v.runMigrations()
 }
 
-func (v *Vault) getSchemaVersion() (int, error) {
-	val, err := v.GetMeta("schema_version")
-	if err != nil {
-		return 0, fmt.Errorf("vault: get schema version: %w", err)
+// isFreshVault returns true when vault_meta does not exist yet, which is
+// the unambiguous marker of a not-yet-initialized vault.db. We probe the
+// sqlite_master table (always present, even on an empty database) so we
+// never get a false positive from a transient error like ErrMetaNotFound
+// on a wholly different missing key.
+func (v *Vault) isFreshVault() (bool, error) {
+	var name string
+	err := v.db.QueryRow(
+		`SELECT name FROM sqlite_master WHERE type='table' AND name='vault_meta'`,
+	).Scan(&name)
+	if err == sql.ErrNoRows {
+		return true, nil
 	}
-	version, err := strconv.Atoi(val)
 	if err != nil {
-		return 0, fmt.Errorf("vault: parse schema version: %w", err)
+		return false, err
 	}
-	return version, nil
+	return false, nil
 }
 
 // --- Metadata ---
@@ -123,22 +142,80 @@ func (v *Vault) GetMeta(key string) (string, error) {
 
 // --- Secret CRUD ---
 
-// SetSecret stores a secret (UPSERT: by name+environment).
+// SetSecret stores a secret without touching the preview column (UPSERT
+// by name+environment). Preserved for callers that do not have a preview
+// (legacy or test code). New call sites should use SetSecretWithPreview so
+// ciphertext and preview update atomically in the same row mutation.
 func (v *Vault) SetSecret(name, encryptedValue, env string) error {
-	query := `
-		INSERT INTO secrets (name, encrypted_value, environment, version, created_at, updated_at)
-		VALUES (?, ?, ?, 1, datetime('now'), datetime('now'))
+	return v.SetSecretWithPreview(name, encryptedValue, env, "")
+}
+
+// SetSecretWithPreview stores a secret AND its preview substring in a
+// single atomic UPSERT.
+//
+// Atomicity is critical here: if we wrote the ciphertext first and the
+// preview second, a process crash between the two statements would leave
+// vault.db with the previous preview still pointing at the previous
+// plaintext -- meaning `tene list` would show stale information. Doing
+// both columns in one INSERT ... ON CONFLICT DO UPDATE bundles the writes
+// into one SQLite transaction-implicit row mutation.
+//
+// Pass preview = "" to clear the preview (e.g. when preview.enabled=false
+// is the active configuration). The column is NOT NULL DEFAULT ” (schema
+// v2) so this stores the empty string, not NULL.
+func (v *Vault) SetSecretWithPreview(name, encryptedValue, env, preview string) error {
+	const query = `
+		INSERT INTO secrets (name, encrypted_value, environment, preview, version, created_at, updated_at)
+		VALUES (?, ?, ?, ?, 1, datetime('now'), datetime('now'))
 		ON CONFLICT(name, environment) DO UPDATE SET
 			encrypted_value = excluded.encrypted_value,
-			version = secrets.version + 1,
-			updated_at = datetime('now')
+			preview         = excluded.preview,
+			version         = secrets.version + 1,
+			updated_at      = datetime('now')
 	`
-	_, err := v.db.Exec(query, name, encryptedValue, env)
-	if err != nil {
+	if _, err := v.db.Exec(query, name, encryptedValue, env, preview); err != nil {
 		return fmt.Errorf("vault: failed to set secret %q: %w", name, err)
 	}
 
 	return v.AddAuditLog("secret.write", name, "")
+}
+
+// SetSecretBatchWithPreview stores multiple secrets (ciphertext + preview)
+// in a single transaction. Counterpart of SetSecretBatch used by
+// `tene import` so the imported set lands with all previews populated
+// atomically.
+func (v *Vault) SetSecretBatchWithPreview(records []SecretWrite, env string) error {
+	tx, err := v.db.Begin()
+	if err != nil {
+		return fmt.Errorf("vault: failed to begin transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	const query = `
+		INSERT INTO secrets (name, encrypted_value, environment, preview, version, created_at, updated_at)
+		VALUES (?, ?, ?, ?, 1, datetime('now'), datetime('now'))
+		ON CONFLICT(name, environment) DO UPDATE SET
+			encrypted_value = excluded.encrypted_value,
+			preview         = excluded.preview,
+			version         = secrets.version + 1,
+			updated_at      = datetime('now')
+	`
+	stmt, err := tx.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("vault: failed to prepare statement: %w", err)
+	}
+	defer func() { _ = stmt.Close() }()
+
+	for _, r := range records {
+		if _, err := stmt.Exec(r.Name, r.EncryptedValue, env, r.Preview); err != nil {
+			return fmt.Errorf("vault: failed to set secret %q: %w", r.Name, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("vault: failed to commit transaction: %w", err)
+	}
+	return nil
 }
 
 // GetSecret retrieves a secret.
@@ -417,6 +494,116 @@ func (v *Vault) EnvironmentExists(name string) (bool, error) {
 		return false, fmt.Errorf("vault: check environment exists: %w", err)
 	}
 	return count > 0, nil
+}
+
+// --- Metadata Read API (Q2 — no-decrypt path) ---
+
+// ListSecretMetadata returns name + version + updated_at + preview for every
+// secret in env, ordered by name.
+//
+// Security invariant (I-1, I-9): this method MUST NEVER read or expose the
+// encrypted_value column. It exists so commands like `tene list` can render
+// useful output without unlocking the vault, and so AI assistants can learn
+// the canonical key names of a project without being able to see values.
+// The preview column is plaintext per the Q2 user decision; its size is
+// bounded by pkg/crypto.MaxPreviewChars (=8 rune cap), enforced at write
+// time by callers of DerivePreview.
+//
+// Returns an empty slice (not nil) when the environment has no secrets, so
+// JSON callers always get a deterministic array shape.
+//
+// Returns an error only on database-level failures (closed connection,
+// schema corruption). A missing environment is not an error -- it's
+// indistinguishable from "no secrets in that env" at this layer.
+func (v *Vault) ListSecretMetadata(env string) ([]domain.VaultKeyMeta, error) {
+	const q = `SELECT name, version, updated_at, preview
+		FROM secrets
+		WHERE environment = ?
+		ORDER BY name`
+	rows, err := v.db.Query(q, env)
+	if err != nil {
+		return nil, fmt.Errorf("vault: list secret metadata: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]domain.VaultKeyMeta, 0)
+	for rows.Next() {
+		var m domain.VaultKeyMeta
+		var updatedAt string
+		if err := rows.Scan(&m.Name, &m.Version, &updatedAt, &m.Preview); err != nil {
+			return nil, fmt.Errorf("vault: scan secret metadata: %w", err)
+		}
+		if t, err := time.Parse("2006-01-02 15:04:05", updatedAt); err == nil {
+			m.UpdatedAt = t
+		}
+		out = append(out, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("vault: list secret metadata rows: %w", err)
+	}
+	return out, nil
+}
+
+// UpdateSecretPreview rewrites only the preview column for a single secret.
+//
+// Used by `tene migrate fill-previews` to populate previews on a vault that
+// was created before schema v2, and by `tene config preview.enabled=false`
+// followed by `tene migrate fill-previews` to clear them. The ciphertext,
+// version, and updated_at columns are intentionally untouched -- this is
+// not a value change, it's a derived-cache refresh.
+//
+// Returns ErrSecretNotFound when no row matches name+env.
+func (v *Vault) UpdateSecretPreview(name, env, preview string) error {
+	result, err := v.db.Exec(
+		`UPDATE secrets SET preview = ? WHERE name = ? AND environment = ?`,
+		preview, name, env,
+	)
+	if err != nil {
+		return fmt.Errorf("vault: update preview %q: %w", name, err)
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("vault: update preview rows affected: %w", err)
+	}
+	if affected == 0 {
+		return fmt.Errorf("%w: %s", ErrSecretNotFound, name)
+	}
+	return nil
+}
+
+// ListSecretsForBackfill returns the rows that `tene migrate fill-previews`
+// needs to operate on: for each secret in env whose preview is currently
+// empty, the name + encrypted_value (so the caller can decrypt + derive).
+//
+// This is the only metadata-read API in the package that intentionally
+// returns encrypted_value. It is named explicitly so callers cannot
+// accidentally use it where ListSecretMetadata would have sufficed.
+// `tene migrate fill-previews` is a PermSecretRead-tier operation (it
+// requires unlock to derive previews from plaintext), so reading the
+// ciphertext here is appropriate.
+func (v *Vault) ListSecretsForBackfill(env string) ([]SecretBackfill, error) {
+	const q = `SELECT name, encrypted_value
+		FROM secrets
+		WHERE environment = ? AND preview = ''
+		ORDER BY name`
+	rows, err := v.db.Query(q, env)
+	if err != nil {
+		return nil, fmt.Errorf("vault: list backfill candidates: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	out := make([]SecretBackfill, 0)
+	for rows.Next() {
+		var r SecretBackfill
+		if err := rows.Scan(&r.Name, &r.EncryptedValue); err != nil {
+			return nil, fmt.Errorf("vault: scan backfill row: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("vault: backfill rows: %w", err)
+	}
+	return out, nil
 }
 
 // --- Audit Log ---

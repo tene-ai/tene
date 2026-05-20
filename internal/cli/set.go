@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/agent-kay-it/tene/internal/vaultcfg"
 	"github.com/agent-kay-it/tene/pkg/crypto"
 	teneerr "github.com/agent-kay-it/tene/pkg/errors"
 )
@@ -110,15 +112,34 @@ func runSet(cmd *cobra.Command, args []string) error {
 	}
 	defer crypto.ZeroBytes(encKey)
 
+	// Derive the preview substring from the still-cleartext value BEFORE
+	// we encrypt+store. Doing it here (not inside the vault layer) keeps
+	// pkg/crypto's plaintext exposure window to a single function and
+	// preserves the vault package's "no decrypt happens here" invariant.
+	//
+	// preview.enabled=false collapses to front=0/back=0 inside
+	// DerivePreview, which returns the empty string -- matching the Q2
+	// "always-string, possibly empty" JSON contract.
+	settings, err := vaultcfg.GetPreviewSettings(app.Vault)
+	if err != nil {
+		return fmt.Errorf("failed to read preview settings: %w", err)
+	}
+	preview := ""
+	if settings.Enabled {
+		preview = crypto.DerivePreview(value, settings.Front, settings.Back)
+	}
+
 	// Encrypt
 	ciphertext, err := crypto.Encrypt(encKey, []byte(value), []byte(keyName))
 	if err != nil {
 		return err
 	}
 
-	// Store
+	// Store ciphertext + preview together in a single atomic UPSERT so a
+	// crash between the two writes cannot leave the preview out of sync
+	// with the value it summarizes.
 	encoded := encodeBase64(ciphertext)
-	if err := app.Vault.SetSecret(keyName, encoded, env); err != nil {
+	if err := app.Vault.SetSecretWithPreview(keyName, encoded, env, preview); err != nil {
 		return err
 	}
 
