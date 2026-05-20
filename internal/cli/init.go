@@ -234,6 +234,14 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		fmt.Println("  Tip: No server needed. Your secrets stay on this device.")
 		fmt.Println("       AI agents will automatically use tene.")
+		// F7 — permission + preview hints (3 lines, sprint cli-ux-permission-model).
+		// Wording is locked by plan.md F7 step 1: default preview is front=0/back=4
+		// (Q2 final 2026-05-20, prefix exposure off by default). The deprecated
+		// "first-4 + last-4" phrasing must NEVER appear here — TestInit_DoesNotMentionFirstFourLastFour
+		// is a regression guard. Hint count capped at 3 (Q4 + RISK 5 verbosity cap).
+		fmt.Println("       Run `tene permissions` to see which commands need your password.")
+		fmt.Println("       `tene list` shows last 4 chars of each value by default (no prefix exposed).")
+		fmt.Println("       Disable: `tene config preview.enabled=false`  |  Opt-in to prefix: `tene config preview.front=N`")
 		fmt.Println()
 		fmt.Println("  Docs:  https://tene.sh")
 	} else {
