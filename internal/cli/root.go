@@ -238,6 +238,7 @@ func init() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(migrateCmd)
+	rootCmd.AddCommand(permissionsCmd) // F5 — info command for the tier table.
 
 	// Cloud commands — removed from CLI while being redesigned.
 	// Code preserved in: login.go, logout.go, push.go, pull.go,
