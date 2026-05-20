@@ -14,6 +14,20 @@ type testEnv struct {
 }
 
 // setupTestEnv creates a temporary directory and environment variables for testing.
+//
+// Sprint v1014-rc1-qa-fixes follow-up: force the file-store fallback via
+// TENE_KEYCHAIN_FALLBACK=file so test runs do NOT probe the real macOS
+// keychain. Without this, every test that uses a fresh t.TempDir creates
+// a new tene-<hash> service name and macOS displays a "<process> wants
+// to access keychain" dialog requiring the user's login password — once
+// per service. Long test runs (the 300 s -race sweep on this branch was
+// the worst offender) accumulated dozens of dialogs.
+//
+// The file fallback path is functionally identical for what these tests
+// exercise (KeyStore Load/Store/Delete contract); the OS keychain
+// integration itself is covered by the dedicated
+// TestSelectKeyStore_NoFlag_UsesOSKeychainOrFileFallback test in
+// no_keychain_integration_test.go, which deliberately UNsets this var.
 func setupTestEnv(t *testing.T) *testEnv {
 	t.Helper()
 
@@ -22,6 +36,7 @@ func setupTestEnv(t *testing.T) *testEnv {
 
 	t.Setenv("HOME", home)
 	t.Setenv("TENE_MASTER_PASSWORD", "testpassword123")
+	t.Setenv("TENE_KEYCHAIN_FALLBACK", "file")
 
 	return &testEnv{Dir: dir, HomeDir: home, t: t}
 }

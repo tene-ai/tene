@@ -14,6 +14,38 @@ import (
 const (
 	ServiceName = "tene"
 	AccountName = "master-key"
+
+	// ProbeServiceName is the macOS Keychain / libsecret / CredManager
+	// service name used by NewStoreWithStatus to check whether the OS
+	// keychain accepts writes. Sprint keychain-probe-fixed.
+	//
+	// Why a fixed name rather than the per-project ServiceName + "-"
+	// + hashPath(projectPath):
+	//
+	//   - The probe value never carries a real secret; it is a
+	//     `Set("probe", "ok")` followed by `Delete`. Yet the per-project
+	//     name registered a new keychain service entry on every project
+	//     directory the user touched, with the ACL grant ("tene allowed
+	//     to access this service") accumulating in macOS's metadata DB.
+	//
+	//   - During the v1.0.14-rc1 QA cycle the user accumulated 95+
+	//     `tene-<hash>` entries on their dev machine and started seeing
+	//     "키체인을 발견할 수 없음" (Keychain not found) dialogs as the
+	//     metadata DB went into a transient inconsistency state.
+	//
+	//   - One fixed service is sufficient for the availability test:
+	//     either go-keyring's Set succeeds (OS keychain works → use it)
+	//     or it fails (no keychain → file fallback).
+	//
+	// The master-key STORAGE service stays per-project so cross-project
+	// isolation is preserved. Only the AVAILABILITY check is shared.
+	ProbeServiceName = "tene-probe"
+
+	// probeAccount is the user identifier under ProbeServiceName for
+	// the availability test. The value written is always "ok"; the
+	// account name is what distinguishes a tene probe from any other
+	// generic-password entry in the keychain.
+	probeAccount = "probe"
 )
 
 // KeyStore is the interface for securely storing and loading the Master Key.
@@ -130,10 +162,20 @@ func NewStore(projectPath string) KeyStore {
 // Selection precedence:
 //  1. TENE_KEYCHAIN_FALLBACK=file env override -> FileStore
 //     (Reason="env_override")
-//  2. OS keychain probe: a no-op Set() to the project-scoped service.
+//  2. OS keychain probe: a small Set/Delete round-trip against the
+//     FIXED ProbeServiceName (NOT the per-project storage service).
 //     If it succeeds, we use the OS keychain (Reason="").
 //     If it fails (CI, Docker, headless, libsecret missing), we fall
 //     back to FileStore (Reason="keychain_unavailable").
+//
+// Sprint keychain-probe-fixed: the probe target is ProbeServiceName
+// (a single fixed name shared across all projects), but the returned
+// KeyringStore still binds to `ServiceName + "-" + hashPath(projectPath)`
+// so vault keys remain per-project isolated. Before this change the
+// probe wrote to the per-project service, causing macOS Keychain to
+// accumulate one ACL-registered entry per project directory the user
+// touched — surfacing as the "키체인을 발견할 수 없음" dialog when the
+// metadata DB went transiently inconsistent.
 //
 // The fallback file path is always ~/.tene/keyfile (per-user, not
 // per-project — keychain.NewFileStore historically used a single path,
@@ -152,12 +194,14 @@ func NewStoreWithStatus(projectPath string) (KeyStore, FallbackInfo) {
 		}
 	}
 
-	service := ServiceName + "-" + hashPath(projectPath)
-	ks := NewKeyringStore(service)
+	storageService := ServiceName + "-" + hashPath(projectPath)
+	ks := NewKeyringStore(storageService)
 
-	// Test keychain availability via a small Set/Delete round-trip.
-	testKey := "keychain-test"
-	if err := keyring.Set(service, testKey, "test"); err != nil {
+	// Test keychain availability via a small Set/Delete round-trip
+	// against the FIXED ProbeServiceName. See the const docstring for
+	// why this is shared across projects while master-key storage at
+	// `storageService` stays per-project.
+	if err := keyring.Set(ProbeServiceName, probeAccount, "ok"); err != nil {
 		// Keychain unavailable -> file fallback
 		return NewFileStore(keyfilePath), FallbackInfo{
 			Used:   true,
@@ -165,7 +209,7 @@ func NewStoreWithStatus(projectPath string) (KeyStore, FallbackInfo) {
 			Path:   keyfilePath,
 		}
 	}
-	_ = keyring.Delete(service, testKey)
+	_ = keyring.Delete(ProbeServiceName, probeAccount)
 
 	return ks, FallbackInfo{Used: false}
 }

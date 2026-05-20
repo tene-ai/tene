@@ -7,6 +7,75 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **`keychain.ProbeServiceName`** (new exported constant, value
+  `"tene-probe"`) — macOS Keychain / libsecret / Windows CredManager
+  service name shared by every project's availability probe. Master
+  key storage remains under the per-project
+  `tene-<hashPath(projectDir)>` service for isolation (sprint
+  keychain-probe-fixed).
+
+### Fixed
+
+- **macOS Keychain ACL prompts and "키체인을 발견할 수 없음" dialog
+  storms during repeated `tene` invocations across many new project
+  directories.** The v1.0.14 `NewStoreWithStatus` availability probe
+  wrote a transient `Set`/`Delete` value under the per-project
+  `tene-<hash>` service. macOS retained one ACL-registered service
+  entry per project even after the value was deleted, so users who
+  touched dozens of project dirs (95+ on a developer machine during
+  the rc1 QA cycle) saw macOS's metadata DB go transiently
+  inconsistent and the "Keychain not found" dialog appear repeatedly.
+  The probe now targets the fixed `ProbeServiceName`, so the host
+  accumulates exactly one keychain entry from the availability
+  check regardless of how many projects the user works on.
+
+  Existing `tene-<hash>` entries from earlier versions are inert
+  (the probe `Delete` removed any stored value). To inventory and
+  clean up at your leisure:
+
+  ```bash
+  # inventory
+  security dump-keychain 2>/dev/null | grep -oE '"tene-[a-f0-9]+"' | sort -u
+
+  # delete (these are availability-probe orphans — safe)
+  for s in $(security dump-keychain 2>/dev/null | grep -oE '"tene-[a-f0-9]+"' | tr -d '"' | sort -u); do
+    security delete-generic-password -s "$s" 2>/dev/null
+  done
+  ```
+
+### Internal / tests
+
+- `setupTestEnv` in `internal/cli/testhelper_test.go` now sets
+  `TENE_KEYCHAIN_FALLBACK=file`, so the CLI test suite never probes
+  the host OS keychain. Cut the full `go test -race ./internal/cli/...`
+  wall-clock from ~270 s to ~38 s on macOS by eliminating the
+  per-test "Always Allow" dialog wait.
+- `TestSelectKeyStore_NoFlag_UsesOSKeychainOrFileFallback` (the one
+  test that still genuinely needs the OS keychain) gains a
+  `testing.Short()` skip plus an explicit `TENE_KEYCHAIN_FALLBACK=""`
+  unset, so `go test -short` is dialog-free and the test still
+  exercises real keychain selection in normal `go test` runs.
+
+## [1.0.14] - 2026-05-20
+
+Closes ten regressions from the v1.0.14-rc1 QA cycle (3 CRITICAL +
+3 HIGH + 3 MEDIUM + 4 LOW) on top of the cli-ux-permission-model
+sprint (PR #116). Three new invariants (I-11/I-12/I-13) pin the
+critical fixes. Full sprint reports under
+`docs/sprints/cli-ux-permission-model/` and
+`docs/sprints/v1014-rc1-qa-fixes/`.
+
+## [1.0.14] - 2026-05-20
+
+Closes ten regressions from the v1.0.14-rc1 QA cycle (3 CRITICAL +
+3 HIGH + 3 MEDIUM + 4 LOW) on top of the cli-ux-permission-model
+sprint (PR #116). Three new invariants (I-11/I-12/I-13) pin the
+critical fixes. Full sprint reports under
+`docs/sprints/cli-ux-permission-model/` and
+`docs/sprints/v1014-rc1-qa-fixes/`.
+
 ### ⚠️ Breaking
 
 - `tene get <KEY>` now refuses to print plaintext to non-TTY stdout by default.

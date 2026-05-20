@@ -73,6 +73,26 @@ Whichever you pick, the file mode is `0600` and the directory is created
 with mode `0700`. Tene never grants other users access to your key file;
 that part of the contract is unchanged.
 
+### OS Keychain probe vs. master-key storage (sprint `keychain-probe-fixed`)
+
+On macOS / Linux libsecret / Windows Credential Manager, tene uses
+two distinct service names against the OS keychain:
+
+| Service name | Purpose | Lifetime | Per-project? |
+| --- | --- | --- | --- |
+| `tene-probe` | One-shot Set/Delete to verify the OS keychain accepts writes (selects KeyringStore vs. FileStore fallback) | Created on first `tene` invocation per host, deleted immediately after, but the service registration / ACL grant persists | **No** — single fixed name shared across all projects |
+| `tene-<hashPath(projectDir)>` | Stores the master key for one specific project's vault | Persists for the life of the vault (cleared on `tene` uninstall) | **Yes** — one per project |
+
+The probe service is shared because its only job is "does the
+keychain work?" — a single registration is enough. The storage
+service is per-project because a leaked master key for project A
+must not unlock project B's vault.
+
+Prior to v1.0.15 the probe wrote to the per-project service, which
+made macOS Keychain accumulate one ACL-registered entry per project
+directory the user touched. Inert leftovers from that period can be
+removed via the snippet in `CHANGELOG.md` for [Unreleased].
+
 ## AI-Safe Design Properties
 
 The CLI actively defends against AI agent secret exfiltration:

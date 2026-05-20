@@ -70,9 +70,20 @@ func TestSelectKeyStore_TENE_KEYFILE_OverrideUsesFileStore(t *testing.T) {
 // non-flagged path still returns a real keystore (KeyringStore on macOS
 // dev machines, FileStore on a CI host that lacks libsecret). The point
 // is that NullStore is NEVER returned without the --no-keychain flag.
+//
+// This test is intentionally allowed to probe the real macOS keychain
+// (it explicitly UNsets TENE_KEYCHAIN_FALLBACK so the helper does not
+// short-circuit). On a developer laptop with an unlocked login keychain
+// this completes in ~100 ms; the first run after a reboot may show the
+// "tene wants to access keychain" dialog once. Skip with `-short` if
+// that is disruptive during normal development.
 func TestSelectKeyStore_NoFlag_UsesOSKeychainOrFileFallback(t *testing.T) {
+	if testing.Short() {
+		t.Skip("-short skips OS keychain probe to avoid login dialogs")
+	}
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("TENE_KEYFILE", "")
+	t.Setenv("TENE_KEYCHAIN_FALLBACK", "")
 
 	ks := selectKeyStore(t.TempDir(), false /* noKeychain */, true /* quiet */, os.Stderr)
 	if _, ok := ks.(*keychain.NullStore); ok {
