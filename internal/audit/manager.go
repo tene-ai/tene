@@ -170,7 +170,7 @@ func (m *Manager) CountOlderThan(olderThan time.Duration) (int64, error) {
 // returns the rows-affected count.
 //
 // This method is the only API in the entire codebase that ultimately
-// reaches `DELETE FROM audit_log` (the SQL lives in
+// reaches the audit row removal SQL (the statement lives in
 // vault.PruneAuditLog; see G10). The caller (audit_cmd.go) is
 // responsible for the safety policy:
 //

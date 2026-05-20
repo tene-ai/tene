@@ -124,9 +124,9 @@ func emitFallbackNoticeIfNeeded(stderr io.Writer, info keychain.FallbackInfo, pr
 //   - Trailing period inside the parens, then a hint sentence outside.
 //     Reads naturally when piped to a log file.
 func writeFallbackNotice(stderr io.Writer, keyfilePath string) {
-	fmt.Fprintf(stderr,
+	_, _ = fmt.Fprintf(stderr,
 		"note: tene is using file-based keystore at %s (keychain unavailable).\n",
 		keyfilePath)
-	fmt.Fprintln(stderr,
+	_, _ = fmt.Fprintln(stderr,
 		"      This message shows once per project. Pass --quiet to suppress.")
 }

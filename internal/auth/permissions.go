@@ -130,7 +130,7 @@ var CommandTier = map[string]PermLevel{
 	"import":      PermSecretWrite,
 	"delete":      PermSecretWrite, // Value never decrypted but row removal is a write op.
 	"init":        PermSecretWrite, // Sets the master password; vault creation is a write.
-	"audit prune": PermSecretWrite, // F8 — DELETE FROM audit_log requires the write tier.
+	"audit prune": PermSecretWrite, // F8 — audit log row removal requires the write tier.
 
 	// --- PermSecretRead (5) ------------------------------------------------
 	// Master-key unlock required to decrypt plaintext. STDOUT_SECRET_BLOCKED

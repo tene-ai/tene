@@ -220,10 +220,10 @@ func resetAuditSentinel(projectDir string) {
 //     can copy-paste it without a docs round-trip.
 func writeThresholdNotice(stderr io.Writer, sizeBytes int64, thresholdMB int) {
 	sizeMB := sizeBytes / (1024 * 1024)
-	fmt.Fprintf(stderr,
+	_, _ = fmt.Fprintf(stderr,
 		"note: audit log is ~%dMB (threshold %dMB). Run 'tene audit prune --older-than 30d' to clean up.\n",
 		sizeMB, thresholdMB,
 	)
-	fmt.Fprintln(stderr,
+	_, _ = fmt.Fprintln(stderr,
 		"      This message shows once per project per 24h. Pass --quiet to suppress.")
 }

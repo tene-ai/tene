@@ -517,7 +517,7 @@ func parseHumanDuration(s string) (time.Duration, error) {
 // captures stdout still surfaces the question to the human operator
 // before the program blocks on stdin.
 func confirmDestructive(in io.Reader, errOut io.Writer, prompt string) bool {
-	fmt.Fprintf(errOut, "%s [y/N]: ", prompt)
+	_, _ = fmt.Fprintf(errOut, "%s [y/N]: ", prompt)
 	br := bufio.NewReader(in)
 	line, err := br.ReadString('\n')
 	if err != nil && err != io.EOF {
