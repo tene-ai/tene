@@ -109,3 +109,56 @@ func TestPersistentPreRunE_RootBarePasses(t *testing.T) {
 		t.Errorf("rootPersistentPreRunE(rootCmd) = %v, want nil", err)
 	}
 }
+
+// TestPersistentPreRunE_HelpSubcommandSkipped — sprint v1014-rc1-qa-fixes
+// FX4 (B4 regression test). Cobra's auto-generated "help" command must
+// pass through rootPersistentPreRunE without triggering the
+// "no PermLevel entry" error. The synthetic help command is fabricated
+// the same way auth.TestValidate_IgnoresHelpCommand does it: call
+// InitDefaultHelpCmd, find the command, invoke the hook directly.
+func TestPersistentPreRunE_HelpSubcommandSkipped(t *testing.T) {
+	rootCmd.InitDefaultHelpCmd()
+	helpCmd, _, err := rootCmd.Find([]string{"help"})
+	if err != nil {
+		t.Fatalf("rootCmd.Find(help) = %v", err)
+	}
+	if helpCmd.Name() != "help" {
+		t.Fatalf("expected to resolve cobra's synthetic help command, got %q", helpCmd.Name())
+	}
+	if err := rootPersistentPreRunE(helpCmd, nil); err != nil {
+		t.Errorf("rootPersistentPreRunE(help) = %v, want nil — B4 regression", err)
+	}
+}
+
+// TestPersistentPreRunE_CompleteSubcommandSkipped — same shape as the
+// help test but for cobra's __complete shell-completion helper. We can
+// fabricate it directly because cobra exposes the name; we attach it
+// to rootCmd so CommandPath() resolves and clean up afterwards.
+func TestPersistentPreRunE_CompleteSubcommandSkipped(t *testing.T) {
+	complete := &cobra.Command{Use: "__complete", Run: func(*cobra.Command, []string) {}}
+	rootCmd.AddCommand(complete)
+	t.Cleanup(func() { rootCmd.RemoveCommand(complete) })
+
+	if err := rootPersistentPreRunE(complete, nil); err != nil {
+		t.Errorf("rootPersistentPreRunE(__complete) = %v, want nil", err)
+	}
+}
+
+// TestProductionTree_LogoutIsAbsent — pins B5: the permissions table
+// the binary publishes must not include `logout` until the cloud
+// feature is re-registered. A future PR that re-adds the cloud verb
+// must update both CommandTier and rootCmd, and this test will
+// continue to pass at that point because Find(logout) will resolve.
+//
+// For today's build, Find returns a non-nil error because the command
+// is not registered.
+func TestProductionTree_LogoutIsAbsent(t *testing.T) {
+	cmd, _, err := rootCmd.Find([]string{"logout"})
+	// cobra.Find returns the closest ancestor (rootCmd) and a "no such
+	// command" error when the leaf is missing. Either condition is
+	// acceptable; what we are guarding against is the rc1 state where
+	// Find found a real command for "logout" without any matching tier.
+	if err == nil && cmd != rootCmd && cmd.Name() == "logout" {
+		t.Fatal("logout is registered but FX4 expected it to remain unregistered until cloud is re-enabled")
+	}
+}

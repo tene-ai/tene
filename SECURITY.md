@@ -32,11 +32,46 @@ We aim to acknowledge within 72 hours and fix critical issues within 14 days.
   secret name bound as AAD)
 - **Key Derivation**: Argon2id (64 MiB memory, 3 iterations)
 - **Key Storage**: OS native keychain (macOS Keychain, Linux libsecret,
-  Windows Credential Vault)
+  Windows Credential Vault). See "Master Key Storage Modes" below for the
+  fallback hierarchy and the security stance of each mode.
 - **Recovery**: 12-word BIP-39 mnemonic
 - **Network**: Zero network calls from the CLI by default
 - **Audit**: All encryption primitives live in `pkg/crypto/` and can be
   inspected under the MIT license.
+
+## Master Key Storage Modes
+
+The master key (derived from your password via Argon2id) is held in one of
+four modes. Tene picks one at every CLI invocation based on the
+`--no-keychain` flag and the `TENE_KEYFILE` environment variable. The
+trade-offs differ — read this section before automating tene in CI/CD.
+
+| Mode | Selected when | Persistence | When to use | Trust model |
+| --- | --- | --- | --- | --- |
+| **OS Keychain** | default (no flag) | OS-managed encrypted store | Local dev, single-user laptop | OS keychain ACL gates `Load()` |
+| **Auto file fallback** | OS keychain probe failed (Docker, headless Linux without libsecret) | `~/.tene/keyfile` (mode 0600) | CI hosts without a keychain | File mode 0600; user must trust the host |
+| **Explicit file (`TENE_KEYFILE=path`)** | `--no-keychain` + `TENE_KEYFILE` set | user-chosen path (mode 0600) | Daemons that cannot pipe a password every call | User picks the path; isolate per project |
+| **`NullStore` (no persistence)** | `--no-keychain` alone, since v1.0.14 | none | CI/CD with `TENE_MASTER_PASSWORD` per call | Every invocation re-derives from the env var |
+
+The fourth mode — `NullStore` — exists because the previous shared
+`~/.tene/keyfile` fallback caused a real cross-project key-bleed (filed
+as B1 in the v1.0.14-rc1 QA cycle): a second project's `tene init
+--no-keychain` overwrote the first project's master key in the shared
+file, after which any subsequent decrypt from the first project succeeded
+with the *second* project's password. The fix restores the obvious
+contract: `--no-keychain` means no persistent key on disk, period.
+
+If your automation relied on the old shared file (so it did not have to
+re-supply the password on every call), you have two safe replacements:
+
+1. Pipe `TENE_MASTER_PASSWORD` on every invocation (recommended for CI/CD).
+2. Set `TENE_KEYFILE=/secure/per-project/path` to opt back into a
+   file-backed store at a path **you** control. Pick a path that is not
+   shared across projects.
+
+Whichever you pick, the file mode is `0600` and the directory is created
+with mode `0700`. Tene never grants other users access to your key file;
+that part of the contract is unchanged.
 
 ## AI-Safe Design Properties
 

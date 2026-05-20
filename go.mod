@@ -8,6 +8,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/zalando/go-keyring v0.2.6
 	golang.org/x/crypto v0.46.0
+	golang.org/x/mod v0.30.0
 	golang.org/x/term v0.38.0
 	modernc.org/sqlite v1.34.5
 )
@@ -29,7 +30,6 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/tools v0.39.0 // indirect

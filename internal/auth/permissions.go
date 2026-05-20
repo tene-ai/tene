@@ -22,8 +22,15 @@
 //     ciphertext (PermSecretWrite), and which touch only metadata
 //     (PermMetaRead — list/env/audit/permissions/etc.).
 //
-// The 26 entries below mirror the CommandTier class diagram in
-// docs/sprints/cli-ux-permission-model/design.md §1.1 byte-for-byte.
+// The 25 entries below mirror the CommandTier class diagram in
+// docs/sprints/cli-ux-permission-model/design.md §1.1, with the
+// `logout` entry removed as part of sprint v1014-rc1-qa-fixes FX4
+// (B5: cloud verbs are intentionally not registered in root.go init
+// while the cloud feature is being redesigned, so listing logout in
+// the tier table made `tene permissions` advertise a verb the
+// binary refuses to dispatch). The login/push/pull/sync/billing/team
+// verbs were never in this table; when cloud is re-enabled, the PR
+// that re-registers those verbs will also add their tier entries.
 package auth
 
 import (
@@ -98,12 +105,15 @@ func (p PermLevel) RequiresUnlock() bool {
 // args, which falls through to env list) also get an entry so that
 // Validate() accepts them.
 //
-// 26 entries total: 16 PermMetaRead + 5 PermSecretWrite + 5 PermSecretRead.
+// 25 entries total: 15 PermMetaRead + 5 PermSecretWrite + 5 PermSecretRead.
 // Adding a new cobra command without adding an entry here causes Validate()
 // to return an error which root.go's init() turns into a startup panic —
-// see quality gate G4 (master-plan.md §5).
+// see quality gate G4 (master-plan.md §5). Sprint v1014-rc1-qa-fixes/FX4
+// extended Validate to also catch the reverse drift: a CommandTier entry
+// whose path is not reachable in rootCmd is reported as a "stale entry"
+// and refused at startup the same way.
 var CommandTier = map[string]PermLevel{
-	// --- PermMetaRead (16) -------------------------------------------------
+	// --- PermMetaRead (15) -------------------------------------------------
 	// No master-key unlock. Reads only metadata columns or static info.
 
 	"list":        PermMetaRead, // F3 will rewrite to read preview column directly.
@@ -116,7 +126,6 @@ var CommandTier = map[string]PermLevel{
 	"version":     PermMetaRead,
 	"update":      PermMetaRead,
 	"completion":  PermMetaRead,
-	"logout":      PermMetaRead, // Cloud session logout; no vault unlock needed.
 	"audit":       PermMetaRead, // F8 — catch-all root for audit sub-tree.
 	"audit tail":  PermMetaRead, // F8.
 	"audit show":  PermMetaRead, // F8.
@@ -156,14 +165,21 @@ func TierFor(cmdPath string) (PermLevel, bool) {
 // command sees a clear pointer to internal/auth/permissions.go.
 var ErrMissingTier = errors.New("command has no PermLevel entry in internal/auth.CommandTier")
 
-// Validate walks rootCmd and every reachable subcommand and confirms that
-// each one has a CommandTier entry. The leaf check uses Command.Runnable()
-// so that pure grouping commands without a RunE (none currently exist —
-// envCmd and migrateCmd both have RunE) are still validated; that future-
-// proofs G4 against accidental panic surfaces.
+// Validate walks rootCmd and every reachable subcommand and confirms
+// that each one has a CommandTier entry. This is the forward direction
+// only: a registered verb without a tier declaration is reported. It is
+// the check that init() has called since PR #116 to fail-loud at binary
+// startup when a developer forgets to update CommandTier.
 //
-// The returned error lists every missing path on a separate line so the
-// startup panic is actionable in one read.
+// Reverse-drift detection (a CommandTier entry whose verb is NOT
+// registered in rootCmd — sprint v1014-rc1-qa-fixes/FX4, bug B5) lives
+// in ValidateStrict so that synthetic-tree unit tests can exercise the
+// forward path without having to populate every tier entry. Production
+// init() calls ValidateStrict so both directions are enforced at the
+// real binary's startup.
+//
+// The returned error lists every missing path on a separate line so
+// the startup panic is actionable in one read.
 func Validate(rootCmd *cobra.Command) error {
 	if rootCmd == nil {
 		return errors.New("Validate: rootCmd is nil")
@@ -182,6 +198,90 @@ func Validate(rootCmd *cobra.Command) error {
 		ErrMissingTier,
 		strings.Join(missing, "\n  - "),
 	)
+}
+
+// ValidateStrict runs Validate (forward direction) AND additionally
+// asserts that every CommandTier entry is reachable in the rootCmd
+// subtree. The reverse direction catches the class of bug that QA
+// filed as B5 in v1.0.14-rc1: the `logout` entry was left in
+// CommandTier after the cloud feature was unregistered from root.go's
+// init(), so `tene permissions` advertised a verb the binary refused
+// to dispatch.
+//
+// Forward and reverse drifts are reported with distinct prefixes
+// ("missing tier declaration" vs "stale entry") so the operator knows
+// the fix direction. The error wraps ErrMissingTier in both cases so
+// callers (root.go init) can use errors.Is to recognise the class.
+//
+// Production startup uses ValidateStrict. Unit tests on synthetic
+// cobra trees use the looser Validate to avoid having to materialise
+// every CommandTier entry in their test fixtures.
+func ValidateStrict(rootCmd *cobra.Command) error {
+	if rootCmd == nil {
+		return errors.New("ValidateStrict: rootCmd is nil")
+	}
+
+	var missing []string
+	walk(rootCmd, "", &missing)
+	stale := findStaleTierEntries(rootCmd)
+
+	if len(missing) == 0 && len(stale) == 0 {
+		return nil
+	}
+
+	sort.Strings(missing)
+	sort.Strings(stale)
+
+	var msg strings.Builder
+	if len(missing) > 0 {
+		msg.WriteString("missing tier declaration(s):\n  - ")
+		msg.WriteString(strings.Join(missing, "\n  - "))
+	}
+	if len(stale) > 0 {
+		if msg.Len() > 0 {
+			msg.WriteString("\n")
+		}
+		msg.WriteString("stale entry(ies) in CommandTier (verb not registered in rootCmd):\n  - ")
+		msg.WriteString(strings.Join(stale, "\n  - "))
+	}
+	msg.WriteString("\nedit internal/auth/permissions.go to fix")
+
+	return fmt.Errorf("%w: %s", ErrMissingTier, msg.String())
+}
+
+// findStaleTierEntries returns the CommandTier paths that have no
+// corresponding command in the rootCmd subtree. Used by Validate to
+// detect the reverse-drift class of bug (B5).
+//
+// A path is considered "reachable" iff cobra.Find returns a command
+// whose own Name() matches the last path segment AND whose CommandPath
+// (minus the root name) equals the original tier path. The double
+// check defends against cobra.Find returning the closest ancestor when
+// the leaf is missing (e.g. for "env nonexistent" cobra returns envCmd
+// rather than an error).
+func findStaleTierEntries(rootCmd *cobra.Command) []string {
+	var stale []string
+	rootName := rootCmd.Name()
+	for path := range CommandTier {
+		parts := strings.Fields(path)
+		if len(parts) == 0 {
+			stale = append(stale, path)
+			continue
+		}
+		cmd, _, err := rootCmd.Find(parts)
+		if err != nil || cmd == nil || cmd == rootCmd {
+			stale = append(stale, path)
+			continue
+		}
+		// Walk back the actual command path (strip the root prefix) and
+		// compare with the tier key. This catches the "cobra.Find returns
+		// the ancestor instead of an error" case.
+		actual := strings.TrimPrefix(cmd.CommandPath(), rootName+" ")
+		if actual != path {
+			stale = append(stale, path)
+		}
+	}
+	return stale
 }
 
 // walk recurses through the cobra tree collecting every leaf or
@@ -205,7 +305,7 @@ func walk(cmd *cobra.Command, parentPath string, missing *[]string) {
 		// "completion" verb itself IS in the table, but its dynamically
 		// generated shell-specific children (bash/zsh/fish/powershell)
 		// are cobra internals that share the parent's policy.
-		if isCobraInternal(sub) {
+		if IsCobraSynthetic(sub) {
 			continue
 		}
 		if path == "completion bash" || path == "completion zsh" ||
@@ -226,11 +326,18 @@ func walk(cmd *cobra.Command, parentPath string, missing *[]string) {
 	}
 }
 
-// isCobraInternal returns true for commands that cobra synthesizes
+// IsCobraSynthetic returns true for commands that cobra synthesizes
 // (help, __complete, __completeNoDesc) and that should not be required
 // to declare a tier — they never reach user-facing RunE through normal
 // invocation.
-func isCobraInternal(c *cobra.Command) bool {
+//
+// Exported because the runtime dispatcher in internal/cli/root.go uses
+// the same predicate to short-circuit its tier lookup. Before sprint
+// v1014-rc1-qa-fixes/FX4 the dispatcher tried to look "help" up in
+// CommandTier and refused dispatch when it was not found, which is how
+// `tene help` and `tene help set` ended up broken in v1.0.14-rc1 (B4).
+// Sharing the predicate keeps the static and runtime checks in lockstep.
+func IsCobraSynthetic(c *cobra.Command) bool {
 	if c == nil {
 		return false
 	}

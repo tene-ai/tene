@@ -198,7 +198,7 @@ Your secrets are encrypted locally with XChaCha20-Poly1305. The master key is de
 | `--json` | JSON output (for AI agents and scripting) |
 | `--env <name>` | Target environment (default: active) |
 | `--quiet` | Minimal output (errors only) |
-| `--no-keychain` | Skip OS keychain (for CI/CD) |
+| `--no-keychain` | Skip OS keychain (for CI/CD). Since v1.0.14 this means *no* persistence — supply `TENE_MASTER_PASSWORD` on every call, or set `TENE_KEYFILE=/path/you/control` to opt back into a file-backed store at a per-project path |
 | `--no-color` | Disable color output |
 
 ### Supported AI Editors

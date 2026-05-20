@@ -13,6 +13,7 @@ package auth
 
 import (
 	"errors"
+	"sort"
 	"strings"
 	"testing"
 
@@ -87,10 +88,16 @@ func TestPermLevel_RequiresUnlock(t *testing.T) {
 // separately so adding an extra rogue entry without updating the design
 // doc still fails the test.
 //
-// 26 entries: 16 PermMetaRead + 5 PermSecretWrite + 5 PermSecretRead.
+// 25 entries: 15 PermMetaRead + 5 PermSecretWrite + 5 PermSecretRead.
+//
+// Note: `logout` was in this table through v1.0.14-rc1 but the cloud
+// feature it belonged to was never registered in root.go init(), making
+// `tene permissions` advertise a phantom verb (QA filed as B5, sprint
+// v1014-rc1-qa-fixes/FX4). The entry was removed; when cloud is
+// re-enabled, the PR that re-registers logout will re-add it here.
 func TestCommandTier_HasAllExpected(t *testing.T) {
 	expected := map[string]PermLevel{
-		// PermMetaRead (16)
+		// PermMetaRead (15)
 		"list":        PermMetaRead,
 		"env":         PermMetaRead,
 		"env list":    PermMetaRead,
@@ -101,7 +108,6 @@ func TestCommandTier_HasAllExpected(t *testing.T) {
 		"version":     PermMetaRead,
 		"update":      PermMetaRead,
 		"completion":  PermMetaRead,
-		"logout":      PermMetaRead,
 		"audit":       PermMetaRead,
 		"audit tail":  PermMetaRead,
 		"audit show":  PermMetaRead,
@@ -158,7 +164,7 @@ func TestCommandTier_Counts(t *testing.T) {
 	}
 
 	expected := map[PermLevel]int{
-		PermMetaRead:    16,
+		PermMetaRead:    15,
 		PermSecretWrite: 5,
 		PermSecretRead:  5,
 	}
@@ -278,4 +284,143 @@ func TestValidate_IgnoresHelpCommand(t *testing.T) {
 	if err := Validate(root); err != nil {
 		t.Errorf("Validate(tree with cobra auto help cmd) = %v, want nil — help must be skipped", err)
 	}
+}
+
+// TestIsCobraSynthetic — pins the membership of the synthetic-command
+// predicate. Cobra ships `help`, `__complete`, `__completeNoDesc`; any
+// future addition by cobra would need a deliberate update here AND in
+// the dispatcher's mirror call in cli/root.go.
+func TestIsCobraSynthetic(t *testing.T) {
+	cases := []struct {
+		name string
+		want bool
+	}{
+		{"help", true},
+		{"__complete", true},
+		{"__completeNoDesc", true},
+		{"list", false},
+		{"env", false},
+		{"", false},
+	}
+	for _, tc := range cases {
+		got := IsCobraSynthetic(&cobra.Command{Use: tc.name})
+		if got != tc.want {
+			t.Errorf("IsCobraSynthetic(%q) = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+	// Nil-safety: a nil *Command must return false, not panic.
+	if IsCobraSynthetic(nil) {
+		t.Error("IsCobraSynthetic(nil) = true, want false (nil-safe)")
+	}
+}
+
+// TestValidateStrict_PassesWithEveryTierEntryRegistered — synthetic
+// tree where every CommandTier path is reachable. The bidirectional
+// check should return nil. This is the equivalent of "the real
+// rootCmd tree" but synthesised so the test does not depend on the
+// cli package's init() ordering.
+func TestValidateStrict_PassesWithEveryTierEntryRegistered(t *testing.T) {
+	root := buildSyntheticRootForAllTierEntries()
+	if err := ValidateStrict(root); err != nil {
+		t.Errorf("ValidateStrict(complete synthetic tree) = %v, want nil", err)
+	}
+}
+
+// TestValidateStrict_DetectsStaleEntry — temporarily add a bogus path
+// to CommandTier and confirm ValidateStrict reports it as a stale
+// entry (B5 regression test). The defer restores CommandTier so
+// subsequent tests are unaffected.
+//
+// Build order matters: the synthetic tree must be assembled BEFORE the
+// stale entry is added, otherwise buildSyntheticRootForAllTierEntries
+// would also register a synthetic verb for the stale path and the
+// reverse-drift check would (correctly) not flag it.
+func TestValidateStrict_DetectsStaleEntry(t *testing.T) {
+	root := buildSyntheticRootForAllTierEntries()
+
+	const stale = "ghost-verb-from-cloud-feature"
+	CommandTier[stale] = PermMetaRead
+	defer delete(CommandTier, stale)
+
+	err := ValidateStrict(root)
+	if err == nil {
+		t.Fatal("ValidateStrict with stale entry = nil, want error")
+	}
+	if !errors.Is(err, ErrMissingTier) {
+		t.Errorf("ValidateStrict error = %v, want errors.Is(..., ErrMissingTier)", err)
+	}
+	if !strings.Contains(err.Error(), stale) {
+		t.Errorf("error %q does not name the stale path %q", err.Error(), stale)
+	}
+	if !strings.Contains(err.Error(), "stale entry") {
+		t.Errorf("error %q does not say 'stale entry' — fix direction unclear to operator", err.Error())
+	}
+}
+
+// TestValidateStrict_NilRoot — defensive: nil rootCmd surfaces a clear
+// error mentioning ValidateStrict by name.
+func TestValidateStrict_NilRoot(t *testing.T) {
+	err := ValidateStrict(nil)
+	if err == nil {
+		t.Fatal("ValidateStrict(nil) = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "ValidateStrict") {
+		t.Errorf("error %q does not name the function — debugging signpost missing", err.Error())
+	}
+}
+
+// buildSyntheticRootForAllTierEntries constructs a cobra tree whose
+// every leaf path corresponds to a CommandTier key. Used by the
+// ValidateStrict tests so the reverse-drift check has a "complete"
+// baseline tree to compare against without depending on the real
+// rootCmd from the cli package (which would create an import cycle).
+func buildSyntheticRootForAllTierEntries() *cobra.Command {
+	root := &cobra.Command{Use: "tene"}
+	// Group registry: tier keys with two whitespace-separated tokens are
+	// child commands and need a parent group. Build groups lazily.
+	groups := map[string]*cobra.Command{}
+	ensureGroup := func(name string) *cobra.Command {
+		if g, ok := groups[name]; ok {
+			return g
+		}
+		// If a top-level entry exists in CommandTier with this name we
+		// want to share it (so envCmd is both a group and a verb).
+		g := &cobra.Command{Use: name, Run: func(*cobra.Command, []string) {}}
+		root.AddCommand(g)
+		groups[name] = g
+		return g
+	}
+
+	// Sort the keys so the build order is deterministic — helps
+	// debugging when a test fails by printing a stable tree.
+	keys := make([]string, 0, len(CommandTier))
+	for k := range CommandTier {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, path := range keys {
+		parts := strings.Fields(path)
+		switch len(parts) {
+		case 1:
+			// Top-level. Reuse if a group with the same name already
+			// exists (e.g. env, audit).
+			if g, ok := groups[parts[0]]; ok {
+				_ = g // already present as group → also serves as verb
+				continue
+			}
+			cmd := &cobra.Command{Use: parts[0], Run: func(*cobra.Command, []string) {}}
+			root.AddCommand(cmd)
+			groups[parts[0]] = cmd
+		case 2:
+			parent := ensureGroup(parts[0])
+			parent.AddCommand(&cobra.Command{Use: parts[1], Run: func(*cobra.Command, []string) {}})
+		default:
+			// Three-level paths do not occur today. If/when they do, the
+			// test will need a small extension. Failing loud here is
+			// better than silently mis-modelling the tree.
+			panic("buildSyntheticRootForAllTierEntries: path with >2 segments not supported: " + path)
+		}
+	}
+	return root
 }

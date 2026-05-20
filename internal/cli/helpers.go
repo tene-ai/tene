@@ -48,6 +48,21 @@ func validateEnvName(name string) error {
 	return nil
 }
 
+// pluralize returns the supplied noun rendered with English plural-s
+// rules: `pluralize(1, "secret") = "secret"`, `pluralize(0|N, "secret")
+// = "secrets"`. Sprint v1014-rc1-qa-fixes / FX6 (B10).
+//
+// Kept deliberately small — we only need this for "secret"/"environment"
+// today, and Go's lack of a stdlib pluraliser does not justify pulling
+// in a dependency. Callers that need irregular plurals can pre-compute
+// the form and pass it in directly.
+func pluralize(count int, singular string) string {
+	if count == 1 {
+		return singular
+	}
+	return singular + "s"
+}
+
 func promptPassword(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
 	password, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -96,7 +111,25 @@ func promptPasswordConfirm(prompt string) (string, error) {
 
 func promptConfirm(msg string) bool {
 	if !isTerminal() {
-		return true // non-interactive defaults to yes
+		// Sprint v1014-rc1-qa-fixes / FX2 (invariant I-12).
+		//
+		// Before v1.0.14 this branch returned true, which meant any
+		// destructive verb invoked from a non-TTY shell (CI/CD, an AI
+		// agent piping through bash, `tene env delete | tee log`)
+		// silently consented to data loss. QA filed it as B2: typing
+		// `tene env delete prod` in a non-interactive context wiped
+		// the prod environment with no prompt at all.
+		//
+		// Fail-closed restores the principle that destructive ops
+		// require explicit human (or scripted-with-intent) consent.
+		// Callers that legitimately want unattended execution opt in
+		// with --force; the verb-specific call site checks that flag
+		// BEFORE entering promptConfirm, so the only way to reach
+		// here is "no flag set, no TTY available" — which is the
+		// shape of a mistake, not the shape of intent.
+		fmt.Fprintln(os.Stderr, "Refusing to confirm a destructive operation on a non-interactive shell.")
+		fmt.Fprintln(os.Stderr, "Pass --force to skip the prompt, or run in a terminal.")
+		return false
 	}
 	fmt.Fprintf(os.Stderr, "%s (y/N) ", msg)
 	reader := bufio.NewReader(os.Stdin)

@@ -170,10 +170,20 @@ func printAllConfig(app *App) error {
 }
 
 func printSingleConfig(app *App, key string) error {
-	if !vaultcfg.IsKnown(key) {
-		return fmt.Errorf("unknown config key %q. Run `tene config` to list valid keys", key)
+	// FX6 B12: users naturally type the bare form (`tene config
+	// preview.enabled`), but the stored key carries the `config.`
+	// prefix. Try both shapes so the rc1 "unknown config key" error
+	// only fires for genuinely unknown keys.
+	resolved := key
+	if !vaultcfg.IsKnown(resolved) {
+		prefixed := "config." + key
+		if vaultcfg.IsKnown(prefixed) {
+			resolved = prefixed
+		} else {
+			return fmt.Errorf("unknown config key %q. Run `tene config` to list valid keys", key)
+		}
 	}
-	val, err := vaultcfg.Get(app.Vault, key)
+	val, err := vaultcfg.Get(app.Vault, resolved)
 	if err != nil {
 		return err
 	}

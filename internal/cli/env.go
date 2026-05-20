@@ -22,6 +22,13 @@ var envCreateCmd = &cobra.Command{
 	RunE:  runEnvCreate,
 }
 
+// envDeleteFlagForce is the env-delete-scoped equivalent of deleteFlagForce
+// (delete.go). They are kept separate because the two verbs live in
+// distinct cobra subtrees and a single shared variable would let one verb
+// silently affect the next verb in the same process, which test harnesses
+// have already tripped over once. Sprint v1014-rc1-qa-fixes / FX2.
+var envDeleteFlagForce bool
+
 var envDeleteCmd = &cobra.Command{
 	Use:   "delete NAME",
 	Short: "Delete an environment",
@@ -39,6 +46,7 @@ func init() {
 	envCmd.AddCommand(envCreateCmd)
 	envCmd.AddCommand(envDeleteCmd)
 	envCmd.AddCommand(envListCmd)
+	envDeleteCmd.Flags().BoolVar(&envDeleteFlagForce, "force", false, "Skip confirmation prompt")
 }
 
 func runEnv(cmd *cobra.Command, args []string) error {
@@ -129,15 +137,14 @@ func runEnvList(cmd *cobra.Command, args []string) error {
 	fmt.Println("  Environments:")
 	for _, e := range envs {
 		count, _ := app.Vault.CountSecrets(e.Name)
-		marker := " "
-		active := ""
+		// FX6 B10 + B11: two explicit format strings remove the double
+		// space rc1 produced for non-active envs ("  dev (  0 secrets)")
+		// and pluralise "secret" correctly when the count is 1.
 		if e.IsActive {
-			marker = "*"
-			active = " (active,"
+			fmt.Printf("  * %s (active, %d %s)\n", e.Name, count, pluralize(count, "secret"))
 		} else {
-			active = " ("
+			fmt.Printf("    %s (%d %s)\n", e.Name, count, pluralize(count, "secret"))
 		}
-		fmt.Printf("  %s %s%s %d secrets)\n", marker, e.Name, active, count)
 	}
 	return nil
 }
@@ -196,8 +203,15 @@ func runEnvDelete(cmd *cobra.Command, args []string) error {
 		return teneerr.ErrEnvironmentProtected(envName, "Switch to another first.")
 	}
 
-	// Confirm
-	if !deleteFlagForce {
+	// Confirm. Sprint v1014-rc1-qa-fixes / FX2 (invariant I-12):
+	// - if --force is passed, skip the prompt entirely.
+	// - otherwise call promptConfirm which is fail-closed on non-TTY.
+	// This is the read side of B2/B9: the previous code used
+	// deleteFlagForce (the unrelated `tene delete KEY` flag) and silently
+	// reached promptConfirm even when the user typed `tene env delete X
+	// --force` (which produced "unknown flag: --force" instead of doing
+	// what the user meant).
+	if !envDeleteFlagForce {
 		count, _ := app.Vault.CountSecrets(envName)
 		msg := fmt.Sprintf("Delete environment %q and all its secrets?", envName)
 		if count > 0 {
@@ -207,7 +221,13 @@ func runEnvDelete(cmd *cobra.Command, args []string) error {
 			if !flagQuiet {
 				fmt.Println("Cancelled.")
 			}
-			return nil
+			// Treat refusal as an explicit error so CI/CD pipelines do
+			// not interpret a non-deleted env as a successful run.
+			// Exit non-zero via cobra by returning an error; the user
+			// already saw the "Refusing to confirm..." stderr line
+			// from promptConfirm.
+			return teneerr.New("CONFIRMATION_REQUIRED",
+				fmt.Sprintf("env delete %q cancelled: pass --force to confirm in a non-interactive shell", envName), 1)
 		}
 	}
 
@@ -228,7 +248,10 @@ func runEnvDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if !flagQuiet {
-		fmt.Printf("Environment %q deleted (%d secrets removed).\n", envName, secretsRemoved)
+		// FX6 B10: pluralise "secret(s)" so single-secret deletes read
+		// naturally ("1 secret removed" not "1 secrets removed").
+		fmt.Printf("Environment %q deleted (%d %s removed).\n",
+			envName, secretsRemoved, pluralize(secretsRemoved, "secret"))
 	}
 	return nil
 }

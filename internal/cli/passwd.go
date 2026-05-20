@@ -12,7 +12,22 @@ import (
 var passwdCmd = &cobra.Command{
 	Use:   "passwd",
 	Short: "Change the Master Password",
-	RunE:  runPasswd,
+	Long: `Change the Master Password.
+
+This command is interactive-only by design: it refuses to run from a
+non-TTY shell (CI/CD, log-redirected scripts, AI agent contexts) even
+when TENE_MASTER_PASSWORD is set in the environment. The reason is
+deliberate — master-password rotation is the highest-trust operation
+the binary performs, and forcing a human-witnessed terminal session
+closes a CI-driven brute-force vector where an attacker who can run
+"tene passwd" repeatedly in the background could otherwise pivot a
+weak old password into an arbitrary new one without an interactive
+proof of presence.
+
+If you need to rotate a password in CI, do it manually on a
+maintainer's workstation and re-distribute the resulting recovery key
+through your team's secret-sharing channel.`,
+	RunE: runPasswd,
 }
 
 func runPasswd(cmd *cobra.Command, args []string) error {

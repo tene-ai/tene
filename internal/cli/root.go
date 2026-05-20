@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -123,6 +124,18 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 		// The bare root invocation (`tene` with no args) prints help; no
 		// tier check is meaningful here. Cobra dispatches to help text
 		// without ever entering a subcommand's RunE.
+		return nil
+	}
+
+	// Sprint v1014-rc1-qa-fixes / FX4 (B4 fix). Cobra's synthetic verbs
+	// (the auto-generated `help` command and the `__complete*` shell
+	// completion helpers) are not in CommandTier by design — auth.walk
+	// already skips them when Validate() runs at startup. Mirror the
+	// same skip here so a `tene help` invocation does not produce
+	// "internal: command 'help' has no PermLevel entry" the way rc1
+	// did. Synthetic verbs also do not emit audit rows (no tier, no
+	// security-relevant action).
+	if auth.IsCobraSynthetic(cmd) {
 		return nil
 	}
 
@@ -253,14 +266,18 @@ func init() {
 	// rootCmd.AddCommand(newTeamCmd())
 
 	// F2 quality gate G4: every registered cobra command must have a
-	// declared PermLevel in internal/auth.CommandTier. Validate() walks
-	// the entire command tree and Refuses to start the binary if any
-	// command is missing — the panic message names the missing paths so
-	// the developer can add them to permissions.go before the next build.
+	// declared PermLevel in internal/auth.CommandTier, AND every
+	// CommandTier entry must correspond to a registered verb. The
+	// bidirectional check (sprint v1014-rc1-qa-fixes/FX4, B5) catches
+	// stale entries like the v1.0.14-rc1 `logout` ghost — a verb the
+	// table advertised but the binary did not dispatch.
 	//
-	// This is the deliberate "static" half of G4 enforcement; the
-	// "runtime" half lives in rootPersistentPreRunE above.
-	if err := auth.Validate(rootCmd); err != nil {
+	// ValidateStrict panics the binary at startup if either direction
+	// drifts so a developer cannot ship a regression on either side.
+	// The unit tests in internal/auth use the looser forward-only
+	// Validate so they can exercise synthetic trees without having to
+	// populate the full CommandTier in their fixtures.
+	if err := auth.ValidateStrict(rootCmd); err != nil {
 		panic(fmt.Sprintf("F2 G4 violation: %v", err))
 	}
 }
@@ -294,6 +311,16 @@ func loadApp() (*App, error) {
 	dir := resolveDir()
 	vaultPath := filepath.Join(dir, ".tene", "vault.db")
 
+	// FX6 B13: distinguish "you pointed at a nonexistent directory"
+	// from "this directory exists but has no vault". Both used to
+	// return ErrVaultNotFound which gave the user the wrong fix
+	// suggestion (run `tene init` here would silently re-create the
+	// wrong path).
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		return nil, teneerr.New("DIR_NOT_FOUND",
+			fmt.Sprintf("Directory %q does not exist.", dir), 1)
+	}
+
 	if _, err := os.Stat(vaultPath); os.IsNotExist(err) {
 		return nil, teneerr.ErrVaultNotFound
 	}
@@ -303,21 +330,7 @@ func loadApp() (*App, error) {
 		return nil, fmt.Errorf("failed to open vault: %w", err)
 	}
 
-	var ks keychain.KeyStore
-	if flagNoKeychain {
-		home, _ := os.UserHomeDir()
-		ks = keychain.NewFileStore(filepath.Join(home, ".tene", "keyfile"))
-		// --no-keychain is an explicit user choice. They do not need a
-		// notice telling them the keychain is unavailable — they asked
-		// for the file fallback. Stay silent.
-	} else {
-		var info keychain.FallbackInfo
-		ks, info = keychain.NewStoreWithStatus(dir)
-		// F6: one-time stderr notice when keychain unavailable and we
-		// silently dropped down to the file keystore. No-op on the
-		// happy path (info.Used == false).
-		emitFallbackNoticeIfNeeded(os.Stderr, info, dir, flagQuiet)
-	}
+	ks := selectKeyStore(dir, flagNoKeychain, flagQuiet, os.Stderr)
 
 	env, err := v.GetActiveEnvironment()
 	if err != nil {
@@ -408,4 +421,93 @@ func fileExists(path string) bool {
 // RootCmd returns the root cobra command. Useful for docs/manpage generation.
 func RootCmd() *cobra.Command {
 	return rootCmd
+}
+
+// selectKeyStore returns the appropriate KeyStore for an --no-keychain or
+// default invocation. Sprint v1014-rc1-qa-fixes / FX1 (invariant I-11).
+//
+// Selection precedence:
+//
+//  1. flagNoKeychain == true AND TENE_KEYFILE is set:
+//     -> FileStore at the user-specified path. This is the explicit
+//     opt-in for the previous v1.0.13 behaviour (sharing a file-backed
+//     store across processes) at a path the user controls.
+//
+//  2. flagNoKeychain == true AND TENE_KEYFILE is unset:
+//     -> NullStore. No persistence at all; every invocation must resolve
+//     the master password from TENE_MASTER_PASSWORD or the interactive
+//     prompt. Replaces the old "single shared ~/.tene/keyfile" path
+//     which caused the B1 cross-project bleed bug.
+//
+//  3. flagNoKeychain == false:
+//     -> OS keychain via NewStoreWithStatus, which may itself drop down to
+//     a FileStore when the OS keychain is unavailable (CI/Docker/headless);
+//     in that case emitFallbackNoticeIfNeeded prints a single stderr line
+//     so the user knows. This is the F6 path from PR #116 and is
+//     intentionally unchanged.
+//
+// stderrW lets tests inject an io.Writer; production callers pass os.Stderr.
+func selectKeyStore(dir string, noKeychain, quiet bool, stderrW io.Writer) keychain.KeyStore {
+	if noKeychain {
+		if envKeyfile := os.Getenv("TENE_KEYFILE"); envKeyfile != "" {
+			// Explicit user opt-in to a file-backed store at the path
+			// they chose. Documented in CHANGELOG as the v1.0.13 migration
+			// path. Permissions and location are entirely the user's
+			// responsibility — we do not validate the path beyond using
+			// FileStore's existing 0600 file mode on write.
+			return keychain.NewFileStore(envKeyfile)
+		}
+		// Default --no-keychain behaviour (v1.0.14+): no persistence.
+		// I-11.
+		return keychain.NewNullStore()
+	}
+
+	var info keychain.FallbackInfo
+	ks, info := keychain.NewStoreWithStatus(dir)
+	// F6 notice (PR #116). No-op on the happy path (info.Used == false).
+	emitFallbackNoticeIfNeeded(stderrW, info, dir, quiet)
+	return ks
+}
+
+// describeKeyStoreStatus returns the human-readable status line(s) that
+// init.go's Step 14 prints to tell the user where (or whether) the master
+// key was persisted. Sprint v1014-rc1-qa-fixes / FX1.
+//
+// rc1 always said "Master Key saved to OS Keychain" regardless of what
+// actually happened, which is how B1 went undetected for a full release
+// candidate. By branching on the concrete KeyStore type here we make the
+// message truthful for every path selectKeyStore picks.
+//
+// The return value is a slice because the NullStore branch needs two lines
+// (status + guidance) to make the consequence clear; every other branch
+// returns a single line.
+func describeKeyStoreStatus(ks keychain.KeyStore) []string {
+	switch s := ks.(type) {
+	case *keychain.KeyringStore:
+		return []string{"Master Key saved to OS Keychain"}
+	case *keychain.FileStore:
+		// Reflect the source of truth (env var vs auto-fallback). The
+		// FileStore type itself does not carry that distinction, so we
+		// peek at the env var the same way selectKeyStore did.
+		if envKeyfile := os.Getenv("TENE_KEYFILE"); envKeyfile != "" {
+			return []string{fmt.Sprintf("Master Key saved to %s (via TENE_KEYFILE)", envKeyfile)}
+		}
+		// Auto-fallback to the standard fallback path (~/.tene/keyfile).
+		// emitFallbackNoticeIfNeeded already explained "why" on stderr; we
+		// just confirm the "where" here.
+		home, _ := os.UserHomeDir()
+		return []string{fmt.Sprintf("Master Key saved to %s (OS keychain unavailable)", filepath.Join(home, ".tene", "keyfile"))}
+	case *keychain.NullStore:
+		return []string{
+			"Master Key NOT persisted (--no-keychain).",
+			"You will be prompted for the password on each command, or set TENE_MASTER_PASSWORD.",
+		}
+	default:
+		// Future-proofing: if a new KeyStore type ships without a status
+		// entry, fall back to a generic message instead of crashing.
+		// G7's reverse-drift check in auth.Validate is the static safety
+		// net; this is only here in case a test injects a custom store.
+		_ = s
+		return []string{"Master Key storage configured."}
+	}
 }

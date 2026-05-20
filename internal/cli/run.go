@@ -33,6 +33,21 @@ func runRun(cmd *cobra.Command, args []string) error {
 	// Manually parse --env flag before "--" since DisableFlagParsing is true
 	parseFlagsBeforeDash(args)
 
+	// FX5 (B6): with DisableFlagParsing=true we must handle --help / -h
+	// ourselves before the "no command specified" guard below, which
+	// otherwise reports `tene run --help` as a user error instead of
+	// showing the help text. Every other tene verb relies on cobra's
+	// built-in handler for this; `run` cannot because the same parser
+	// would also consume flags that belong to the child command after
+	// the `--` separator.
+	//
+	// hasHelpFlag deliberately stops scanning at the first `--` token
+	// so that `tene run -- python -h` invokes the child's -h instead
+	// of printing tene's help.
+	if hasHelpFlag(args) {
+		return cmd.Help()
+	}
+
 	// Parse args after "--"
 	cmdArgs := extractArgsAfterDash(args)
 	if len(cmdArgs) == 0 {
@@ -117,6 +132,26 @@ func runRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	return nil
+}
+
+// hasHelpFlag reports whether args contain a --help or -h before the
+// "--" command separator. Sprint v1014-rc1-qa-fixes / FX5.
+//
+// The scan stops at the first "--" so `tene run -- python -h` does NOT
+// match (the -h belongs to the child python invocation, not to tene
+// run's help system). This is the precise contract callers rely on:
+// "did the user ask for tene run's help, or are they passing -h
+// through to their program?".
+func hasHelpFlag(args []string) bool {
+	for _, a := range args {
+		if a == "--" {
+			return false
+		}
+		if a == "--help" || a == "-h" {
+			return true
+		}
+	}
+	return false
 }
 
 // parseFlagsBeforeDash manually parses known flags (--env, --json, --quiet)

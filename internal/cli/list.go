@@ -96,7 +96,17 @@ func renderListJSON(app *App, env string, metas []domain.VaultKeyMeta) error {
 
 // renderListText prints the 3-column table to stdout and, when relevant,
 // a single footer hint to stderr explaining the empty preview state.
+//
+// Sprint v1014-rc1-qa-fixes / FX6 (B8): when --quiet is set, the entire
+// text-mode output is suppressed. Scripts that need a parseable result
+// should use --json instead; --quiet means "errors only" per the global
+// flag's documentation and the convention `tene set --quiet` already
+// follows.
 func renderListText(app *App, env string, metas []domain.VaultKeyMeta, previewEnabled bool) error {
+	if flagQuiet {
+		return nil
+	}
+
 	if len(metas) == 0 {
 		fmt.Printf("No secrets in %q environment. Use \"tene set KEY VALUE\" to add one.\n", env)
 		return nil
@@ -120,7 +130,9 @@ func renderListText(app *App, env string, metas []domain.VaultKeyMeta, previewEn
 		fmt.Printf("  %-30s %-16s %s\n", m.Name, preview, formatTimeAgo(m.UpdatedAt))
 	}
 
-	fmt.Printf("\n  %d secrets in %q environment\n", len(metas), env)
+	// FX6 B10: pluralise "secret" / "secrets" properly when the count
+	// drops to one. Prior wording was always "%d secrets".
+	fmt.Printf("\n  %d %s in %q environment\n", len(metas), pluralize(len(metas), "secret"), env)
 
 	// Footer hints. Stderr so scripts that parse stdout (NAME column at
 	// position 1 — design §F3 regression note) are unaffected.

@@ -22,8 +22,87 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - Switch to `tene run -- <command>` (recommended — secrets never touch stdout).
   - `tene get --json` still works on non-TTY but emits a one-line warning on stderr.
 
+- **Destructive verbs refuse to proceed on a non-interactive shell
+  without `--force`** (sprint v1014-rc1-qa-fixes, FX2, invariant I-12).
+
+  Previously `promptConfirm()` returned `true` whenever stdin was not a
+  TTY. That made `tene env delete prod` (and `tene delete KEY`) silently
+  succeed in CI/CD pipelines, log-redirected scripts, and AI agent
+  contexts — the very places destructive intent should be most carefully
+  guarded. QA filed this as B2 (CRITICAL data loss).
+
+  v1.0.14 inverts the default: a non-TTY invocation without `--force` is
+  refused with a stderr message and a non-zero exit code. The
+  destructive op does not run.
+
+  **Migration**
+
+  - In a terminal, behaviour is unchanged: tene asks `(y/N)` and acts on
+    your answer.
+  - In automation, add `--force` to any `tene delete KEY` or
+    `tene env delete <name>` invocation that *intends* to proceed
+    unattended. `tene env delete prod --force` is now a working flag
+    (it raised "unknown flag" in rc1, the B9 piece of this fix).
+
+- **`--no-keychain` no longer writes the master key to a shared
+  `~/.tene/keyfile`** (sprint v1014-rc1-qa-fixes, FX1, invariant I-11).
+
+  Through v1.0.13 and v1.0.14-rc1, `--no-keychain` quietly fell back to a
+  single shared file at `~/.tene/keyfile`. Two projects on the same machine
+  using `--no-keychain` overwrote each other's master keys, and the *most
+  recently written* key was returned for every subsequent decrypt — which
+  meant a wrong `TENE_MASTER_PASSWORD` (or no password at all) still
+  decrypted a sibling project's vault. QA report B1 in tene-biz for the
+  full reproduction.
+
+  `--no-keychain` now means what its name says: **no persistence anywhere**.
+  Every invocation must resolve the master password from
+  `TENE_MASTER_PASSWORD` env var or the interactive prompt.
+
+  **Migration**
+
+  - Most users: nothing to do. Drop `--no-keychain` and use the OS keychain
+    (the default), or keep `--no-keychain` and ensure `TENE_MASTER_PASSWORD`
+    is set in your CI/CD environment.
+  - To preserve the v1.0.13 file-backed behaviour, set a path explicitly:
+    `export TENE_KEYFILE=$HOME/.tene/keyfile-myproject` (or any path you
+    control). The chosen file is created with mode `0600`; you are
+    responsible for its location and isolation between projects.
+  - If you scripted around the old shared `~/.tene/keyfile` path, switch
+    to per-project `TENE_KEYFILE` files. The legacy path itself is left on
+    disk so other processes that still rely on it can keep working until
+    you remove it.
+
 ### Added
 
+- **`auth.IsCobraSynthetic(*cobra.Command) bool`** — exported helper
+  that returns true for cobra's auto-generated `help`, `__complete`,
+  `__completeNoDesc` verbs. Sprint v1014-rc1-qa-fixes/FX4 promotes
+  the previously-private `isCobraInternal` to public so the runtime
+  dispatcher in `cli/root.go` can share the predicate with the
+  startup-time walker, ensuring static + runtime stay in lockstep.
+- **`auth.ValidateStrict(*cobra.Command) error`** — bidirectional
+  startup validator. Reports both "missing tier declaration" (forward)
+  and "stale entry" (reverse) drifts with distinct prefixes so the
+  fix direction is obvious. `root.go init()` now calls this instead
+  of `Validate`; the looser `Validate` remains for unit tests with
+  synthetic trees that do not need to populate every tier entry.
+- **`tene update --include-prerelease`** — opt-in flag for pulling RC/beta
+  releases. Without it the update-check path treats the stable channel
+  as the only auto-recommendation source, which is what closes the B3
+  downgrade vector (sprint v1014-rc1-qa-fixes, FX3, invariant I-13).
+- **`shouldOfferUpdate` SemVer-aware helper** — replaces the
+  single-character `!=` comparison that drove the B3 RC-to-stable
+  downgrade. Uses `golang.org/x/mod/semver.Compare` so the decision
+  table is the standard Go community implementation.
+- **`TENE_KEYFILE` env var** — explicit opt-in to a file-backed master-key
+  store when running with `--no-keychain`. The path is the user's choice;
+  the file is created with mode `0600` on first `tene init`. This is the
+  documented migration path for the v1.0.13 `--no-keychain` behaviour
+  (sprint v1014-rc1-qa-fixes, FX1).
+- **`keychain.NullStore`** — internal type representing "no persistent
+  storage". Selected automatically when `--no-keychain` is passed without
+  a `TENE_KEYFILE` override. Backs invariant I-11.
 - **`tene permissions`** — print the 3-tier permission table (text + `--json` modes). Shows which commands need a password and which run silently. 26 commands classified as `metaread` / `secretwrite` / `secretread`. Source: sprint cli-ux-permission-model F5.
 - **`tene audit tail|show|prune`** — manage the local audit log (sprint F8). `tail [-n N]` shows recent rows; `show --since X --filter Y` queries by time / action prefix; `prune --older-than X` deletes old rows (requires interactive confirm or `--force`). All three accept `--json` for NDJSON output. Auto-deletion never happens — manual prune only (G10 invariant, single DELETE chokepoint enforced by static test).
 - **`tene config`** — read / write vault-scoped settings stored in the `vault_meta` table (sprint F1). Keys: `preview.enabled` (bool), `preview.front` (int 0-8), `preview.back` (int 0-8), `audit.warnAtMB` (int 1-1000). `tene config preview.front=N` for N>0 prompts an explicit confirmation because it exposes API key prefixes (sk-, ghp_, AKIA…); `--force` skips the confirm for scripts.
@@ -68,6 +147,86 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **B7 (MEDIUM): `tene passwd` documentation now explains the
+  TTY-only stance.** The previous "This command requires an interactive
+  terminal." error read like a missing feature; the new `Long`
+  description on `passwdCmd` spells out the deliberate security
+  rationale (forces human-witnessed rotation; closes a CI-driven
+  brute-force vector) (sprint v1014-rc1-qa-fixes, FX6).
+- **B8 (MEDIUM): `tene list --quiet` now honours `--quiet`.** Previously
+  the text-mode output printed the banner, table header, rows, and
+  footer regardless of `--quiet`. The flag's documented meaning is
+  "minimal output (errors only)" — matching `tene set --quiet`. JSON
+  output is unaffected (its consumers need the payload).
+- **B10 (LOW): `1 secrets` plural form fixed** to `1 secret` in
+  `tene env list`, `tene list` footer, and `tene env delete` summary.
+  New `pluralize(count, singular)` helper in `cli/helpers.go`.
+- **B11 (LOW): `(  0 secrets)` double-space** in `tene env list`
+  non-active rows fixed by splitting the format string into two
+  explicit branches (active vs not).
+- **B12 (LOW): `tene config preview.enabled`** (bare form, no
+  `config.` prefix) now resolves to the value instead of returning
+  "unknown config key". The prefixed form is preserved.
+- **B13 (LOW): `tene list --dir /no/such/dir`** now returns a
+  distinct `DIR_NOT_FOUND` error instead of conflating it with the
+  no-vault path, so the recommended fix (`tene init` here vs
+  `cd somewhere/else`) is unambiguous.
+- **B6 (HIGH): `tene run --help` returned "No command specified"** instead
+  of help text. The `runCmd` declares `DisableFlagParsing: true` so it can
+  forward unknown flags to the child process after `--`; cobra's built-in
+  `--help` handler is therefore skipped, and the home-grown
+  `parseFlagsBeforeDash` did not look for help. The new
+  `hasHelpFlag(args)` helper scans pre-`--` tokens for `--help`/`-h` and
+  short-circuits `runRun` to `cmd.Help()`. A guard stops the scan at the
+  first `--` so `tene run -- python -h` still passes `-h` through to the
+  child program (sprint v1014-rc1-qa-fixes, FX5).
+- **B4 (HIGH): `tene help` and `tene help <verb>` returned a dispatch
+  error**. The PR #116 permission-tier dispatcher refused to dispatch
+  any command without a CommandTier entry, including cobra's synthetic
+  `help` verb. The auth-package walker already knew to skip `help`;
+  the runtime dispatcher in `cli/root.go` now mirrors that skip via
+  the exported `auth.IsCobraSynthetic` predicate. The same fix covers
+  `__complete` shell-completion helpers.
+- **B5 (HIGH): `tene permissions` listed `logout` as a valid verb but
+  `tene logout` returned "unknown command"**. The cloud feature whose
+  scope included `logout` was unregistered from `root.go init()` while
+  the entry remained in `auth.CommandTier`. The entry has been removed
+  and `auth.Validate` was extended to detect reverse drift (a
+  CommandTier path with no registered verb) via the new
+  `auth.ValidateStrict`. The bidirectional check now panics at binary
+  startup if either direction drifts.
+- **B3 (CRITICAL): `tene update` recommended a downgrade from RC to older
+  stable**. A user on `v1.0.14-rc1` typing `tene update` was
+  auto-downgraded to `v1.0.13` because `updateAvailable` was a single-
+  character `!=` check that ignored SemVer ordering. The new
+  `shouldOfferUpdate(current, latest, includePrerelease)` helper
+  centralises the decision and never returns `true` when `latest`
+  precedes `current`. The text-mode flow now prints
+  "You are on vX, which is newer than the latest stable vY" with
+  guidance to use `--include-prerelease` or an explicit version.
+- **B2 (CRITICAL): silent destructive ops on non-TTY** — see the ⚠️
+  Breaking entry above. The shared `promptConfirm()` helper at
+  `internal/cli/helpers.go` now refuses non-TTY invocations without
+  `--force`. Both `tene delete KEY` and `tene env delete` surface the
+  refusal as a non-zero exit (previously they returned exit 0 + "no
+  change"); CI pipelines that ignored the exit code now learn about
+  cancelled runs.
+- **B9: `tene env delete --force` was an unknown flag** — `envDeleteCmd`
+  now declares its own `--force` BoolVar (`envDeleteFlagForce`),
+  separate from the single-secret `deleteFlagForce`. The two destructive
+  verbs no longer share global state, which the test harness will use
+  to assert per-test isolation.
+- **B1 (CRITICAL): cross-project key bleed under `--no-keychain`** — see the
+  ⚠️ Breaking entry above for the full root cause and migration path. The
+  fix lives in `internal/keychain/null_store.go` and `internal/cli/root.go`
+  (`selectKeyStore` helper). Regression-pinned by
+  `TestNoKeychain_CrossProjectIsolation` in
+  `internal/cli/no_keychain_integration_test.go`.
+- **`tene init` master-key status message** — was always "Master Key saved
+  to OS Keychain" regardless of where the key actually landed. Now reflects
+  the real destination: OS Keychain, file path with `TENE_KEYFILE`,
+  auto-fallback file (with reason), or "NOT persisted (--no-keychain)" with
+  guidance to set `TENE_MASTER_PASSWORD`.
 - `/vs/*` Schema.org `SoftwareApplication` node now conforms to spec.
 - `auto-tag.yml` workflow's `Update LATEST_VERSION` step now runs with
   `if: always()` and a S3 tarball existence check. Previously a
