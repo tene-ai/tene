@@ -22,8 +22,45 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - Switch to `tene run -- <command>` (recommended — secrets never touch stdout).
   - `tene get --json` still works on non-TTY but emits a one-line warning on stderr.
 
+- **`--no-keychain` no longer writes the master key to a shared
+  `~/.tene/keyfile`** (sprint v1014-rc1-qa-fixes, FX1, invariant I-11).
+
+  Through v1.0.13 and v1.0.14-rc1, `--no-keychain` quietly fell back to a
+  single shared file at `~/.tene/keyfile`. Two projects on the same machine
+  using `--no-keychain` overwrote each other's master keys, and the *most
+  recently written* key was returned for every subsequent decrypt — which
+  meant a wrong `TENE_MASTER_PASSWORD` (or no password at all) still
+  decrypted a sibling project's vault. QA report B1 in tene-biz for the
+  full reproduction.
+
+  `--no-keychain` now means what its name says: **no persistence anywhere**.
+  Every invocation must resolve the master password from
+  `TENE_MASTER_PASSWORD` env var or the interactive prompt.
+
+  **Migration**
+
+  - Most users: nothing to do. Drop `--no-keychain` and use the OS keychain
+    (the default), or keep `--no-keychain` and ensure `TENE_MASTER_PASSWORD`
+    is set in your CI/CD environment.
+  - To preserve the v1.0.13 file-backed behaviour, set a path explicitly:
+    `export TENE_KEYFILE=$HOME/.tene/keyfile-myproject` (or any path you
+    control). The chosen file is created with mode `0600`; you are
+    responsible for its location and isolation between projects.
+  - If you scripted around the old shared `~/.tene/keyfile` path, switch
+    to per-project `TENE_KEYFILE` files. The legacy path itself is left on
+    disk so other processes that still rely on it can keep working until
+    you remove it.
+
 ### Added
 
+- **`TENE_KEYFILE` env var** — explicit opt-in to a file-backed master-key
+  store when running with `--no-keychain`. The path is the user's choice;
+  the file is created with mode `0600` on first `tene init`. This is the
+  documented migration path for the v1.0.13 `--no-keychain` behaviour
+  (sprint v1014-rc1-qa-fixes, FX1).
+- **`keychain.NullStore`** — internal type representing "no persistent
+  storage". Selected automatically when `--no-keychain` is passed without
+  a `TENE_KEYFILE` override. Backs invariant I-11.
 - **`tene permissions`** — print the 3-tier permission table (text + `--json` modes). Shows which commands need a password and which run silently. 26 commands classified as `metaread` / `secretwrite` / `secretread`. Source: sprint cli-ux-permission-model F5.
 - **`tene audit tail|show|prune`** — manage the local audit log (sprint F8). `tail [-n N]` shows recent rows; `show --since X --filter Y` queries by time / action prefix; `prune --older-than X` deletes old rows (requires interactive confirm or `--force`). All three accept `--json` for NDJSON output. Auto-deletion never happens — manual prune only (G10 invariant, single DELETE chokepoint enforced by static test).
 - **`tene config`** — read / write vault-scoped settings stored in the `vault_meta` table (sprint F1). Keys: `preview.enabled` (bool), `preview.front` (int 0-8), `preview.back` (int 0-8), `audit.warnAtMB` (int 1-1000). `tene config preview.front=N` for N>0 prompts an explicit confirmation because it exposes API key prefixes (sk-, ghp_, AKIA…); `--force` skips the confirm for scripts.
@@ -68,6 +105,17 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **B1 (CRITICAL): cross-project key bleed under `--no-keychain`** — see the
+  ⚠️ Breaking entry above for the full root cause and migration path. The
+  fix lives in `internal/keychain/null_store.go` and `internal/cli/root.go`
+  (`selectKeyStore` helper). Regression-pinned by
+  `TestNoKeychain_CrossProjectIsolation` in
+  `internal/cli/no_keychain_integration_test.go`.
+- **`tene init` master-key status message** — was always "Master Key saved
+  to OS Keychain" regardless of where the key actually landed. Now reflects
+  the real destination: OS Keychain, file path with `TENE_KEYFILE`,
+  auto-fallback file (with reason), or "NOT persisted (--no-keychain)" with
+  guidance to set `TENE_MASTER_PASSWORD`.
 - `/vs/*` Schema.org `SoftwareApplication` node now conforms to spec.
 - `auto-tag.yml` workflow's `Update LATEST_VERSION` step now runs with
   `if: always()` and a S3 tarball existence check. Previously a

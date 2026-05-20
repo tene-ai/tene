@@ -9,7 +9,6 @@ import (
 
 	"github.com/agent-kay-it/tene/internal/claudemd"
 	"github.com/agent-kay-it/tene/internal/config"
-	"github.com/agent-kay-it/tene/internal/keychain"
 	"github.com/agent-kay-it/tene/internal/recovery"
 	"github.com/agent-kay-it/tene/internal/vault"
 	"github.com/agent-kay-it/tene/pkg/crypto"
@@ -145,14 +144,16 @@ func runInit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// 9. Store master key in keychain
-	var ks keychain.KeyStore
-	if flagNoKeychain {
-		home, _ := os.UserHomeDir()
-		ks = keychain.NewFileStore(filepath.Join(home, ".tene", "keyfile"))
-	} else {
-		ks = keychain.NewStore(dir)
-	}
+	// 9. Store master key in keychain (or skip persistence — see FX1).
+	//
+	// The selectKeyStore helper is reused so init follows exactly the same
+	// selection precedence as every other verb's loadApp: --no-keychain +
+	// TENE_KEYFILE picks a user-controlled FileStore, --no-keychain alone
+	// picks NullStore (no persistence, I-11), default picks the OS keychain
+	// with the F6 auto-fallback notice. Keeping init aligned with loadApp
+	// matters because the status message at Step 14 reads the resulting
+	// KeyStore's concrete type and would lie if init silently disagreed.
+	ks := selectKeyStore(dir, flagNoKeychain, flagQuiet, os.Stderr)
 	if err := ks.Store(masterKey); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: could not store key in keychain: %v\n", err)
 	}
@@ -210,7 +211,12 @@ func runInit(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		fmt.Printf("  Created .tene/vault.db (local encrypted vault)\n")
 		fmt.Printf("  Added .tene/ to .gitignore\n")
-		fmt.Printf("  Master Key saved to OS Keychain\n")
+		// FX1: storage-aware status line. Lying ("OS Keychain") when the
+		// key actually landed in ~/.tene/keyfile is what got us B1 in
+		// rc1; describeKeyStore() returns the truthful one-line status.
+		for _, line := range describeKeyStoreStatus(ks) {
+			fmt.Printf("  %s\n", line)
+		}
 		if len(agentFiles) > 0 {
 			fmt.Printf("  Generated %s\n", strings.Join(agentFiles, ", "))
 		}
