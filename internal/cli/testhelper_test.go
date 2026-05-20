@@ -59,6 +59,10 @@ func resetFlags() {
 	// delete command flags
 	deleteFlagForce = false
 
+	// env delete command flag (FX2 — separate from deleteFlagForce so the
+	// two destructive verbs do not leak state into each other across runs)
+	envDeleteFlagForce = false
+
 	// export command flags
 	exportFlagFile = ""
 	exportFlagEncrypted = false

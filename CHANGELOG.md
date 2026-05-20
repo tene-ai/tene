@@ -22,6 +22,28 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     - Switch to `tene run -- <command>` (recommended — secrets never touch stdout).
   - `tene get --json` still works on non-TTY but emits a one-line warning on stderr.
 
+- **Destructive verbs refuse to proceed on a non-interactive shell
+  without `--force`** (sprint v1014-rc1-qa-fixes, FX2, invariant I-12).
+
+  Previously `promptConfirm()` returned `true` whenever stdin was not a
+  TTY. That made `tene env delete prod` (and `tene delete KEY`) silently
+  succeed in CI/CD pipelines, log-redirected scripts, and AI agent
+  contexts — the very places destructive intent should be most carefully
+  guarded. QA filed this as B2 (CRITICAL data loss).
+
+  v1.0.14 inverts the default: a non-TTY invocation without `--force` is
+  refused with a stderr message and a non-zero exit code. The
+  destructive op does not run.
+
+  **Migration**
+
+  - In a terminal, behaviour is unchanged: tene asks `(y/N)` and acts on
+    your answer.
+  - In automation, add `--force` to any `tene delete KEY` or
+    `tene env delete <name>` invocation that *intends* to proceed
+    unattended. `tene env delete prod --force` is now a working flag
+    (it raised "unknown flag" in rc1, the B9 piece of this fix).
+
 - **`--no-keychain` no longer writes the master key to a shared
   `~/.tene/keyfile`** (sprint v1014-rc1-qa-fixes, FX1, invariant I-11).
 
@@ -105,6 +127,18 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **B2 (CRITICAL): silent destructive ops on non-TTY** — see the ⚠️
+  Breaking entry above. The shared `promptConfirm()` helper at
+  `internal/cli/helpers.go` now refuses non-TTY invocations without
+  `--force`. Both `tene delete KEY` and `tene env delete` surface the
+  refusal as a non-zero exit (previously they returned exit 0 + "no
+  change"); CI pipelines that ignored the exit code now learn about
+  cancelled runs.
+- **B9: `tene env delete --force` was an unknown flag** — `envDeleteCmd`
+  now declares its own `--force` BoolVar (`envDeleteFlagForce`),
+  separate from the single-secret `deleteFlagForce`. The two destructive
+  verbs no longer share global state, which the test harness will use
+  to assert per-test isolation.
 - **B1 (CRITICAL): cross-project key bleed under `--no-keychain`** — see the
   ⚠️ Breaking entry above for the full root cause and migration path. The
   fix lives in `internal/keychain/null_store.go` and `internal/cli/root.go`

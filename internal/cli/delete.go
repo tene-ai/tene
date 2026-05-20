@@ -40,14 +40,20 @@ func runDelete(cmd *cobra.Command, args []string) error {
 		return teneerr.ErrSecretNotFound(keyName, env)
 	}
 
-	// Confirm
+	// Confirm. Sprint v1014-rc1-qa-fixes / FX2 (invariant I-12):
+	// promptConfirm is now fail-closed on non-TTY, so we must surface
+	// the refusal as a non-zero exit. Previously runDelete returned nil
+	// after promptConfirm == false, which combined with the old
+	// "non-TTY defaults to yes" gave CI/CD pipelines a green build even
+	// when the secret was untouched — a confusing and brittle contract.
 	if !deleteFlagForce {
 		msg := fmt.Sprintf("Delete secret %q from %q?", keyName, env)
 		if !promptConfirm(msg) {
 			if !flagQuiet {
 				fmt.Println("Cancelled.")
 			}
-			return nil
+			return teneerr.New("CONFIRMATION_REQUIRED",
+				fmt.Sprintf("delete %q cancelled: pass --force to confirm in a non-interactive shell", keyName), 1)
 		}
 	}
 
