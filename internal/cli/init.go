@@ -185,6 +185,15 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// 13. Audit log
 	_ = v.AddAuditLog("vault.init", "", "project="+projectName)
 
+	// 13a. F4 — emit the cli.<tier>.<verb> dispatcher row that
+	// rootPersistentPreRunE skipped (vault.db did not yet exist when the
+	// dispatcher fired for init). G7 requires every CommandTier entry to
+	// produce a cli.* row per invocation; writing it here closes the
+	// gap for init specifically. Tier is hard-coded rather than looked
+	// up to keep the call independent of the auth package import graph.
+	// We use the active vault handle that init already holds open.
+	_ = v.AddAuditLog("cli.secretwrite.init", "", "")
+
 	// 14. Output
 	if flagJSON {
 		return printJSON(map[string]any{
