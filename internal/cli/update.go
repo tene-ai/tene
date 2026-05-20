@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/mod/semver"
 )
 
 const releaseBaseURL = "https://tene-releases.s3.ap-northeast-2.amazonaws.com"
@@ -33,10 +34,51 @@ Examples:
 	RunE: runUpdate,
 }
 
-var updateFlagCheck bool
+var (
+	updateFlagCheck             bool
+	updateFlagIncludePrerelease bool
+)
 
 func init() {
 	updateCmd.Flags().BoolVar(&updateFlagCheck, "check", false, "Check for updates without installing")
+	updateCmd.Flags().BoolVar(&updateFlagIncludePrerelease, "include-prerelease", false,
+		"Allow upgrading to RC/beta releases (opt-in)")
+}
+
+// shouldOfferUpdate reports whether tene should offer to upgrade from
+// `current` to `latest`. Sprint v1014-rc1-qa-fixes / FX3 (invariant I-13).
+//
+// The rules are deliberately conservative — the worst-case behaviour of
+// rc1's naive != comparison was to recommend a downgrade from v1.0.14-rc1
+// to v1.0.13. Every clause below corresponds to a documented scenario in
+// internal/cli/update_semver_test.go.
+//
+//   - current is "dev"/"vdev"/empty: no comparable baseline; never offer.
+//   - either tag is not valid semver: malformed input; fail closed.
+//   - semver.Compare(latest, current) <= 0: latest is not strictly newer;
+//     covers both "already up to date" and the B3 downgrade case.
+//   - latest is a pre-release and the user did not opt in via
+//     --include-prerelease: never auto-recommend RC/beta to stable users.
+//   - otherwise: offer.
+//
+// An explicit `tene update v1.0.13` (user supplies a target version) does
+// NOT pass through this helper — that path is a manual downgrade, which
+// is left available because it is sometimes legitimate (rolling back a
+// broken release).
+func shouldOfferUpdate(current, latest string, includePrerelease bool) bool {
+	if current == "vdev" || current == "dev" || current == "" {
+		return false
+	}
+	if !semver.IsValid(current) || !semver.IsValid(latest) {
+		return false
+	}
+	if semver.Compare(latest, current) <= 0 {
+		return false
+	}
+	if !includePrerelease && semver.Prerelease(latest) != "" {
+		return false
+	}
+	return true
 }
 
 type releaseInfo struct {
@@ -77,12 +119,22 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		currentDisplay = "v" + currentDisplay
 	}
 
+	// FX3: replace the rc1 single-character != check with the
+	// SemVer-aware shouldOfferUpdate helper. autoOffer is the
+	// boolean we use when the user has not asked for a specific
+	// version (no positional arg) — i.e. the "tene update" / "tene
+	// update --check" recommendation path. An explicit positional
+	// like `tene update v1.0.13` skips this check (see below) so
+	// the user can still roll back deliberately.
+	userSuppliedTarget := len(args) == 1
+	autoOffer := shouldOfferUpdate(currentDisplay, latestTag, updateFlagIncludePrerelease)
+
 	if flagJSON {
 		return printJSON(map[string]any{
 			"currentVersion":  currentDisplay,
 			"latestVersion":   latestTag,
 			"targetVersion":   targetVersion,
-			"updateAvailable": currentDisplay != latestTag && currentDisplay != "vdev",
+			"updateAvailable": autoOffer,
 		})
 	}
 
@@ -94,10 +146,25 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Auto-update path with no version arg: respect the SemVer-aware
+	// decision. Display the "you are ahead of the stable channel" or
+	// "already up to date" line instead of marching toward a downgrade.
+	if !userSuppliedTarget && !autoOffer {
+		if semver.IsValid(currentDisplay) && semver.IsValid(latestTag) &&
+			semver.Compare(currentDisplay, latestTag) > 0 {
+			fmt.Printf("\n  You are on %s, which is newer than the latest stable %s.\n", currentDisplay, latestTag)
+			fmt.Println("  Use 'tene update --include-prerelease' to receive prerelease updates,")
+			fmt.Println("  or 'tene update vX.Y.Z' to install a specific version.")
+		} else {
+			fmt.Println("\n  Already up to date.")
+		}
+		return nil
+	}
+
 	fmt.Printf("  Target version:  %s\n", targetVersion)
 
 	if updateFlagCheck {
-		if currentDisplay != latestTag && currentDisplay != "vdev" {
+		if autoOffer {
 			fmt.Printf("\n  Update available! Run 'tene update' to install %s.\n", latestTag)
 		}
 		return nil

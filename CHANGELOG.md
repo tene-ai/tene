@@ -75,6 +75,14 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`tene update --include-prerelease`** — opt-in flag for pulling RC/beta
+  releases. Without it the update-check path treats the stable channel
+  as the only auto-recommendation source, which is what closes the B3
+  downgrade vector (sprint v1014-rc1-qa-fixes, FX3, invariant I-13).
+- **`shouldOfferUpdate` SemVer-aware helper** — replaces the
+  single-character `!=` comparison that drove the B3 RC-to-stable
+  downgrade. Uses `golang.org/x/mod/semver.Compare` so the decision
+  table is the standard Go community implementation.
 - **`TENE_KEYFILE` env var** — explicit opt-in to a file-backed master-key
   store when running with `--no-keychain`. The path is the user's choice;
   the file is created with mode `0600` on first `tene init`. This is the
@@ -127,6 +135,15 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **B3 (CRITICAL): `tene update` recommended a downgrade from RC to older
+  stable**. A user on `v1.0.14-rc1` typing `tene update` was
+  auto-downgraded to `v1.0.13` because `updateAvailable` was a single-
+  character `!=` check that ignored SemVer ordering. The new
+  `shouldOfferUpdate(current, latest, includePrerelease)` helper
+  centralises the decision and never returns `true` when `latest`
+  precedes `current`. The text-mode flow now prints
+  "You are on vX, which is newer than the latest stable vY" with
+  guidance to use `--include-prerelease` or an explicit version.
 - **B2 (CRITICAL): silent destructive ops on non-TTY** — see the ⚠️
   Breaking entry above. The shared `promptConfirm()` helper at
   `internal/cli/helpers.go` now refuses non-TTY invocations without
