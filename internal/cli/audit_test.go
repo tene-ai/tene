@@ -475,6 +475,151 @@ func TestAuditShow_FilterByAction(t *testing.T) {
 	}
 }
 
+// TestAuditShow_FilterByResource — `tene audit show --resource NAME`
+// returns only rows whose resource_name contains NAME as a substring.
+// Spec source: design.md §6B.1 + plan.md F8 step 3. The flag was
+// missing from the F8 initial implementation and added in F8'
+// compensation patch.
+//
+// Coverage:
+//   - Substring match: --resource STRIPE matches STRIPE_KEY +
+//     STRIPE_WEBHOOK rows but NOT OPENAI_KEY.
+//   - AND semantics with --filter: --resource STRIPE +
+//     --filter 'cli.secretwrite.%' narrows to write-tier STRIPE rows.
+//   - Empty value: --resource "" is equivalent to no filter.
+//
+// The audit_log table mixes auto-emitted dispatcher rows (resource="")
+// with verb-emitted legacy rows (resource carries the key name). The
+// test asserts that an explicit --resource STRIPE_KEY excludes the
+// resource-empty dispatcher rows since the LIKE %STRIPE_KEY% pattern
+// never matches "".
+func TestAuditShow_FilterByResource(t *testing.T) {
+	env := setupTestEnv(t)
+	env.initVault()
+
+	// Seed three distinct resource names so the substring filter has
+	// something to discriminate. The legacy `secret.write` row from
+	// each `set` carries the key name in resource_name; the F4
+	// dispatcher row carries resource="" (resource_name is empty for
+	// the cli.* rows). LIKE %X% does not match the empty string, so
+	// the dispatcher rows are naturally excluded from a --resource
+	// query.
+	for _, key := range []string{"STRIPE_KEY", "STRIPE_WEBHOOK", "OPENAI_KEY"} {
+		if _, _, err := env.run("set", key, "v-AAAA", "--overwrite"); err != nil {
+			t.Fatalf("set %s: %v", key, err)
+		}
+	}
+
+	// Case 1: --resource STRIPE returns the 2 STRIPE_* rows (not
+	// OPENAI_KEY, not the dispatcher rows whose resource is empty).
+	stdout, _, err := env.runJSON("audit", "show", "--resource", "STRIPE")
+	if err != nil {
+		t.Fatalf("audit show --resource STRIPE --json: %v", err)
+	}
+	gotResources := parseNDJSONResources(t, stdout)
+	stripeCount := 0
+	for _, r := range gotResources {
+		if !strings.Contains(r, "STRIPE") {
+			t.Errorf("--resource STRIPE returned row with resource %q (must contain 'STRIPE')", r)
+		}
+		if strings.Contains(r, "STRIPE_KEY") || strings.Contains(r, "STRIPE_WEBHOOK") {
+			stripeCount++
+		}
+		if strings.Contains(r, "OPENAI") {
+			t.Errorf("--resource STRIPE leaked OPENAI row (resource=%q)", r)
+		}
+	}
+	if stripeCount < 2 {
+		t.Errorf("--resource STRIPE returned %d STRIPE_* rows; want >= 2 (one secret.write each for STRIPE_KEY + STRIPE_WEBHOOK)\nresources: %v",
+			stripeCount, gotResources)
+	}
+
+	// Case 2: --resource exact match (STRIPE_KEY) returns only the
+	// STRIPE_KEY rows. STRIPE_WEBHOOK and OPENAI_KEY must be excluded.
+	resetFlags()
+	stdout, _, err = env.runJSON("audit", "show", "--resource", "STRIPE_KEY")
+	if err != nil {
+		t.Fatalf("audit show --resource STRIPE_KEY --json: %v", err)
+	}
+	gotResources = parseNDJSONResources(t, stdout)
+	if len(gotResources) == 0 {
+		t.Errorf("--resource STRIPE_KEY returned 0 rows; want >= 1")
+	}
+	for _, r := range gotResources {
+		if r != "STRIPE_KEY" {
+			t.Errorf("--resource STRIPE_KEY returned non-matching row resource=%q (substring %%STRIPE_KEY%% LIKE)", r)
+		}
+	}
+
+	// Case 3: --resource + --filter AND semantics. Use the secret.write
+	// (legacy) action which only fires on actual writes. Combined with
+	// --resource STRIPE we should still get at least 2 rows (one per
+	// STRIPE_* key) and zero non-STRIPE rows.
+	resetFlags()
+	stdout, _, err = env.runJSON("audit", "show", "--resource", "STRIPE", "--filter", "secret.write")
+	if err != nil {
+		t.Fatalf("audit show --resource STRIPE --filter secret.write --json: %v", err)
+	}
+	combined := parseNDJSONRows(t, stdout)
+	if len(combined) == 0 {
+		t.Errorf("--resource STRIPE --filter secret.write returned 0 rows; want >= 2")
+	}
+	for _, row := range combined {
+		if row.Action != "secret.write" {
+			t.Errorf("AND filter leaked action %q (expected only secret.write)", row.Action)
+		}
+		if !strings.Contains(row.Resource, "STRIPE") {
+			t.Errorf("AND filter leaked resource %q (expected substring STRIPE)", row.Resource)
+		}
+	}
+}
+
+// parseNDJSONResources parses NDJSON stdout from `audit show --json`
+// and returns the resource field of each row. Empty resources are
+// preserved so a regression that returns dispatcher rows for a
+// non-empty --resource query is visible.
+func parseNDJSONResources(t *testing.T, stdout string) []string {
+	t.Helper()
+	rows := parseNDJSONRows(t, stdout)
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, r.Resource)
+	}
+	return out
+}
+
+// parseNDJSONRows parses NDJSON stdout into a typed slice. Each line
+// must be a valid JSON object with at minimum action + resource fields.
+func parseNDJSONRows(t *testing.T, stdout string) []struct {
+	Action   string `json:"action"`
+	Resource string `json:"resource"`
+} {
+	t.Helper()
+	trimmed := strings.TrimSpace(stdout)
+	if trimmed == "" {
+		return nil
+	}
+	lines := strings.Split(trimmed, "\n")
+	out := make([]struct {
+		Action   string `json:"action"`
+		Resource string `json:"resource"`
+	}, 0, len(lines))
+	for i, line := range lines {
+		if line == "" {
+			continue
+		}
+		var row struct {
+			Action   string `json:"action"`
+			Resource string `json:"resource"`
+		}
+		if err := json.Unmarshal([]byte(line), &row); err != nil {
+			t.Fatalf("NDJSON line %d not valid JSON: %v\nline: %q", i, err, line)
+		}
+		out = append(out, row)
+	}
+	return out
+}
+
 // TestAuditShow_SinceDuration — `tene audit show --since 5m` returns
 // only rows within the last 5 minutes. We assert at minimum that the
 // command runs without error and includes the just-emitted F4 row.

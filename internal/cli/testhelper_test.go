@@ -81,6 +81,7 @@ func resetFlags() {
 	auditTailN = 20
 	auditShowSince = ""
 	auditShowFilter = ""
+	auditShowResource = ""
 	auditShowLimit = 200
 	auditPruneOlderThan = ""
 	auditPruneForce = false

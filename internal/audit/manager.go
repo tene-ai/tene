@@ -76,11 +76,16 @@ type LogEntry struct {
 //     non-empty, the caller-supplied glob style ("cli.metaread*") is
 //     translated to LIKE syntax by the CLI layer; the Manager passes
 //     the value through verbatim.
+//   - Resource is a substring match on the resource_name column,
+//     implemented via `resource_name LIKE %Resource%`. When non-empty
+//     and combined with ActionMatch, both conditions are AND-ed.
+//     Spec source: design.md §6B.1 + plan.md F8 step 3.
 //   - Limit > 0 caps the row count; Limit == 0 means unlimited.
 type Filter struct {
 	Since       time.Time
 	Until       time.Time
 	ActionMatch string
+	Resource    string
 	Limit       int
 }
 
@@ -105,10 +110,11 @@ func (m *Manager) Tail(n int) ([]LogEntry, error) {
 // expected to add wildcards where appropriate).
 func (m *Manager) Show(f Filter) ([]LogEntry, error) {
 	rows, err := m.v.QueryAuditLog(vault.AuditLogFilter{
-		Since:      f.Since,
-		Until:      f.Until,
-		ActionLike: f.ActionMatch,
-		MaxRows:    f.Limit,
+		Since:        f.Since,
+		Until:        f.Until,
+		ActionLike:   f.ActionMatch,
+		ResourceLike: f.Resource,
+		MaxRows:      f.Limit,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("audit: show: %w", err)

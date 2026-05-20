@@ -646,14 +646,20 @@ type AuditLogEntry struct {
 // reverse chronological order (newest first) up to MaxRows. A non-zero
 // Since/Until uses inclusive bounds on the SQL side. ActionLike is
 // applied with SQL LIKE — the caller is expected to add wildcards
-// (`cli.metaread.%`) when prefix-matching is desired.
+// (`cli.metaread.%`) when prefix-matching is desired. ResourceLike is
+// applied with SQL LIKE against the resource_name column; the audit
+// CLI layer wraps the user-supplied substring in `%...%` so a bare
+// `--resource STRIPE` matches any row whose resource_name contains
+// "STRIPE" (e.g. STRIPE_KEY, STRIPE_WEBHOOK). All non-zero filter
+// fields are AND-ed together.
 //
 // MaxRows = 0 means "unlimited" (sentinel for tail with no -n flag).
 type AuditLogFilter struct {
-	Since      time.Time
-	Until      time.Time
-	ActionLike string
-	MaxRows    int
+	Since        time.Time
+	Until        time.Time
+	ActionLike   string
+	ResourceLike string
+	MaxRows      int
 }
 
 // QueryAuditLog returns audit_log rows matching the filter, newest
@@ -687,6 +693,10 @@ func (v *Vault) QueryAuditLog(f AuditLogFilter) ([]AuditLogEntry, error) {
 	if f.ActionLike != "" {
 		conds = append(conds, "action LIKE ?")
 		args = append(args, f.ActionLike)
+	}
+	if f.ResourceLike != "" {
+		conds = append(conds, "resource_name LIKE ?")
+		args = append(args, f.ResourceLike)
 	}
 	if len(conds) > 0 {
 		query += " WHERE " + conds[0]
@@ -798,10 +808,15 @@ func (v *Vault) CountAuditLogOlderThan(cutoff time.Time) (int64, error) {
 //     means a static check (`grep -rn "DELETE FROM audit_log"`) trips
 //     immediately if a future commit adds a "log rotation" path.
 //
-//   - Atomicity: the DELETE runs inside a BEGIN IMMEDIATE / COMMIT
-//     transaction so a concurrent reader sees either all-old-rows-still-
-//     present or all-old-rows-removed, never half. This matters when
-//     another tene process is mid-query.
+//   - Atomicity: we use a deferred-write transaction; the DELETE is the
+//     only statement, so coarse locking + commit semantics suffice for
+//     readers seeing either all-old-rows-still-present or
+//     all-old-rows-removed, never half. modernc.org/sqlite does not
+//     expose `BEGIN IMMEDIATE` (statement returns "cannot start a
+//     transaction within a transaction" when issued inside an already-
+//     open db.Begin() transaction) — see migration.go for the matching
+//     rationale. The atomicity guarantee is unaffected because there is
+//     exactly one mutating statement inside this transaction.
 //
 //   - Returning the rows-affected count lets the CLI report "Deleted
 //     N rows" without a follow-up SELECT.

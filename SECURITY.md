@@ -103,9 +103,8 @@ leaked database file.
    for `N>0` requires interactive confirmation:
 
    ```
-   WARNING: setting preview.front > 0 will expose API key prefixes
-   (sk-, ghp_, AKIA...) in vault.db. This makes service identification
-   possible if vault.db leaks. Continue? [y/N]
+   WARNING: setting preview.front > 0 will expose API key prefixes (sk-, ghp_, AKIA...) in vault.db.
+   This makes service identification possible if vault.db leaks. Continue? [y/N]
    ```
 
    Pass `--force` to skip the prompt in scripts.

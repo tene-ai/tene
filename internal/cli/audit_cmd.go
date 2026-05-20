@@ -51,6 +51,7 @@ var (
 	auditTailN          int
 	auditShowSince      string
 	auditShowFilter     string
+	auditShowResource   string
 	auditShowLimit      int
 	auditPruneOlderThan string
 	auditPruneForce     bool
@@ -106,7 +107,7 @@ shape of audit_log.`,
 
 var auditShowCmd = &cobra.Command{
 	Use:   "show",
-	Short: "Filtered audit-log query (by time window + action pattern)",
+	Short: "Filtered audit-log query (by time window + action pattern + resource)",
 	Long: `Filtered audit-log query.
 
 Flags:
@@ -118,6 +119,11 @@ Flags:
                         --filter 'cli.metaread.%'
                         --filter 'cli.%.set'
                         --filter 'secret.write'
+  --resource NAME     Substring match on the resource_name column.
+                      Internally wrapped as %NAME%. Combine with
+                      --filter for AND semantics. Examples:
+                        --resource STRIPE_KEY
+                        --resource STRIPE --filter 'cli.secretread.%'
   --limit N           Cap the result to N rows (default: 200).
 
 In --json mode, output is NDJSON (see 'tene audit tail').`,
@@ -167,6 +173,7 @@ func init() {
 
 	auditShowCmd.Flags().StringVar(&auditShowSince, "since", "", "Match rows within the last DURATION (e.g. 1h, 24h, 7d)")
 	auditShowCmd.Flags().StringVar(&auditShowFilter, "filter", "", "SQL-LIKE pattern for the action column (e.g. 'cli.metaread.%')")
+	auditShowCmd.Flags().StringVar(&auditShowResource, "resource", "", "Substring match on the resource_name column (LIKE %NAME%)")
 	auditShowCmd.Flags().IntVar(&auditShowLimit, "limit", 200, "Maximum rows to return")
 
 	auditPruneCmd.Flags().StringVar(&auditPruneOlderThan, "older-than", "", "Required. Delete rows older than DURATION (e.g. 30d, 90d)")
@@ -218,6 +225,13 @@ func runAuditShow(cmd *cobra.Command, args []string) error {
 	}
 	if auditShowFilter != "" {
 		f.ActionMatch = auditShowFilter
+	}
+	// --resource is a user-friendly substring match; wrap as
+	// %NAME% here so the vault layer's SQL LIKE call matches any
+	// resource_name containing the substring. design.md §6B.1 +
+	// plan.md F8 step 3 spec.
+	if auditShowResource != "" {
+		f.Resource = "%" + auditShowResource + "%"
 	}
 
 	mgr := audit.New(app.Vault)

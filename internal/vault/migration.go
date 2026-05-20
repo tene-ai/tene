@@ -121,6 +121,14 @@ func (v *Vault) applyV2() error {
 		// than fail the migration because the "nested transaction" return
 		// is a no-op on the lock state we want.
 		//
+		// This is an INTENTIONAL accommodation of the modernc.org/sqlite
+		// driver, NOT a TODO. design.md §6.3 has been updated to reflect
+		// this; safety holds via SQLite default coarse locking + PRAGMA
+		// idempotency (PRAGMA table_info check inside the transaction
+		// ensures a racing second process sees the column already present
+		// and skips the ALTER). TestMigrate_ConcurrentOpens validates the
+		// safety end-to-end.
+		//
 		// We do not log here (vault is library code) but the error string
 		// is captured so a defect investigator can trace it.
 		_ = err

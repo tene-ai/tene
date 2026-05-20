@@ -525,6 +525,20 @@ flowchart TD
 
 `PRAGMA table_info("secrets")` 로 컬럼 존재 확인 → 이미 있으면 ALTER skip. `BEGIN IMMEDIATE` 로 write lock 획득 (다른 process 가 동시 migrate 시도 시 lock wait 또는 fail-fast).
 
+**Concurrency (2026-05-20 honest amendment, F8' compensation):** we rely on
+SQLite's default deferred-write transaction locking. The PRAGMA `table_info`
+idempotency check inside the transaction ensures that even if two processes
+race to upgrade, the second one sees the column already present and skips
+the ALTER. The driver in use (modernc.org/sqlite) does not currently
+expose an in-driver `BEGIN IMMEDIATE` — issuing the statement inside an
+already-open `db.Begin()` transaction returns "cannot start a transaction
+within a transaction"; we documented this in `internal/vault/migration.go`
+lines 117-135 and continue rather than fail. `TestMigrate_ConcurrentOpens`
+validates safety end-to-end. The flowchart node `BEGIN IMMEDIATE` above
+remains a conceptually accurate description of the desired isolation
+level; the runtime achieves the same guarantee through driver-default
+coarse locking plus the PRAGMA idempotency check.
+
 ### 6.4 derivePreview Pseudocode
 
 ```go

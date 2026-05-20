@@ -156,6 +156,12 @@ The dataflow integration test suite (`internal/cli/dataflow_test.go`, F1) covers
 
 All 7 cases PASS at tip.
 
+### 4.5 L5 manual E2E scenarios
+
+`plan.md §2 Test Strategy Matrix` defines L5 as a manual E2E layer covering six scripted scenarios (E2E-1 through E2E-6: init flow, set + list round-trip, audit prune confirm UX, fallback notice on a no-keychain machine, preview opt-in confirm, schema v2 migration on a legacy fixture). These scenarios are intentionally manual — they cover terminal-interactive prompts (`y/N`, password prompts) that automated tests stub but a human should validate against a real shell.
+
+**Status at sprint archival**: not executed in this orchestrator pass. Recommend running E2E-1 through E2E-6 against the `feature/cli-ux-permission-model` build before merging to `staging`. The L1-L4 layers (unit + integration + CLI + cross-repo) are all green and they cover the same code paths; L5 adds only the human-in-the-loop UX validation.
+
 ---
 
 ## 5. Cross-sprint / cross-repo integration matrix
@@ -245,6 +251,21 @@ No P0/P1 issues blocked the sprint. Items noted during execution:
 | P3 | LOC estimate ~3.5x short of actual | Clean Architecture mandate (doc comments, table-driven tests, dataflow integration tests) inflates each touchpoint; estimate model needs adjustment for future sprints |
 | P3 | F7 hint line 3 is ~95 chars; may wrap on a 79-col terminal | Accepted for this sprint (readability outweighs wrap); follow-up if user reports the wrap is ugly |
 | P3 | S3 KPI (prompts/session) not measured at sprint end | Needs 1-week kay dogfood window; not a release blocker |
+
+### 7.1 Post-archive gap-detector findings (2026-05-20)
+
+After the initial sprint archival, a user-initiated gap-detector pass against the plan / prd / design / state JSON surfaced **1 material + 5 minor drift items** that this report did not originally flag. They are closed in the **F8' compensation patch** (commit on top of `c43a991`):
+
+| Severity | Drift | Source | Resolution in F8' |
+|:---:|---|---|---|
+| **Material** | `tene audit show --resource <NAME>` flag specified in design.md §6B.1 + plan.md F8 step 3 but not implemented during the initial F8 do phase | gap-detector inspection of `internal/cli/audit_cmd.go::auditShowCmd` | Added `--resource` flag to `audit show`, propagated to `audit.Filter.Resource`, added `resource_name LIKE ?` clause in `vault.QueryAuditLog`, new test `TestAuditShow_FilterByResource` |
+| P3 | `internal/vault/migration.go::runMigrations` runs `tx.Exec("BEGIN IMMEDIATE")` after `db.Begin()` already opened a tx — `modernc.org/sqlite` returns "transaction-within-transaction" and the code swallows the error. Concurrency safety is preserved by SQLite default coarse locking + PRAGMA idempotency, but design.md §6.3 and the surrounding comment claimed explicit BEGIN IMMEDIATE | gap-detector reading `migration.go:115` | Updated design.md §6.3 + the inline comment to honestly describe the actual locking semantics. Runtime unchanged (already safe per `TestMigrate_ConcurrentOpens`) |
+| P3 | `internal/vault/vault.go::PruneAuditLog` has the same doc-vs-code drift as above (comment claims BEGIN IMMEDIATE, code uses deferred-write) | gap-detector reading `vault.go:801` | Updated comment to describe the actual semantics |
+| P3 | SECURITY.md preview warning text was wrapped across 3 lines, not byte-identical to the single-line code constant printed at runtime | gap-detector reading `SECURITY.md:106-108` | Rewrapped to single line so the doc matches the user-visible CLI output |
+| P3 | `report.md §4 Sprint-level QA` did not mention that L5 manual E2E scenarios were intentionally not executed | gap-detector cross-referencing `plan.md §2` | Added §4.5 "L5 manual E2E scenarios" noting deferred-to-staging-dogfood status |
+| P3 | (this row) Original `report.md §7` Issues list did not flag the `--resource` omission — orchestrator self-report missed a real DoD drift | gap-detector "honesty correction" | This row is the correction. Future sprints should walk DoD bullets explicitly during the per-feature report phase instead of trusting commit message claims |
+
+**Overall completeness post-F8'**: gap-detector estimated 94/100 pre-patch; post-patch the material gap is closed and 4/5 minor gaps fixed in code or docs; the remaining minor (F7 line 3 length on a 79-col terminal) is left in §9.3 follow-ups by design.
 
 ---
 
