@@ -7,6 +7,18 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+(No unreleased changes yet — see follow-up entries below this section
+as PRs land. The next stable will increment from v1.0.14.)
+
+## [1.0.14] - 2026-05-20
+
+Closes ten regressions from the v1.0.14-rc1 QA cycle (3 CRITICAL +
+3 HIGH + 3 MEDIUM + 4 LOW) on top of the cli-ux-permission-model
+sprint (PR #116). Three new invariants (I-11/I-12/I-13) pin the
+critical fixes. Full sprint reports under
+`docs/sprints/cli-ux-permission-model/` and
+`docs/sprints/v1014-rc1-qa-fixes/`.
+
 ### ⚠️ Breaking
 
 - `tene get <KEY>` now refuses to print plaintext to non-TTY stdout by default.
