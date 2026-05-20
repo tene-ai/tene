@@ -127,6 +127,18 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Sprint v1014-rc1-qa-fixes / FX4 (B4 fix). Cobra's synthetic verbs
+	// (the auto-generated `help` command and the `__complete*` shell
+	// completion helpers) are not in CommandTier by design — auth.walk
+	// already skips them when Validate() runs at startup. Mirror the
+	// same skip here so a `tene help` invocation does not produce
+	// "internal: command 'help' has no PermLevel entry" the way rc1
+	// did. Synthetic verbs also do not emit audit rows (no tier, no
+	// security-relevant action).
+	if auth.IsCobraSynthetic(cmd) {
+		return nil
+	}
+
 	tier, ok := auth.TierFor(path)
 	if !ok {
 		// Mirror the wording auth.Validate() uses so an operator sees the
@@ -254,14 +266,18 @@ func init() {
 	// rootCmd.AddCommand(newTeamCmd())
 
 	// F2 quality gate G4: every registered cobra command must have a
-	// declared PermLevel in internal/auth.CommandTier. Validate() walks
-	// the entire command tree and Refuses to start the binary if any
-	// command is missing — the panic message names the missing paths so
-	// the developer can add them to permissions.go before the next build.
+	// declared PermLevel in internal/auth.CommandTier, AND every
+	// CommandTier entry must correspond to a registered verb. The
+	// bidirectional check (sprint v1014-rc1-qa-fixes/FX4, B5) catches
+	// stale entries like the v1.0.14-rc1 `logout` ghost — a verb the
+	// table advertised but the binary did not dispatch.
 	//
-	// This is the deliberate "static" half of G4 enforcement; the
-	// "runtime" half lives in rootPersistentPreRunE above.
-	if err := auth.Validate(rootCmd); err != nil {
+	// ValidateStrict panics the binary at startup if either direction
+	// drifts so a developer cannot ship a regression on either side.
+	// The unit tests in internal/auth use the looser forward-only
+	// Validate so they can exercise synthetic trees without having to
+	// populate the full CommandTier in their fixtures.
+	if err := auth.ValidateStrict(rootCmd); err != nil {
 		panic(fmt.Sprintf("F2 G4 violation: %v", err))
 	}
 }

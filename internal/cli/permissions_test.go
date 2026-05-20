@@ -92,12 +92,14 @@ func TestPermissions_Text_Counts(t *testing.T) {
 	// Sprint-locked totals — if these change, the design doc §1.1
 	// CommandTier diagram and master-plan §11 must also change. The
 	// hard-coded numbers double-check that the dynamic count above
-	// matches the documented 16/5/5 breakdown.
-	if total != 26 {
-		t.Errorf("expected 26 total commands per design.md §1.1, got %d", total)
+	// matches the documented 15/5/5 breakdown (down from 16/5/5 after
+	// sprint v1014-rc1-qa-fixes/FX4 removed the stale `logout`
+	// CommandTier entry — see CHANGELOG.md B5 fix).
+	if total != 25 {
+		t.Errorf("expected 25 total commands (15+5+5 post-FX4), got %d", total)
 	}
-	if got := want[auth.PermMetaRead]; got != 16 {
-		t.Errorf("expected 16 metaread entries per design.md §1.1, got %d", got)
+	if got := want[auth.PermMetaRead]; got != 15 {
+		t.Errorf("expected 15 metaread entries (post-FX4), got %d", got)
 	}
 	if got := want[auth.PermSecretWrite]; got != 5 {
 		t.Errorf("expected 5 secretwrite entries per design.md §1.1, got %d", got)

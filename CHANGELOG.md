@@ -75,6 +75,18 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **`auth.IsCobraSynthetic(*cobra.Command) bool`** — exported helper
+  that returns true for cobra's auto-generated `help`, `__complete`,
+  `__completeNoDesc` verbs. Sprint v1014-rc1-qa-fixes/FX4 promotes
+  the previously-private `isCobraInternal` to public so the runtime
+  dispatcher in `cli/root.go` can share the predicate with the
+  startup-time walker, ensuring static + runtime stay in lockstep.
+- **`auth.ValidateStrict(*cobra.Command) error`** — bidirectional
+  startup validator. Reports both "missing tier declaration" (forward)
+  and "stale entry" (reverse) drifts with distinct prefixes so the
+  fix direction is obvious. `root.go init()` now calls this instead
+  of `Validate`; the looser `Validate` remains for unit tests with
+  synthetic trees that do not need to populate every tier entry.
 - **`tene update --include-prerelease`** — opt-in flag for pulling RC/beta
   releases. Without it the update-check path treats the stable channel
   as the only auto-recommendation source, which is what closes the B3
@@ -135,6 +147,21 @@ and tene adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **B4 (HIGH): `tene help` and `tene help <verb>` returned a dispatch
+  error**. The PR #116 permission-tier dispatcher refused to dispatch
+  any command without a CommandTier entry, including cobra's synthetic
+  `help` verb. The auth-package walker already knew to skip `help`;
+  the runtime dispatcher in `cli/root.go` now mirrors that skip via
+  the exported `auth.IsCobraSynthetic` predicate. The same fix covers
+  `__complete` shell-completion helpers.
+- **B5 (HIGH): `tene permissions` listed `logout` as a valid verb but
+  `tene logout` returned "unknown command"**. The cloud feature whose
+  scope included `logout` was unregistered from `root.go init()` while
+  the entry remained in `auth.CommandTier`. The entry has been removed
+  and `auth.Validate` was extended to detect reverse drift (a
+  CommandTier path with no registered verb) via the new
+  `auth.ValidateStrict`. The bidirectional check now panics at binary
+  startup if either direction drifts.
 - **B3 (CRITICAL): `tene update` recommended a downgrade from RC to older
   stable**. A user on `v1.0.14-rc1` typing `tene update` was
   auto-downgraded to `v1.0.13` because `updateAvailable` was a single-
