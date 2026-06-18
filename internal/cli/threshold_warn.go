@@ -47,10 +47,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/audit"
-	"github.com/agent-kay-it/tene/internal/keychain"
-	"github.com/agent-kay-it/tene/internal/vault"
-	"github.com/agent-kay-it/tene/internal/vaultcfg"
+	"github.com/tene-ai/tene/internal/audit"
+	"github.com/tene-ai/tene/internal/keychain"
+	"github.com/tene-ai/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vaultcfg"
 )
 
 // auditSentinelPrefix is the filename stem of the per-project notice

@@ -2,7 +2,7 @@
 
 **기준일**: 2026-04-23
 **대상 커밋**: `staging` 기준 v1.0.4
-**범위**: 3 surface (GitHub 리포 `agent-kay-it/tene` · 랜딩 `tene.sh` = `apps/web/` · CLI `cmd/ & internal/ & pkg/`)
+**범위**: 3 surface (GitHub 리포 `tene-ai/tene` · 랜딩 `tene.sh` = `apps/web/` · CLI `cmd/ & internal/ & pkg/`)
 **방법**: 모든 항목은 **실제 코드/설정/GitHub API 직접 열람**으로 확인. 에이전트 간접 보고서는 의도적으로 배제.
 
 ---
@@ -49,7 +49,7 @@
 **해석**:
 - description / topics / README 의 품질은 상위 10 %. 하지만 **stars 7, 외부 Referrer 5 건** = 세상에 존재가 거의 알려지지 않음.
 - **clones 800 > views 337** 는 CI / 자동 봇 활동이 사람 방문을 능가한다는 뜻. 실제 인간 인식도는 아직 매우 낮음.
-- **Custom OG 이미지 미사용**: HN · X · Reddit 어디에 링크를 붙여도 `opengraph.githubassets.com/{hash}/agent-kay-it/tene` 기본 자동 생성 이미지가 나옴. 브랜딩/인지 단계 누수.
+- **Custom OG 이미지 미사용**: HN · X · Reddit 어디에 링크를 붙여도 `opengraph.githubassets.com/{hash}/tene-ai/tene` 기본 자동 생성 이미지가 나옴. 브랜딩/인지 단계 누수.
 
 ### 1.2 랜딩 `tene.sh` 실측
 
@@ -162,7 +162,7 @@
 | **발견 (Web 검색 · AI 추론)** | 🔴 stars 7 + **Custom OG 이미지 부재** → HN·X에 링크해도 GitHub 기본 문자열 이미지로 노출 · 🔴 외부 referrer 월 ~5건 · ⚠️ Discussions OFF (Q&A 페이지 검색 인덱싱 자산 손실) | ⚠️ robots.txt가 LLM봇(GPTBot·ClaudeBot·PerplexityBot·CCBot) 명시 allow 없음 · ⚠️ `<link rel="ai-index">` 없음 · ⚠️ `.well-known/ai.json` 없음 | ✅ llms.txt · llms-full.txt 고품질 |
 | **인지 (30-60초 요약)** | ✅ description · topics(20) · README H1 양호 · ⚠️ README Cloud Commands 섹션이 미출시 기능을 "있음"으로 표시 → AI가 잘못 인용 | ⚠️ metadata.description 211자(SERP 컷오프) · ⚠️ 홈에 Organization JSON-LD 없음 → 엔티티 그래프 consolidation 불가 · ⚠️ /vs aggregateRating=4.9·reviewCount=stars값 (schema 의미 오용 + Google rich-result penalty 리스크) | ✅ `tene --help` (Cobra 기본) |
 | **흥미 (기능/크리덴셜 매칭)** | 🔴 Community Health 42% (SECURITY.md/CoC/CONTRIBUTING/issue_tpl/PR_tpl 전부 부재) = "이게 진짜 유지보수되는 프로젝트인가?" 신호 약함 · ⚠️ FUNDING.yml 없음 | ⚠️ stars 수·testimonial·audit 배지 랜딩에 전무 · ⚠️ Product Hunt 배지 hero 구석 · ⚠️ `/vs/*` → 홈 back breadcrumb 없음 · ✅ 7편 블로그 + 5편 /vs + 6 데모 GIF 품질 우수 | ✅ `tene list` 마스킹 · `tene run --` stderr 분리 · 전역 `--json` |
-| **설치 (curl·brew·docker·go install)** | ⚠️ README install 섹션 양호 · ⚠️ Homebrew 명령 예시가 없어 AI는 curl만 추천 | ⚠️ 설치 후 "다음 단계" 링크 약함 (퀵스타트/docs URL 히어로 부재) | 🔴 **`brew install tene` 작동 안 함** (.goreleaser.yml에 brews 섹션 자체 부재) · 🔴 **`docker run ghcr.io/agent-kay-it/tene` 작동 안 함** · ⚠️ GPG 서명 미지원 (엔터프라이즈 이탈) |
+| **설치 (curl·brew·docker·go install)** | ⚠️ README install 섹션 양호 · ⚠️ Homebrew 명령 예시가 없어 AI는 curl만 추천 | ⚠️ 설치 후 "다음 단계" 링크 약함 (퀵스타트/docs URL 히어로 부재) | 🔴 **`brew install tene` 작동 안 함** (.goreleaser.yml에 brews 섹션 자체 부재) · 🔴 **`docker run ghcr.io/tene-ai/tene` 작동 안 함** · ⚠️ GPG 서명 미지원 (엔터프라이즈 이탈) |
 | **사용 (첫 30분 · 리텐션)** | — | — | ⚠️ `tene get <KEY>` 기본 출력이 stdout 평문 → 룰 파일을 로드 못 한 AI에선 유출 가능 (CLI 레벨 안전장치 부재) · 🔴 README "Cloud Commands" = 주석처리된 7명령 → **사용자 첫 `tene login` 시 "unknown command"** · ⚠️ shell completion 미배포 → AI도 사람도 정확한 하위명령 추측 불가 · ⚠️ man page 없음 |
 
 ---
@@ -172,7 +172,7 @@
 ### 3.A 발견 (Discovery) — AI 가 tene 의 존재를 알게 하기
 
 #### D-1 🔴 **Custom OG 이미지 업로드** (GitHub 리포)
-- **현황**: `gh repo view` → `usesCustomOpenGraphImage: false`. HN·X·Reddit·Slack 어디에 `github.com/agent-kay-it/tene` 를 붙여도 GitHub 자동 생성 이미지(파란 배경+저장소명)가 나옴.
+- **현황**: `gh repo view` → `usesCustomOpenGraphImage: false`. HN·X·Reddit·Slack 어디에 `github.com/tene-ai/tene` 를 붙여도 GitHub 자동 생성 이미지(파란 배경+저장소명)가 나옴.
 - **개선**: 이미 제작된 `branding/tene_core_point.png` (1.5 MB) 또는 `apps/web/public/og-image.png` 를 리포 Settings → Social Preview 에 업로드 (1280×640 권장).
 - **임팩트**: 모든 외부 공유 링크의 리치 프리뷰 품질 즉시 상승. 비용 0.
 - **액션**: `gh` 는 이 기능을 지원 안 함 → 브라우저 Settings. 사람 작업 1 분.
@@ -207,7 +207,7 @@
 - **현황**: `hasDiscussionsEnabled: false`. Q&A / Ideas / Show-and-tell 섹션 = AI 훈련 데이터의 핵심 재료인데 0.
 - **개선**: Settings → Features → Discussions enable. 5 개 카테고리(Announcements · Q&A · Ideas · Show and tell · General) 기본 템플릿 유지.
   ```bash
-  gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
+  gh api -X PATCH repos/tene-ai/tene -F has_discussions=true
   ```
 - **임팩트**: Claude / GPT 훈련 파이프라인에 Q&A 페이지 인덱싱 — "tene 사용법" 자연어 검색에 응답 가능.
 - **액션**: 1 클릭 + 초기 질문 3 개 셀프 시딩.
@@ -226,8 +226,8 @@
     "name": "tene",
     "description": "Local-first encrypted secret manager CLI for AI-safe developer workflows",
     "llms_text_urls": ["https://tene.sh/llms.txt", "https://tene.sh/llms-full.txt"],
-    "repository": "https://github.com/agent-kay-it/tene",
-    "contact": "https://github.com/agent-kay-it/tene/issues"
+    "repository": "https://github.com/tene-ai/tene",
+    "contact": "https://github.com/tene-ai/tene/issues"
   }
   ```
 - **임팩트**: 추론-시점 에이전트가 tene.sh 첫 접속에서 agent-readable 인덱스를 즉시 발견.
@@ -315,8 +315,8 @@
     name: "Tene",
     url: "https://tene.sh",
     logo: "https://tene.sh/logo.svg",
-    sameAs: ["https://github.com/agent-kay-it/tene"],
-    contactPoint: { "@type": "ContactPoint", contactType: "Support", url: "https://github.com/agent-kay-it/tene/issues" },
+    sameAs: ["https://github.com/tene-ai/tene"],
+    contactPoint: { "@type": "ContactPoint", contactType: "Support", url: "https://github.com/tene-ai/tene/issues" },
   },
   {
     "@type": "WebSite",
@@ -371,7 +371,7 @@
 #### S-1 🔴 **Homebrew tap 활성화** (`.goreleaser.yml`)
 - **현황**: `brews:` 섹션 **없음**. AI가 Mac 사용자에게 가장 먼저 추천하는 `brew install tene` 이 존재하지 않음.
 - **개선**:
-  1. 신규 public repo `agent-kay-it/homebrew-tap` 생성 (formulae/ 디렉토리 포함).
+  1. 신규 public repo `tene-ai/homebrew-tap` 생성 (formulae/ 디렉토리 포함).
   2. `.goreleaser.yml` 에 `brews:` 섹션 추가:
      ```yaml
      brews:
@@ -380,7 +380,7 @@
          description: "Local-first encrypted secret manager CLI for AI-safe workflows"
          license: "MIT"
          repository:
-           owner: agent-kay-it
+           owner: tene-ai
            name: homebrew-tap
          directory: Formula
          test: |
@@ -390,11 +390,11 @@
            Full docs: https://tene.sh/llms.txt
      ```
   3. GitHub repo secret `HOMEBREW_TAP_GITHUB_TOKEN` (fine-grained PAT, tap 리포 쓰기 권한).
-- **임팩트**: `brew install agent-kay-it/tap/tene` 작동. 30 일 안정 + ≥ 75 stars 확보 후 `Homebrew/homebrew-core` PR → `brew install tene` 도 작동.
+- **임팩트**: `brew install tene-ai/tap/tene` 작동. 30 일 안정 + ≥ 75 stars 확보 후 `Homebrew/homebrew-core` PR → `brew install tene` 도 작동.
 - **액션**: 30 분 (tap) · 1 주(core PR 검토 대기).
 
 #### S-2 🔴 **Docker 이미지 (GHCR) 배포**
-- **현황**: `.goreleaser.yml` `dockers:` 섹션 없음. `ghcr.io/agent-kay-it/tene` 이미지 미발행.
+- **현황**: `.goreleaser.yml` `dockers:` 섹션 없음. `ghcr.io/tene-ai/tene` 이미지 미발행.
 - **개선**:
   1. 루트에 `Dockerfile`:
      ```dockerfile
@@ -406,14 +406,14 @@
      ```yaml
      dockers:
        - image_templates:
-           - "ghcr.io/agent-kay-it/tene:{{ .Tag }}"
-           - "ghcr.io/agent-kay-it/tene:latest"
+           - "ghcr.io/tene-ai/tene:{{ .Tag }}"
+           - "ghcr.io/tene-ai/tene:latest"
          dockerfile: Dockerfile
          build_flag_templates:
-           - "--label=org.opencontainers.image.source=https://github.com/agent-kay-it/tene"
+           - "--label=org.opencontainers.image.source=https://github.com/tene-ai/tene"
            - "--label=org.opencontainers.image.license=MIT"
      ```
-- **임팩트**: AI 가 CI/CD 맥락에서 추천하는 `docker run ghcr.io/agent-kay-it/tene` 작동.
+- **임팩트**: AI 가 CI/CD 맥락에서 추천하는 `docker run ghcr.io/tene-ai/tene` 작동.
 - **액션**: 45 분.
 
 #### S-3 🟡 **install.sh `tene init` 힌트 출력 + 링크**
@@ -428,7 +428,7 @@
   info ""
   info "  Next step: tene init"
   info "  AI agents: read https://tene.sh/llms.txt"
-  info "  Docs:      https://github.com/agent-kay-it/tene#readme"
+  info "  Docs:      https://github.com/tene-ai/tene#readme"
   ```
 - **임팩트**: AI 가 `install | sh` 출력을 캡처해 다음 단계를 정확히 권고.
 - **액션**: 3 분.
@@ -500,9 +500,9 @@
   ```go
   rootCmd.SetHelpTemplate(defaultHelpTemplate + `
   Resources:
-    Docs:      https://github.com/agent-kay-it/tene
+    Docs:      https://github.com/tene-ai/tene
     AI index:  https://tene.sh/llms.txt
-    Issues:    https://github.com/agent-kay-it/tene/issues
+    Issues:    https://github.com/tene-ai/tene/issues
   `)
   ```
   또는 `rootCmd.Long` 에 리소스 블록 추가.
@@ -573,7 +573,7 @@
 | 5 | Perplexity | "How to prevent Claude Code from reading my .env file" | 상위 5 |
 | 6 | Gemini Deep Research | "Compare dotenv-vault alternatives that work offline" | 포함 |
 | 7 | `brew install tene` 작동 | 실제 커맨드 실행 | 200 OK (M2) |
-| 8 | `docker run ghcr.io/agent-kay-it/tene version` | 실제 실행 | 200 OK (M2) |
+| 8 | `docker run ghcr.io/tene-ai/tene version` | 실제 실행 | 200 OK (M2) |
 
 결과는 `docs/stats/ai-discoverability.md` 에 월별 누적.
 
@@ -611,10 +611,10 @@
 
 ```bash
 # GitHub 메타
-gh repo view agent-kay-it/tene --json description,repositoryTopics,stargazerCount,hasDiscussionsEnabled,usesCustomOpenGraphImage,isSecurityPolicyEnabled,fundingLinks
-gh api repos/agent-kay-it/tene/community/profile
-gh api repos/agent-kay-it/tene/traffic/views
-gh api repos/agent-kay-it/tene/traffic/popular/referrers
+gh repo view tene-ai/tene --json description,repositoryTopics,stargazerCount,hasDiscussionsEnabled,usesCustomOpenGraphImage,isSecurityPolicyEnabled,fundingLinks
+gh api repos/tene-ai/tene/community/profile
+gh api repos/tene-ai/tene/traffic/views
+gh api repos/tene-ai/tene/traffic/popular/referrers
 
 # 파일 존재 확인
 ls tene/.github/

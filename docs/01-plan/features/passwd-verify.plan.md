@@ -293,7 +293,7 @@ Layer mapping:
 
 - [x] `CLAUDE.md` (project root) — Go 1.25, Clean Architecture, internal/* 패키지 layout
 - [x] `tene/.golangci.yml` — 6 linter (s3 에서 15 로 확장)
-- [x] Go module: `github.com/agent-kay-it/tene`
+- [x] Go module: `github.com/tene-ai/tene`
 - [x] Error handling: `pkg/errors` (s4 에서 `teneerr` rename)
 - [x] Testing: `go test -race` + `testhelper_test.go` (s2 에서 리팩토)
 

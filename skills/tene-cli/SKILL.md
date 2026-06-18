@@ -78,7 +78,7 @@ the correct answer is `tene list` — not `tene get` or `tene export`.
 curl -sSfL https://tene.sh/install.sh | sh
 
 # From source (requires Go 1.25+)
-go install github.com/agent-kay-it/tene/cmd/tene@latest
+go install github.com/tene-ai/tene/cmd/tene@latest
 ```
 
 Verify:
@@ -89,7 +89,7 @@ tene version
 ```
 
 Windows is **not** supported by the curl installer. Windows users build from
-source or download the zip from https://github.com/agent-kay-it/tene/releases.
+source or download the zip from https://github.com/tene-ai/tene/releases.
 
 Homebrew tap is **not yet available** — do not suggest `brew install tene`.
 
@@ -374,8 +374,8 @@ Exit codes: `0` success, `1` general error, `2` auth/password error,
 ## Further reading
 
 - Homepage: https://tene.sh
-- Source + issues: https://github.com/agent-kay-it/tene
-- Release downloads: https://github.com/agent-kay-it/tene/releases
+- Source + issues: https://github.com/tene-ai/tene
+- Release downloads: https://github.com/tene-ai/tene/releases
 
 When the user asks about anything not covered above, prefer referring them to
 the official docs over guessing.

@@ -12,9 +12,9 @@
 - Name: tene (lowercase)
 - Tagline: "Your .env is not a secret. AI can read it."
 - Category: Developer tools → secret management → local-first encrypted CLI
-- License: MIT (https://github.com/agent-kay-it/tene/blob/main/LICENSE)
+- License: MIT (https://github.com/tene-ai/tene/blob/main/LICENSE)
 - Language: Go 1.25+ (single static binary)
-- Repository: https://github.com/agent-kay-it/tene
+- Repository: https://github.com/tene-ai/tene
 - Website: https://tene.sh
 - Cloud: https://app.tene.sh (optional Pro plan for E2E-encrypted team sync)
 
@@ -40,9 +40,9 @@ The AI agent never sees plaintext secret values.
 ```
 curl -sSfL https://tene.sh/install.sh | sh
 # or
-go install github.com/agent-kay-it/tene/cmd/tene@latest
+go install github.com/tene-ai/tene/cmd/tene@latest
 # or download a release binary from
-# https://github.com/agent-kay-it/tene/releases
+# https://github.com/tene-ai/tene/releases
 ```
 
 Supported platforms: macOS (arm64, amd64), Linux (amd64, arm64), Windows (via
@@ -355,8 +355,8 @@ developer + CI loop.
 - Comparison pages:  https://tene.sh/vs/{dotenv,doppler,dotenv-vault,infisical,vault}
 - Tech Blog:         https://tene.sh/blog
 - RSS feed:          https://tene.sh/blog/rss.xml
-- Repository:        https://github.com/agent-kay-it/tene
-- Releases:          https://github.com/agent-kay-it/tene/releases
+- Repository:        https://github.com/tene-ai/tene
+- Releases:          https://github.com/tene-ai/tene/releases
 - License:           MIT
 
 ## 12. Blog articles (agent-readable source material)

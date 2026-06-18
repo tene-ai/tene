@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/agent-kay-it/tene/internal/vaultcfg"
-	"github.com/agent-kay-it/tene/pkg/domain"
+	"github.com/tene-ai/tene/internal/vaultcfg"
+	"github.com/tene-ai/tene/pkg/domain"
 )
 
 var listCmd = &cobra.Command{

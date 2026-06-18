@@ -290,7 +290,7 @@ your credit card against your OpenAI account.
 disk in the first place. Encrypt the secrets at rest, decrypt
 them in memory only, and pass them to your app as environment
 variables at runtime. That's the pattern
-[tene](https://github.com/agent-kay-it/tene) uses:
+[tene](https://github.com/tene-ai/tene) uses:
 
 ```bash
 # 1. Install once
@@ -323,7 +323,7 @@ here's the path I'd defend:
 - **Auth**: Clerk or Auth.js (NextAuth). Don't roll your own.
 - **Deploy**: Vercel for the frontend. The managed database lives
   on the Supabase or Neon side.
-- **Secret management**: [tene](https://github.com/agent-kay-it/tene)
+- **Secret management**: [tene](https://github.com/tene-ai/tene)
   for local dev (keeps keys out of your AI agent's context) plus
   Vercel's environment-variable UI for production.
 - **Domain**: Cloudflare. Cheap, fast DNS, free HTTPS on top.
@@ -364,7 +364,7 @@ learn them once and they apply to every future project.
   Railway, or raw cloud.
 - **Secrets**: the one thing tutorials lie about. Keep them off
   disk and out of the AI agent's context from day one — that's
-  what [tene](https://github.com/agent-kay-it/tene) is for.
+  what [tene](https://github.com/tene-ai/tene) is for.
 
 ## Terms used in this post
 

@@ -93,13 +93,13 @@ const jsonLd = {
         height: 256,
       },
       sameAs: [
-        "https://github.com/agent-kay-it/tene",
+        "https://github.com/tene-ai/tene",
         "https://agentkay.it",
       ],
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "Support",
-        url: "https://github.com/agent-kay-it/tene/issues",
+        url: "https://github.com/tene-ai/tene/issues",
       },
       founder: {
         "@type": "Person",

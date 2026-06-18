@@ -63,7 +63,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/agent-kay-it/tene/internal/auth"
+	"github.com/tene-ai/tene/internal/auth"
 )
 
 // permissionsCmd is the `tene permissions` top-level subcommand.

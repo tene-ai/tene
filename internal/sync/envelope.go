@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/tene-ai/tene/pkg/crypto"
 )
 
 const (

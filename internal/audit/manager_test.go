@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 // newTestManager opens a fresh vault under t.TempDir() and returns a

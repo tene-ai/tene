@@ -744,7 +744,7 @@ package recovery
 
 import (
     "github.com/tyler-smith/go-bip39"
-    "github.com/agent-kay-it/tene/internal/crypto"
+    "github.com/tene-ai/tene/internal/crypto"
 )
 
 // GenerateMnemonic은 128-bit 엔트로피에서 12단어 BIP-39 니모닉을 생성한다.
@@ -853,7 +853,7 @@ const SectionHeader = "# Secrets Management"
 
 const SecretsMdTemplate = `# Secrets Management
 
-This project uses [tene](https://github.com/agent-kay-it/tene) for secret management.
+This project uses [tene](https://github.com/tene-ai/tene) for secret management.
 
 ## Usage
 - Get a secret: ` + "`tene get <KEY>`" + `
@@ -964,9 +964,9 @@ package cli
 
 import (
     "github.com/spf13/cobra"
-    "github.com/agent-kay-it/tene/internal/crypto"
-    "github.com/agent-kay-it/tene/internal/keychain"
-    "github.com/agent-kay-it/tene/internal/vault"
+    "github.com/tene-ai/tene/internal/crypto"
+    "github.com/tene-ai/tene/internal/keychain"
+    "github.com/tene-ai/tene/internal/vault"
 )
 
 var (

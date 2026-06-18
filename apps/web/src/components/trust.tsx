@@ -36,48 +36,48 @@ export function Trust() {
         {/* Live badges row */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-opacity hover:opacity-80"
             aria-label="GitHub stars"
           >
             <img
-              src="https://img.shields.io/github/stars/agent-kay-it/tene?style=for-the-badge&label=GitHub%20stars&color=black"
+              src="https://img.shields.io/github/stars/tene-ai/tene?style=for-the-badge&label=GitHub%20stars&color=black"
               alt="GitHub stars"
               loading="lazy"
               height={32}
             />
           </a>
           <a
-            href="https://github.com/agent-kay-it/tene/releases"
+            href="https://github.com/tene-ai/tene/releases"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-opacity hover:opacity-80"
             aria-label="Latest release"
           >
             <img
-              src="https://img.shields.io/github/v/release/agent-kay-it/tene?style=for-the-badge&label=latest&color=green"
+              src="https://img.shields.io/github/v/release/tene-ai/tene?style=for-the-badge&label=latest&color=green"
               alt="Latest release"
               loading="lazy"
               height={32}
             />
           </a>
           <img
-            src="https://img.shields.io/github/license/agent-kay-it/tene?style=for-the-badge&color=blue"
+            src="https://img.shields.io/github/license/tene-ai/tene?style=for-the-badge&color=blue"
             alt="MIT License"
             loading="lazy"
             height={32}
           />
           <a
-            href="https://goreportcard.com/report/github.com/agent-kay-it/tene"
+            href="https://goreportcard.com/report/github.com/tene-ai/tene"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-opacity hover:opacity-80"
             aria-label="Go Report Card"
           >
             <img
-              src="https://goreportcard.com/badge/github.com/agent-kay-it/tene?style=for-the-badge"
+              src="https://goreportcard.com/badge/github.com/tene-ai/tene?style=for-the-badge"
               alt="Go Report Card"
               loading="lazy"
               height={32}

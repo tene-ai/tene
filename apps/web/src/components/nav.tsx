@@ -78,7 +78,7 @@ export function Nav() {
             FAQ
           </a>
           <a
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("github_click", { location: "nav" })}
@@ -94,7 +94,7 @@ export function Nav() {
         {/* Mobile: GitHub icon + hamburger */}
         <div className="flex items-center gap-3 sm:hidden">
           <a
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => track("github_click", { location: "nav" })}

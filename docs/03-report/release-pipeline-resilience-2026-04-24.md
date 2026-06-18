@@ -41,7 +41,7 @@
 | # | 원인 | 파일 | 증상 |
 |:-:|---|---|---|
 | A | `Update LATEST_VERSION` step에 `if: always()` 가드 없음 | `.github/workflows/auto-tag.yml:150-158` | goreleaser exit 1 → step skip |
-| B | `brews:` 섹션이 존재하지 않는 `agent-kay-it/homebrew-tene` 리포 + 미설정 `HOMEBREW_TAP_GITHUB_TOKEN` secret 참조 | `.goreleaser.yml:91-120` | 매 stable 릴리스마다 401 Bad credentials |
+| B | `brews:` 섹션이 존재하지 않는 `tene-ai/homebrew-tene` 리포 + 미설정 `HOMEBREW_TAP_GITHUB_TOKEN` secret 참조 | `.goreleaser.yml:91-120` | 매 stable 릴리스마다 401 Bad credentials |
 
 A는 B의 **결과 증폭**. B를 고치지 않아도 A를 고치면 LATEST_VERSION 자동 갱신은 보장됨. B도 함께 해소하면 workflow failure 라벨 자체가 사라짐.
 
@@ -165,7 +165,7 @@ A는 B의 **결과 증폭**. B를 고치지 않아도 A를 고치면 LATEST_VERS
 ### 6.2 보류 (의도적)
 
 - Homebrew 재활성 — 사용자 결정 대기
-  - `agent-kay-it/homebrew-tene` 저장소 생성
+  - `tene-ai/homebrew-tene` 저장소 생성
   - `HOMEBREW_TAP_GITHUB_TOKEN` secret 설정
   - `.goreleaser.yml` brews 주석 제거
 - Staging goreleaser 17분 hang 이슈 (2026-04-24 12:27:37 시작) — 본 fix와 무관한 GitHub Runner 이슈로 추정. main이 staging rc를 승격한 race condition 가능성. 재발 시 별도 조사.

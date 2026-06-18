@@ -92,7 +92,7 @@
 |------|--------|-------|
 | --no-color | 플래그만 존재 | `internal/cli/color.go` — NO_COLOR 환경변수 + --no-color + TTY 감지 |
 | .tene.enc 포맷 | raw blob | `internal/encfile/` — 56바이트 헤더 (Magic "TENE" + KDF params + Salt + Nonce) |
-| CLAUDE.md URL | agentkay/tene | **agent-kay-it/tene** |
+| CLAUDE.md URL | agentkay/tene | **tene-ai/tene** |
 
 ---
 

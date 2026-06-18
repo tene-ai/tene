@@ -11,10 +11,10 @@
 
 ### AS-IS: Monorepo (Public)
 
-현재 `agent-kay-it/tene` (public) 단일 레포지토리에 CLI, Cloud API, Dashboard, Landing, Terraform 인프라가 모두 포함되어 있다.
+현재 `tene-ai/tene` (public) 단일 레포지토리에 CLI, Cloud API, Dashboard, Landing, Terraform 인프라가 모두 포함되어 있다.
 
 ```
-agent-kay-it/tene (Public)
+tene-ai/tene (Public)
 ├── cmd/tene/           CLI
 ├── cmd/server/         Cloud API
 ├── internal/           Go 패키지 15개
@@ -33,7 +33,7 @@ agent-kay-it/tene (Public)
 ### TO-BE: 2-Repo Open Core
 
 ```
-agent-kay-it/tene (Public, MIT)
+tene-ai/tene (Public, MIT)
 ├── cmd/tene/           CLI entrypoint
 ├── pkg/domain/         데이터 모델 (Shared)
 ├── pkg/crypto/         암호화 유틸 (Shared)
@@ -49,7 +49,7 @@ agent-kay-it/tene (Public, MIT)
 ├── apps/web/           Landing (tene.sh)
 └── .github/workflows/  CLI 릴리스 파이프라인
 
-agent-kay-it/tene-cloud (Private)
+tene-ai/tene-cloud (Private)
 ├── cmd/server/         Cloud API entrypoint
 ├── internal/api/       Echo server, handlers, middleware
 ├── internal/auth/      OAuth + JWT
@@ -72,10 +72,10 @@ agent-kay-it/tene-cloud (Private)
 
 ## 2. Repository 구조
 
-### 2-1. agent-kay-it/tene (Public, MIT License)
+### 2-1. tene-ai/tene (Public, MIT License)
 
 ```
-agent-kay-it/tene/
+tene-ai/tene/
 ├── cmd/
 │   └── tene/
 │       └── main.go                 # CLI entrypoint (goreleaser 빌드 대상)
@@ -160,10 +160,10 @@ agent-kay-it/tene/
 | **claudemd** | `internal/claudemd/` | CLAUDE.md 템플릿 생성, 5개 AI 에디터 지원 |
 | **encfile** | `internal/encfile/` | 암호화 파일 포맷 (TENV magic + version + nonce + ciphertext) |
 
-### 2-2. agent-kay-it/tene-cloud (Private)
+### 2-2. tene-ai/tene-cloud (Private)
 
 ```
-agent-kay-it/tene-cloud/
+tene-ai/tene-cloud/
 ├── cmd/
 │   └── server/
 │       └── main.go                 # API server entrypoint (Docker 빌드 대상)
@@ -250,7 +250,7 @@ agent-kay-it/tene-cloud/
 ### 3-1. Public repo go.mod
 
 ```go
-module github.com/agent-kay-it/tene
+module github.com/tene-ai/tene
 
 go 1.25.0
 
@@ -290,13 +290,13 @@ require (
 ### 3-2. Private repo go.mod
 
 ```go
-module github.com/agent-kay-it/tene-cloud
+module github.com/tene-ai/tene-cloud
 
 go 1.25.0
 
 require (
     // Shared packages from public repo
-    github.com/agent-kay-it/tene v0.x.x
+    github.com/tene-ai/tene v0.x.x
 
     // Web framework
     github.com/labstack/echo/v4 v4.15.1
@@ -330,7 +330,7 @@ Go의 `internal/` 디렉토리는 같은 모듈 내부에서만 import 가능하
 
 ```go
 // tene-cloud에서 이렇게 import하면 컴파일 에러:
-import "github.com/agent-kay-it/tene/internal/domain"  // ERROR: use of internal package
+import "github.com/tene-ai/tene/internal/domain"  // ERROR: use of internal package
 ```
 
 #### 해결: `internal/` -> `pkg/` 이동
@@ -349,8 +349,8 @@ internal/errors/  → pkg/errors/
 ```go
 // tene-cloud/internal/api/handler/vault.go
 import (
-    "github.com/agent-kay-it/tene/pkg/domain"
-    "github.com/agent-kay-it/tene/pkg/crypto"
+    "github.com/tene-ai/tene/pkg/domain"
+    "github.com/tene-ai/tene/pkg/crypto"
 )
 
 func (h *VaultHandler) Push(c echo.Context) error {
@@ -370,7 +370,7 @@ func (h *VaultHandler) Push(c echo.Context) error {
 
 #### GOPRIVATE 설정 불필요
 
-Public repo(`agent-kay-it/tene`)는 Go module proxy(`proxy.golang.org`)에서 자동으로 접근 가능하다. Private repo에서 `go get github.com/agent-kay-it/tene`을 실행할 때 별도의 GOPRIVATE 설정이 필요하지 않다.
+Public repo(`tene-ai/tene`)는 Go module proxy(`proxy.golang.org`)에서 자동으로 접근 가능하다. Private repo에서 `go get github.com/tene-ai/tene`을 실행할 때 별도의 GOPRIVATE 설정이 필요하지 않다.
 
 단, CI/CD 환경(GitHub Actions)에서 Private repo 자체의 `go mod download`는 정상 동작한다 (`actions/checkout`으로 소스를 이미 받은 상태에서 빌드하므로).
 
@@ -733,7 +733,7 @@ changelog:
 
 release:
   github:
-    owner: agent-kay-it
+    owner: tene-ai
     name: tene
   draft: false
   prerelease: auto
@@ -759,7 +759,7 @@ blobs:
 변경 전 (`apps/web/public/install.sh`):
 
 ```sh
-REPO="agent-kay-it/tene"
+REPO="tene-ai/tene"
 
 get_latest_version() {
   if command -v curl > /dev/null 2>&1; then
@@ -818,7 +818,7 @@ tar xzf "${tmpdir}/${filename}" -C "$tmpdir"
 ```
 
 변경 포인트 3곳:
-1. **상수**: `REPO="agent-kay-it/tene"` -> `RELEASE_BASE="https://tene-releases.s3..."`
+1. **상수**: `REPO="tene-ai/tene"` -> `RELEASE_BASE="https://tene-releases.s3..."`
 2. **버전 조회**: GitHub API -> S3 `LATEST_VERSION` 파일
 3. **다운로드 + 체크섬**: GitHub Releases URL -> S3 URL + SHA-256 검증 추가
 
@@ -832,13 +832,13 @@ tar xzf "${tmpdir}/${filename}" -C "$tmpdir"
 // 상수 (없음, 함수 내에 하드코딩)
 
 func fetchLatestRelease() (*githubRelease, error) {
-    url := "https://api.github.com/repos/agent-kay-it/tene/releases/latest"
+    url := "https://api.github.com/repos/tene-ai/tene/releases/latest"
     // ...GitHub API JSON 파싱...
 }
 
 // 다운로드 URL
 downloadURL := fmt.Sprintf(
-    "https://github.com/agent-kay-it/tene/releases/download/%s/%s",
+    "https://github.com/tene-ai/tene/releases/download/%s/%s",
     targetVersion, assetName,
 )
 ```
@@ -1075,7 +1075,7 @@ module "iam" {
   environment      = local.environment
   vault_bucket_arn = module.s3.vault_bucket_arn
   secrets_arn      = module.secrets.secrets_arn
-  github_org       = "agent-kay-it"
+  github_org       = "tene-ai"
   github_repo      = "tene"
 
   # CLI release upload 권한 (추가)
@@ -1088,8 +1088,8 @@ module "iam" {
 - Private repo (`tene-cloud`): ci.yml에서 ECR push + ECS deploy
 
 두 repo 모두 동일 OIDC provider를 사용하지만, trust policy의 `sub` 조건이 다르다:
-- `repo:agent-kay-it/tene:*` — public repo (CLI 릴리스)
-- `repo:agent-kay-it/tene-cloud:*` — private repo (API 배포)
+- `repo:tene-ai/tene:*` — public repo (CLI 릴리스)
+- `repo:tene-ai/tene-cloud:*` — private repo (API 배포)
 
 IAM 모듈에서 두 repo 모두에 대한 trust policy를 설정해야 한다.
 
@@ -1135,7 +1135,7 @@ packages:
 | Output Directory | `.next` |
 | Node.js Version | 22.x |
 | Domain | `tene.sh` |
-| Git Integration | `agent-kay-it/tene` (public) |
+| Git Integration | `tene-ai/tene` (public) |
 
 환경 변수:
 
@@ -1186,7 +1186,7 @@ Dashboard는 monorepo workspace가 아닌 독립 프로젝트로 운영한다.
 | Output Directory | `.next` |
 | Node.js Version | 22.x |
 | Domain | `app.tene.sh` |
-| Git Integration | `agent-kay-it/tene-cloud` (private) |
+| Git Integration | `tene-ai/tene-cloud` (private) |
 
 Vercel Hobby 플랜에서 private repo 배포가 지원된다 (추가 비용 없음).
 
@@ -1319,20 +1319,20 @@ git mv internal/errors pkg/errors
 
 ```bash
 # 모든 Go 파일에서 import path 변경
-# "github.com/agent-kay-it/tene/internal/domain"
-# -> "github.com/agent-kay-it/tene/pkg/domain"
+# "github.com/tene-ai/tene/internal/domain"
+# -> "github.com/tene-ai/tene/pkg/domain"
 
 # domain (가장 많이 import됨)
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/domain"|"github.com/agent-kay-it/tene/pkg/domain"|g' {} +
+  's|"github.com/tene-ai/tene/internal/domain"|"github.com/tene-ai/tene/pkg/domain"|g' {} +
 
 # crypto
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/crypto"|"github.com/agent-kay-it/tene/pkg/crypto"|g' {} +
+  's|"github.com/tene-ai/tene/internal/crypto"|"github.com/tene-ai/tene/pkg/crypto"|g' {} +
 
 # errors
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/errors"|"github.com/agent-kay-it/tene/pkg/errors"|g' {} +
+  's|"github.com/tene-ai/tene/internal/errors"|"github.com/tene-ai/tene/pkg/errors"|g' {} +
 ```
 
 3. 빌드 검증:
@@ -1348,7 +1348,7 @@ go test ./...
 
 **소요: 1일**
 
-1. GitHub에서 `agent-kay-it/tene-cloud` private repo 생성
+1. GitHub에서 `tene-ai/tene-cloud` private repo 생성
 
 2. 이동할 코드 목록:
 
@@ -1371,42 +1371,42 @@ scripts/sync-secrets.sh  -> tene-cloud/scripts/sync-secrets.sh
 
 ```bash
 cd tene-cloud
-go mod init github.com/agent-kay-it/tene-cloud
+go mod init github.com/tene-ai/tene-cloud
 ```
 
 4. public repo 의존성 추가:
 
 ```bash
-go get github.com/agent-kay-it/tene@latest
+go get github.com/tene-ai/tene@latest
 ```
 
 5. import 경로 변경:
 
 ```bash
 # tene-cloud 내부의 모든 Go 파일에서
-# "github.com/agent-kay-it/tene/internal/api"
-# -> "github.com/agent-kay-it/tene-cloud/internal/api"
+# "github.com/tene-ai/tene/internal/api"
+# -> "github.com/tene-ai/tene-cloud/internal/api"
 
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/api|"github.com/agent-kay-it/tene-cloud/internal/api|g' {} +
+  's|"github.com/tene-ai/tene/internal/api|"github.com/tene-ai/tene-cloud/internal/api|g' {} +
 
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/auth"|"github.com/agent-kay-it/tene-cloud/internal/auth"|g' {} +
+  's|"github.com/tene-ai/tene/internal/auth"|"github.com/tene-ai/tene-cloud/internal/auth"|g' {} +
 
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/billing"|"github.com/agent-kay-it/tene-cloud/internal/billing"|g' {} +
+  's|"github.com/tene-ai/tene/internal/billing"|"github.com/tene-ai/tene-cloud/internal/billing"|g' {} +
 
 find . -name "*.go" -exec sed -i '' \
-  's|"github.com/agent-kay-it/tene/internal/repository"|"github.com/agent-kay-it/tene-cloud/internal/repository"|g' {} +
+  's|"github.com/tene-ai/tene/internal/repository"|"github.com/tene-ai/tene-cloud/internal/repository"|g' {} +
 ```
 
 6. Shared 패키지 import는 그대로 유지:
 
 ```go
 // 이것들은 public repo의 pkg/에서 import (변경 불필요)
-import "github.com/agent-kay-it/tene/pkg/domain"
-import "github.com/agent-kay-it/tene/pkg/crypto"
-import "github.com/agent-kay-it/tene/pkg/errors"
+import "github.com/tene-ai/tene/pkg/domain"
+import "github.com/tene-ai/tene/pkg/crypto"
+import "github.com/tene-ai/tene/pkg/errors"
 ```
 
 7. 빌드 검증:
@@ -1430,19 +1430,19 @@ go test ./...
    - `.github/workflows/dashboard.yml` 생성 (섹션 4-2)
 
 3. IAM OIDC trust policy 업데이트:
-   - `agent-kay-it/tene` + `agent-kay-it/tene-cloud` 모두 허용 (섹션 6-2)
+   - `tene-ai/tene` + `tene-ai/tene-cloud` 모두 허용 (섹션 6-2)
 
 ### Step 6: Vercel 재설정
 
 **소요: 0.5일**
 
 1. **Landing (tene.sh)**:
-   - Vercel 프로젝트 설정 확인: Git Integration이 `agent-kay-it/tene` (public)을 가리키는지 확인
+   - Vercel 프로젝트 설정 확인: Git Integration이 `tene-ai/tene` (public)을 가리키는지 확인
    - Root Directory: `apps/web`
    - 변경 필요 없음 (public repo 유지)
 
 2. **Dashboard (app.tene.sh)**:
-   - Vercel 프로젝트의 Git Integration을 `agent-kay-it/tene-cloud` (private)로 변경
+   - Vercel 프로젝트의 Git Integration을 `tene-ai/tene-cloud` (private)로 변경
    - Root Directory: `apps/dashboard`
    - GitHub App 권한에서 `tene-cloud` repo 접근 허용 확인
    - 검증: 빈 커밋 push -> Vercel 빌드 트리거 확인
@@ -1536,7 +1536,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 
 ## 10. 변경 파일 전체 목록
 
-### Public repo (agent-kay-it/tene) 변경
+### Public repo (tene-ai/tene) 변경
 
 | # | 파일 | 변경 내용 | 구분 |
 |:-:|------|----------|------|
@@ -1572,7 +1572,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 | D10 | `docker-compose.dev.yml` | Private repo로 이동 |
 | D11 | `scripts/` | Private repo로 이동 |
 
-### Private repo (agent-kay-it/tene-cloud) 신규
+### Private repo (tene-ai/tene-cloud) 신규
 
 | # | 파일 | 내용 |
 |:-:|------|------|
@@ -1588,7 +1588,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 | 10 | `docker-compose.dev.yml` | Local dev (기존 코드 그대로) |
 | 11 | `scripts/dev.sh` | Local dev orchestrator (기존 코드 그대로) |
 | 12 | `scripts/sync-secrets.sh` | AWS Secrets Manager 동기화 (기존 코드 그대로) |
-| 13 | `go.mod` | 신규 작성 (module github.com/agent-kay-it/tene-cloud + public repo 의존) |
+| 13 | `go.mod` | 신규 작성 (module github.com/tene-ai/tene-cloud + public repo 의존) |
 | 14 | `go.sum` | 자동 생성 |
 | 15 | `.github/workflows/ci.yml` | test + lint + deploy (섹션 4-2) |
 | 16 | `.github/workflows/dashboard.yml` | Dashboard 빌드 검증 (섹션 4-2) |
@@ -1599,7 +1599,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 
 ## 11. 검증 체크리스트
 
-### Public repo (agent-kay-it/tene)
+### Public repo (tene-ai/tene)
 
 - [ ] `go build ./cmd/tene` 성공
 - [ ] `go test ./...` 성공
@@ -1613,7 +1613,7 @@ curl -sSfL https://tene.sh/install.sh | sh
 - [ ] Landing: `tene.sh` Vercel 배포 정상
 - [ ] pkg/ 패키지가 외부에서 import 가능 확인
 
-### Private repo (agent-kay-it/tene-cloud)
+### Private repo (tene-ai/tene-cloud)
 
 - [ ] `go build ./cmd/server` 성공
 - [ ] `go test ./...` 성공

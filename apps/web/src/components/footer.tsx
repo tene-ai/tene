@@ -16,14 +16,14 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-6 text-sm text-muted">
           <TrackedGithubLink
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             location="footer"
             className="transition-colors hover:text-foreground"
           >
             GitHub
           </TrackedGithubLink>
           <TrackedGithubLink
-            href="https://github.com/agent-kay-it/tene/issues"
+            href="https://github.com/tene-ai/tene/issues"
             location="footer"
             className="transition-colors hover:text-foreground"
           >

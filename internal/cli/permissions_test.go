@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/agent-kay-it/tene/internal/auth"
+	"github.com/tene-ai/tene/internal/auth"
 )
 
 // TestPermissions_Text_AllEntriesPresent asserts that every command

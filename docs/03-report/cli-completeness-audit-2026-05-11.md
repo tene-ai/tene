@@ -58,7 +58,7 @@
 - **노력**: S (3-4시간).
 
 ### P0-3. `pkg/errors`가 stdlib `errors` 패키지를 그림자처리 — A4
-- **근거**: `pkg/errors/errors.go:1`이 `package errors`로 선언. 모든 호출자가 alias 강제 (`teneerr "github.com/agent-kay-it/tene/pkg/errors"`).
+- **근거**: `pkg/errors/errors.go:1`이 `package errors`로 선언. 모든 호출자가 alias 강제 (`teneerr "github.com/tene-ai/tene/pkg/errors"`).
 - **위험**: 교과서적인 stutter 안티패턴; 모든 contributor에게 영구 마찰; `%w` 래핑 후 `*TeneError` 타입 어서션은 `errors.Is/As`와 함께 작동하지 않음.
 - **수정**: `pkg/teneerr` (또는 `pkg/errs`) 로 rename; 모든 alias 제거. 저장소 전체 단일 rename + import 업데이트.
 - **노력**: S (반나절).
@@ -251,7 +251,7 @@
 
 #### 개선점
 - **P0** Linter 커버리지 너무 좁음. `.golangci.yml:8-14`가 6개 linter 만 활성화. 누락: **gofumpt, revive, gocritic, gosec, errorlint, bodyclose, noctx, wrapcheck, gocyclo, prealloc**. crypto + HTTP 다루는 Go 1.25 CLI 에 이건 단일 최대 갭.
-- **P0** `pkg/errors` 가 stdlib `errors` 그림자처리. `pkg/errors/errors.go:1` → 모든 호출자가 alias 강제 (`teneerr "github.com/agent-kay-it/tene/pkg/errors"`). `pkg/teneerr` 또는 `pkg/errs` 로 rename.
+- **P0** `pkg/errors` 가 stdlib `errors` 그림자처리. `pkg/errors/errors.go:1` → 모든 호출자가 alias 강제 (`teneerr "github.com/tene-ai/tene/pkg/errors"`). `pkg/teneerr` 또는 `pkg/errs` 로 rename.
 - **P1** `TeneError` 가 `errors.As` 가 아닌 타입 어서션 사용. `pkg/errors/errors.go:54-59`의 `IsTeneError` 가 raw `err.(*TeneError)` 사용 — `%w` 래핑 후 silent 실패.
 - **P1** `internal/cli` 의 패키지 레벨 mutable state (`root.go:16-20, 41-48`, `get.go:12`, `set.go:14-17`, `init.go:34-40`) + 명령어 등록하는 9개 분리된 `init()` 함수. 테스트 표면이 사실상 reset 불가. **전체에 `t.Parallel()` 0개.** `newRootCmd()` 팩토리 + struct 에 바인딩된 flag 로 이동.
 - **P1** `context.Context` 가 vault/crypto 레이어로 전파되지 않음. `vault.Vault.SetMeta/GetSecret/ListSecrets/DeleteSecret` 모두 `ctx` first arg 없이 SQLite I/O. CLI 트리 전체에 `context.Background()` 가 단 1회 등장.
@@ -424,7 +424,7 @@
 | # | 이슈 | P |
 |---|---|:---:|
 | 1 | **코드 서명 전무.** macOS unsigned → Gatekeeper 벽 + 격리. Windows unsigned → SmartScreen 경고. artifact 나 GHCR 에 Sigstore/cosign 없음. | **P0** |
-| 2 | **Homebrew tap 비활성** (`.goreleaser.yml:89-140` 주석처리; 누락된 `agent-kay-it/homebrew-tene` repo + PAT 인용 TODO). README 가 curl-pipe + `go install` 만 광고. v1.0.5-1.0.7 실패한 3개 릴리스가 이것 때문. | **P0** |
+| 2 | **Homebrew tap 비활성** (`.goreleaser.yml:89-140` 주석처리; 누락된 `tene-ai/homebrew-tene` repo + PAT 인용 TODO). README 가 curl-pipe + `go install` 만 광고. v1.0.5-1.0.7 실패한 3개 릴리스가 이것 때문. | **P0** |
 | 3 | **SBOM 내보내기 없음.** GoReleaser 의 `sboms:` (syft → CycloneDX/SPDX) 지원이 사소함. #1 결합 시 다운스트림 소비자 (기업, GovCloud, distro) 가 수용 불가. | **P1** |
 | 4 | **SLSA provenance 없음.** Workflow 가 이미 `id-token: write` 보유 (AWS OIDC). `slsa-framework/slsa-github-generator` 내보내기는 ~10줄. | **P1** |
 | 5 | **재현 가능 빌드 위생 없음.** `mod_timestamp: '{{ .CommitTimestamp }}'` 없음. 동일 커밋에서 재실행이 다른 해시 생성. | **P1** |
@@ -439,7 +439,7 @@
 - artifact 당 syft CycloneDX + SPDX 내보내는 `sboms:` 블록 (~6줄).
 - `checksums.txt` 에 연결된 SLSA 생성기 워크플로 (`slsa-framework/slsa-github-generator@v2.0.0`) (~30줄).
 - 모든 `actions/*` 를 commit SHA pin + `github-actions` 용 Dependabot 활성화.
-- Homebrew tap 재활성화 (`gh repo create agent-kay-it/homebrew-tene --public`, `HOMEBREW_TAP_GITHUB_TOKEN` 설정, `.goreleaser.yml:109-140` 주석 해제). 블록 이미 작성되고 테스트됨.
+- Homebrew tap 재활성화 (`gh repo create tene-ai/homebrew-tene --public`, `HOMEBREW_TAP_GITHUB_TOKEN` 설정, `.goreleaser.yml:109-140` 주석 해제). 블록 이미 작성되고 테스트됨.
 - 비어있는 `packages/{cli,crypto,types}/` 비우거나 삭제.
 
 #### Big bets

@@ -1,6 +1,6 @@
 # GitHub Copilot — tene Project Instructions
 
-This repository is [tene](https://github.com/agent-kay-it/tene), a local-first
+This repository is [tene](https://github.com/tene-ai/tene), a local-first
 encrypted secret manager CLI. When suggesting code or commands for this
 project, follow these rules.
 
@@ -49,4 +49,4 @@ project, follow these rules.
 - AI index: https://tene.sh/llms.txt
 - Full reference: https://tene.sh/llms-full.txt
 - CLI reference: https://tene.sh/cli
-- Main docs: https://github.com/agent-kay-it/tene#readme
+- Main docs: https://github.com/tene-ai/tene#readme

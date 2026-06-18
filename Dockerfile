@@ -18,7 +18,7 @@ WORKDIR /workspace
 ENTRYPOINT ["/usr/local/bin/tene"]
 CMD ["--help"]
 
-LABEL org.opencontainers.image.source="https://github.com/agent-kay-it/tene"
+LABEL org.opencontainers.image.source="https://github.com/tene-ai/tene"
 LABEL org.opencontainers.image.description="Local-first encrypted secret manager CLI for AI-safe workflows"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.vendor="agent-kay-it"
+LABEL org.opencontainers.image.vendor="tene-ai"

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 // TestList_NoDecrypt_NoPasswordPrompt asserts the F3 core promise: `tene

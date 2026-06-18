@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/agent-kay-it/tene/internal/vaultcfg"
+	"github.com/tene-ai/tene/internal/vaultcfg"
 )
 
 // previewFrontConfirmText is the user-visible prompt shown when the user

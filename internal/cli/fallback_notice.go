@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/agent-kay-it/tene/internal/keychain"
+	"github.com/tene-ai/tene/internal/keychain"
 )
 
 // F6 (Keychain Fallback UX Polish) — emit a one-time stderr notice when

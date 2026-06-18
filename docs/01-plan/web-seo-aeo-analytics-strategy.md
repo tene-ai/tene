@@ -179,7 +179,7 @@ Rationale: Vercel suite gives real-user CWV + cookieless pageviews free; GA4 pro
 | P1-7 | Cornerstone pillar page: `/guides/secret-management-for-ai-agents` (3-5k words) | 1d | Topic cluster anchor |
 | P1-8 | Syndication: cross-post introductory blog post to dev.to + Hashnode with `canonical_url` (wait 14 days) | 30m | After P0-16 is 14d old |
 | P1-9 | Hacker News Show HN submission for tene (timed Tue 8-10am PT) | 15m | One-shot |
-| P1-10 | Homebrew tap: `homebrew-tap` repo with `Formula/tene.rb`; update `.goreleaser.yml` | 4h | Unlocks `brew install agent-kay-it/tap/tene` |
+| P1-10 | Homebrew tap: `homebrew-tap` repo with `Formula/tene.rb`; update `.goreleaser.yml` | 4h | Unlocks `brew install tene-ai/tap/tene` |
 | P1-11 | Signed commits + SLSA provenance on GoReleaser | 2h | Authority signal |
 | P1-12 | Author bio page: `/about` with founder photo, GitHub link, security PGP key | 90m | E-E-A-T |
 
@@ -375,7 +375,7 @@ const organizationJsonLd = {
   url: 'https://tene.sh',
   logo: 'https://tene.sh/favicon.svg',
   sameAs: [
-    'https://github.com/agent-kay-it/tene',
+    'https://github.com/tene-ai/tene',
     'https://clawhub.ai/agent-kay-it/tene-cli',
   ],
   founder: {
@@ -522,7 +522,7 @@ export function CookieBanner() {
 | Analytics over-tracking = ethics concern for security tool | Reputation risk | Document exactly what we track in `/privacy`; opt-out default for GA |
 | llms.txt ROI unclear | Wasted effort | Automate generation; ~30min upfront, ~0 ongoing maintenance |
 | AIO CTR drop continues | Traffic growth stalls | Double down on citation bait (data posts, comparisons) |
-| Homebrew tap rejection | Delayed install channel | Ship as `agent-kay-it/tap/tene` (personal tap) first; apply to homebrew-core after 1k users |
+| Homebrew tap rejection | Delayed install channel | Ship as `tene-ai/tap/tene` (personal tap) first; apply to homebrew-core after 1k users |
 | SEO crawler infinite loops on dynamic routes | Crawl budget waste | All routes static-exported; no dynamic params except blog slugs |
 
 ---

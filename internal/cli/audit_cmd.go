@@ -40,8 +40,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/agent-kay-it/tene/internal/audit"
-	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/tene-ai/tene/internal/audit"
+	"github.com/tene-ai/tene/pkg/crypto"
 )
 
 // Flags scoped to the audit subcommands. Module-level so resetFlags()

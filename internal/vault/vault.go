@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/agent-kay-it/tene/pkg/domain"
+	"github.com/tene-ai/tene/pkg/domain"
 	_ "modernc.org/sqlite"
 )
 

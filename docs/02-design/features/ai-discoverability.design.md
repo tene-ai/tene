@@ -23,12 +23,12 @@
 ## D-1: Custom OG 이미지 업로드
 
 ### 배경
-`gh repo view --json usesCustomOpenGraphImage` → `false`. HN · X · Reddit · Slack 공유 링크에서 GitHub 자동 생성 이미지(`opengraph.githubassets.com/.../agent-kay-it/tene`) 노출.
+`gh repo view --json usesCustomOpenGraphImage` → `false`. HN · X · Reddit · Slack 공유 링크에서 GitHub 자동 생성 이미지(`opengraph.githubassets.com/.../tene-ai/tene`) 노출.
 
 ### 설계
 - **대상 자산**: `apps/web/public/og-image.png` (1200×630, 1.4MB) 또는 `branding/tene_core_point.png` (1.5MB)
 - **권장**: `branding/tene_core_point.png` 그대로 사용 (브랜딩 포함). 단 1280×640 비율 조정 필요 시 미리 가공.
-- **업로드 경로**: https://github.com/agent-kay-it/tene/settings → Options → Social preview → Upload image.
+- **업로드 경로**: https://github.com/tene-ai/tene/settings → Options → Social preview → Upload image.
 
 ### 구현 절차
 ```bash
@@ -42,7 +42,7 @@ sips -Z 1280 branding/tene_core_point.png --out /tmp/og-github.png
 ```
 
 ### 수용 기준
-- [ ] `gh repo view agent-kay-it/tene --json usesCustomOpenGraphImage,openGraphImageUrl` 에서 `usesCustomOpenGraphImage: true`
+- [ ] `gh repo view tene-ai/tene --json usesCustomOpenGraphImage,openGraphImageUrl` 에서 `usesCustomOpenGraphImage: true`
 - [ ] `openGraphImageUrl` 가 `repository-images.githubusercontent.com/...` 로 시작
 - [ ] Twitter Card Validator 로 HN/X 프리뷰 확인
 
@@ -139,7 +139,7 @@ export default function robots(): MetadataRoute.Robots {
 
 **절차**:
 ```bash
-gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
+gh api -X PATCH repos/tene-ai/tene -F has_discussions=true
 ```
 
 **초기 시딩 Q&A 3 개** (사용자 자신이 self-seed):
@@ -152,7 +152,7 @@ gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
    **A**: 12-word BIP-39 recovery key + `tene recover` 흐름
 
 ### 수용 기준
-- [ ] `gh api repos/agent-kay-it/tene --jq '.has_discussions'` = `true`
+- [ ] `gh api repos/tene-ai/tene --jq '.has_discussions'` = `true`
 - [ ] Discussions 탭에 3개 Q 게시됨, 각각 self-answered
 - [ ] 카테고리: `Q&A`, `Show and tell`, `Announcements`, `Ideas`, `General` 5종 유지
 
@@ -215,15 +215,15 @@ gh api -X PATCH repos/agent-kay-it/tene -F has_discussions=true
     "https://tene.sh/llms.txt",
     "https://tene.sh/llms-full.txt"
   ],
-  "repository": "https://github.com/agent-kay-it/tene",
-  "documentation": "https://github.com/agent-kay-it/tene#readme",
+  "repository": "https://github.com/tene-ai/tene",
+  "documentation": "https://github.com/tene-ai/tene#readme",
   "license": "MIT",
-  "contact": "https://github.com/agent-kay-it/tene/issues",
+  "contact": "https://github.com/tene-ai/tene/issues",
   "install": {
     "curl": "curl -sSfL https://tene.sh/install.sh | sh",
-    "brew": "brew install agent-kay-it/tap/tene",
-    "go": "go install github.com/agent-kay-it/tene/cmd/tene@latest",
-    "docker": "docker run ghcr.io/agent-kay-it/tene:latest"
+    "brew": "brew install tene-ai/tap/tene",
+    "go": "go install github.com/tene-ai/tene/cmd/tene@latest",
+    "docker": "docker run ghcr.io/tene-ai/tene:latest"
   }
 }
 ```
@@ -251,7 +251,7 @@ github: [agent-kay-it]
 
 ### 수용 기준
 - [ ] GitHub 리포 상단에 "❤️ Sponsor" 버튼 표시
-- [ ] `gh api repos/agent-kay-it/tene --jq '.funding_links | length'` ≥ 1
+- [ ] `gh api repos/tene-ai/tene --jq '.funding_links | length'` ≥ 1
 
 ---
 
@@ -490,13 +490,13 @@ const jsonLd = {
         height: 256,
       },
       sameAs: [
-        "https://github.com/agent-kay-it/tene",
+        "https://github.com/tene-ai/tene",
         "https://github.com/agent-kay-it",
       ],
       contactPoint: {
         "@type": "ContactPoint",
         contactType: "Support",
-        url: "https://github.com/agent-kay-it/tene/issues",
+        url: "https://github.com/tene-ai/tene/issues",
       },
       founder: {
         "@type": "Person",
@@ -586,11 +586,11 @@ export const heroData = {
     install: "curl -sSfL https://tene.sh/install.sh | sh",
     primary: {
       label: "Star on GitHub",
-      href: "https://github.com/agent-kay-it/tene",
+      href: "https://github.com/tene-ai/tene",
     },
     secondary: {
       label: "Quickstart",
-      href: "https://github.com/agent-kay-it/tene#quick-start",
+      href: "https://github.com/tene-ai/tene#quick-start",
     },
   },
 };
@@ -724,7 +724,7 @@ All participation is governed by [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 ### Build & Test
 
 ```bash
-git clone https://github.com/agent-kay-it/tene.git
+git clone https://github.com/tene-ai/tene.git
 cd tene
 go build -o tene ./cmd/tene
 go test ./...
@@ -942,7 +942,7 @@ Closes #
 ### 수용 기준
 - [ ] `test -f SECURITY.md && test -f CODE_OF_CONDUCT.md && test -f CONTRIBUTING.md`
 - [ ] `test -f .github/ISSUE_TEMPLATE/bug_report.yml && test -f .github/ISSUE_TEMPLATE/feature_request.yml && test -f .github/PULL_REQUEST_TEMPLATE.md`
-- [ ] `gh api repos/agent-kay-it/tene/community/profile --jq '.health_percentage'` ≥ 90
+- [ ] `gh api repos/tene-ai/tene/community/profile --jq '.health_percentage'` ≥ 90
 - [ ] GitHub "New issue" 페이지에 2개 템플릿 표시
 - [ ] GitHub "Security" 탭 활성화 (SECURITY.md 인식)
 
@@ -979,32 +979,32 @@ export function Trust() {
         {/* Row 1: live badges */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-opacity hover:opacity-80"
           >
             <img
-              src="https://img.shields.io/github/stars/agent-kay-it/tene?style=for-the-badge&label=GitHub%20stars&color=black"
+              src="https://img.shields.io/github/stars/tene-ai/tene?style=for-the-badge&label=GitHub%20stars&color=black"
               alt="GitHub stars"
               loading="lazy"
               height="32"
             />
           </a>
           <img
-            src="https://img.shields.io/github/v/release/agent-kay-it/tene?style=for-the-badge&label=latest&color=green"
+            src="https://img.shields.io/github/v/release/tene-ai/tene?style=for-the-badge&label=latest&color=green"
             alt="Latest release"
             loading="lazy"
             height="32"
           />
           <img
-            src="https://img.shields.io/github/license/agent-kay-it/tene?style=for-the-badge&color=blue"
+            src="https://img.shields.io/github/license/tene-ai/tene?style=for-the-badge&color=blue"
             alt="MIT License"
             loading="lazy"
             height="32"
           />
           <img
-            src="https://goreportcard.com/badge/github.com/agent-kay-it/tene?style=for-the-badge"
+            src="https://goreportcard.com/badge/github.com/tene-ai/tene?style=for-the-badge"
             alt="Go Report Card"
             loading="lazy"
             height="32"
@@ -1115,7 +1115,7 @@ import { CTA } from "@/components/cta";
 
 ### TODO (M2)
 - 실제 사용자 3-5명 quote 수집 후 `testimonials` 배열 교체
-- Go Report Card 첫 실행 (`curl https://goreportcard.com/badge/github.com/agent-kay-it/tene`)
+- Go Report Card 첫 실행 (`curl https://goreportcard.com/badge/github.com/tene-ai/tene`)
 
 ---
 
@@ -1206,25 +1206,25 @@ export function Breadcrumb({ items }: Props) {
 
 ### 설계
 
-#### S-1a: 신규 리포 `agent-kay-it/homebrew-tap` 생성
+#### S-1a: 신규 리포 `tene-ai/homebrew-tap` 생성
 
 **사람 작업** (1 분):
 ```bash
-gh repo create agent-kay-it/homebrew-tap --public --description "Homebrew tap for tene — AI-safe secret manager CLI"
+gh repo create tene-ai/homebrew-tap --public --description "Homebrew tap for tene — AI-safe secret manager CLI"
 cd homebrew-tap
 mkdir Formula
 touch README.md
-echo "# homebrew-tap\n\nHomebrew tap for [tene](https://github.com/agent-kay-it/tene)." > README.md
+echo "# homebrew-tap\n\nHomebrew tap for [tene](https://github.com/tene-ai/tene)." > README.md
 git add -A && git commit -m "chore: initial tap repo" && git push
 ```
 
 #### S-1b: PAT 시크릿 생성 + tene 리포에 등록
 
 1. GitHub Settings → Developer settings → Fine-grained PAT
-2. Resource: `agent-kay-it/homebrew-tap` (Contents: Read/Write)
+2. Resource: `tene-ai/homebrew-tap` (Contents: Read/Write)
 3. Token 복사 후:
 ```bash
-gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene --body '<token>'
+gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo tene-ai/tene --body '<token>'
 ```
 
 #### S-1c: `.goreleaser.yml` 에 `brews:` 섹션 추가
@@ -1240,7 +1240,7 @@ brews:
     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
     license: "MIT"
     repository:
-      owner: agent-kay-it
+      owner: tene-ai
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
@@ -1263,7 +1263,7 @@ brews:
         tene init
 
       Documentation:
-        https://github.com/agent-kay-it/tene#readme
+        https://github.com/tene-ai/tene#readme
 
       For AI agents using this project:
         https://tene.sh/llms.txt
@@ -1281,9 +1281,9 @@ env:
 ```
 
 ### 수용 기준
-- [ ] 다음 릴리스 (v1.0.5 또는 v1.1.0) 시 `agent-kay-it/homebrew-tap/Formula/tene.rb` 자동 생성
-- [ ] `brew tap agent-kay-it/tap && brew install tene && tene version` 성공 (macOS arm64 + amd64 · Linux 양쪽)
-- [ ] `brew uninstall tene && brew install agent-kay-it/tap/tene` 재설치 성공
+- [ ] 다음 릴리스 (v1.0.5 또는 v1.1.0) 시 `tene-ai/homebrew-tap/Formula/tene.rb` 자동 생성
+- [ ] `brew tap tene-ai/tap && brew install tene && tene version` 성공 (macOS arm64 + amd64 · Linux 양쪽)
+- [ ] `brew uninstall tene && brew install tene-ai/tap/tene` 재설치 성공
 
 ### Homebrew Core PR (M2-M3, 추가 작업)
 Tap 안정 30일 + stars ≥ 75 후:
@@ -1297,7 +1297,7 @@ Tap 안정 30일 + stars ≥ 75 후:
 ## S-2: Docker 이미지 (GHCR) 배포
 
 ### 배경
-`.goreleaser.yml` 에 `dockers:` 섹션 **없음**. `ghcr.io/agent-kay-it/tene` 미발행.
+`.goreleaser.yml` 에 `dockers:` 섹션 **없음**. `ghcr.io/tene-ai/tene` 미발행.
 
 ### 설계
 
@@ -1325,10 +1325,10 @@ ENTRYPOINT ["/usr/local/bin/tene"]
 CMD ["--help"]
 
 # OCI labels for GHCR UI
-LABEL org.opencontainers.image.source="https://github.com/agent-kay-it/tene"
+LABEL org.opencontainers.image.source="https://github.com/tene-ai/tene"
 LABEL org.opencontainers.image.description="Local-first encrypted secret manager CLI for AI-safe workflows"
 LABEL org.opencontainers.image.license="MIT"
-LABEL org.opencontainers.image.vendor="agent-kay-it"
+LABEL org.opencontainers.image.vendor="tene-ai"
 ```
 
 #### S-2b: `.goreleaser.yml` 에 `dockers:` 섹션
@@ -1338,10 +1338,10 @@ LABEL org.opencontainers.image.vendor="agent-kay-it"
 ```yaml
 dockers:
   - image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}"
-      - "ghcr.io/agent-kay-it/tene:latest"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/tene-ai/tene:latest"
     dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -1350,7 +1350,7 @@ dockers:
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.source=https://github.com/agent-kay-it/tene"
+      - "--label=org.opencontainers.image.source=https://github.com/tene-ai/tene"
       - "--label=org.opencontainers.image.licenses=MIT"
 ```
 
@@ -1358,8 +1358,8 @@ ARM64 빌드 추가 (옵션, linux/arm64 바이너리 이미 생성되므로 가
 
 ```yaml
   - image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-arm64"
-      - "ghcr.io/agent-kay-it/tene:latest-arm64"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-arm64"
+      - "ghcr.io/tene-ai/tene:latest-arm64"
     dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -1372,14 +1372,14 @@ ARM64 빌드 추가 (옵션, linux/arm64 바이너리 이미 생성되므로 가
 
 ```yaml
 docker_manifests:
-  - name_template: "ghcr.io/agent-kay-it/tene:{{ .Tag }}"
+  - name_template: "ghcr.io/tene-ai/tene:{{ .Tag }}"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}"
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-arm64"
-  - name_template: "ghcr.io/agent-kay-it/tene:latest"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/tene-ai/tene:latest"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:latest"
-      - "ghcr.io/agent-kay-it/tene:latest-arm64"
+      - "ghcr.io/tene-ai/tene:latest"
+      - "ghcr.io/tene-ai/tene:latest-arm64"
 ```
 
 #### S-2c: 릴리스 워크플로우에 `packages: write` 권한
@@ -1417,9 +1417,9 @@ jobs:
 ```
 
 ### 수용 기준
-- [ ] 다음 릴리스 시 `ghcr.io/agent-kay-it/tene:v1.0.5` + `latest` 태그 publish
-- [ ] `docker run --rm ghcr.io/agent-kay-it/tene version` → `tene version v1.0.5` 출력
-- [ ] `docker run --rm ghcr.io/agent-kay-it/tene --help` → help 표시
+- [ ] 다음 릴리스 시 `ghcr.io/tene-ai/tene:v1.0.5` + `latest` 태그 publish
+- [ ] `docker run --rm ghcr.io/tene-ai/tene version` → `tene version v1.0.5` 출력
+- [ ] `docker run --rm ghcr.io/tene-ai/tene --help` → help 표시
 - [ ] 이미지 크기 ≤ 20MB
 - [ ] GHCR Package 페이지에 description 표시
 
@@ -1429,10 +1429,10 @@ jobs:
 
 ```bash
 # One-off usage
-docker run --rm -v $(pwd):/workspace ghcr.io/agent-kay-it/tene:latest list
+docker run --rm -v $(pwd):/workspace ghcr.io/tene-ai/tene:latest list
 
 # In GitHub Actions / CI
-- uses: docker://ghcr.io/agent-kay-it/tene:latest
+- uses: docker://ghcr.io/tene-ai/tene:latest
   with:
     args: run --no-keychain -- npm test
   env:
@@ -1471,9 +1471,9 @@ info "  Run 'tene init' to get started."
   info "  Next step: tene init"
   info ""
   info "  Documentation:"
-  info "    README:    https://github.com/agent-kay-it/tene#readme"
+  info "    README:    https://github.com/tene-ai/tene#readme"
   info "    AI index:  https://tene.sh/llms.txt"
-  info "    Issues:    https://github.com/agent-kay-it/tene/issues"
+  info "    Issues:    https://github.com/tene-ai/tene/issues"
 }
 ```
 
@@ -1570,7 +1570,7 @@ import (
     "path/filepath"
 
     "github.com/spf13/cobra/doc"
-    tenecli "github.com/agent-kay-it/tene/internal/cli"
+    tenecli "github.com/tene-ai/tene/internal/cli"
 )
 
 func main() {
@@ -1779,8 +1779,8 @@ import (
     "fmt"
 
     "github.com/spf13/cobra"
-    "github.com/agent-kay-it/tene/pkg/crypto"
-    teneerr "github.com/agent-kay-it/tene/pkg/errors"
+    "github.com/tene-ai/tene/pkg/crypto"
+    teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 
 var getCmd = &cobra.Command{
@@ -1819,8 +1819,8 @@ import (
     "os"
 
     "github.com/spf13/cobra"
-    "github.com/agent-kay-it/tene/pkg/crypto"
-    teneerr "github.com/agent-kay-it/tene/pkg/errors"
+    "github.com/tene-ai/tene/pkg/crypto"
+    teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 
 var flagUnsafeStdout bool
@@ -2011,8 +2011,8 @@ func TestGet_JSON_EmitsWarningToStderr(t *testing.T) {
 - `tene completion [bash|zsh|fish|powershell]` — generate shell completion scripts
 - `.github/copilot-instructions.md`, `.github/FUNDING.yml`
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`
-- Homebrew tap (`brew install agent-kay-it/tap/tene`)
-- Docker image (`docker run ghcr.io/agent-kay-it/tene`)
+- Homebrew tap (`brew install tene-ai/tap/tene`)
+- Docker image (`docker run ghcr.io/tene-ai/tene`)
 - Man page (`man tene`)
 
 ### Fixed
@@ -2049,7 +2049,7 @@ Copilot 은 `AGENTS.md` 와 `.github/copilot-instructions.md` 둘 다 읽지만,
 ```markdown
 # GitHub Copilot — tene Project Instructions
 
-This repository is [tene](https://github.com/agent-kay-it/tene), a local-first
+This repository is [tene](https://github.com/tene-ai/tene), a local-first
 encrypted secret manager CLI. When suggesting code or commands for this
 project, follow these rules:
 
@@ -2093,7 +2093,7 @@ project, follow these rules:
 
 - AI index: https://tene.sh/llms.txt
 - Full reference: https://tene.sh/llms-full.txt
-- Main docs: https://github.com/agent-kay-it/tene#readme
+- Main docs: https://github.com/tene-ai/tene#readme
 ```
 
 ### 수용 기준
@@ -2139,9 +2139,9 @@ Typical workflow:
 
 Resources:
   AI index:   https://tene.sh/llms.txt
-  Docs:       https://github.com/agent-kay-it/tene#readme
-  Issues:     https://github.com/agent-kay-it/tene/issues
-  Discussions: https://github.com/agent-kay-it/tene/discussions
+  Docs:       https://github.com/tene-ai/tene#readme
+  Issues:     https://github.com/tene-ai/tene/issues
+  Discussions: https://github.com/tene-ai/tene/discussions
 `,
     Version:       version,
     SilenceErrors: true,
@@ -2472,10 +2472,10 @@ feat(release): GPG-sign checksums.txt (S-5)
 
 ```bash
 # Homebrew (new!)
-brew install agent-kay-it/tap/tene
+brew install tene-ai/tap/tene
 
 # Docker (new!)
-docker run ghcr.io/agent-kay-it/tene:v1.1.0 version
+docker run ghcr.io/tene-ai/tene:v1.1.0 version
 
 # curl (unchanged)
 curl -sSfL https://tene.sh/install.sh | sh
@@ -2519,12 +2519,12 @@ curl -sSfL https://tene.sh/install.sh | sh
 ```bash
 # 5분짜리 스모크 테스트
 set -e
-brew tap agent-kay-it/tap
+brew tap tene-ai/tap
 brew install tene
 tene version | grep v1.1.0
 tene --help | grep "llms.txt"
 
-docker run --rm ghcr.io/agent-kay-it/tene:v1.1.0 version | grep v1.1.0
+docker run --rm ghcr.io/tene-ai/tene:v1.1.0 version | grep v1.1.0
 
 # tene get non-TTY guard
 mkdir /tmp/tene-smoke && cd /tmp/tene-smoke
@@ -2569,8 +2569,8 @@ curl -s https://tene.sh | grep '"@type":"Organization"'
 
 ```bash
 # GitHub 상태
-gh repo view agent-kay-it/tene --json description,repositoryTopics,stargazerCount,hasDiscussionsEnabled,usesCustomOpenGraphImage,isSecurityPolicyEnabled,fundingLinks
-gh api repos/agent-kay-it/tene/community/profile
+gh repo view tene-ai/tene --json description,repositoryTopics,stargazerCount,hasDiscussionsEnabled,usesCustomOpenGraphImage,isSecurityPolicyEnabled,fundingLinks
+gh api repos/tene-ai/tene/community/profile
 
 # 파일 존재 검증
 test -f SECURITY.md && echo "OK: SECURITY.md"
@@ -2598,8 +2598,8 @@ go build -o tene ./cmd/tene
 
 - `https://goreportcard.com/badge/...` (Trust Section 배지)
 - `https://img.shields.io/...` (다수 배지)
-- GHCR (`ghcr.io/agent-kay-it/tene`)
-- Homebrew tap (`agent-kay-it/homebrew-tap`)
+- GHCR (`ghcr.io/tene-ai/tene`)
+- Homebrew tap (`tene-ai/homebrew-tap`)
 - Contributor Covenant v2.1 markdown 원문
 - (선택) GPG keyserver
 

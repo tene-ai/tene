@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/tene-ai/tene/pkg/crypto"
 )
 
 var teamHTTPClient = &http.Client{Timeout: 30 * time.Second}

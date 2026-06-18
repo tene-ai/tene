@@ -18,11 +18,11 @@ say() { $json_mode || echo "$@"; }
 header() { $json_mode || { echo; echo "─── $1 ────────────────────────────"; }; }
 
 # --- T1: GitHub metadata ---------------------------------------------------
-header "T1 — GitHub metadata (agent-kay-it/tene)"
+header "T1 — GitHub metadata (tene-ai/tene)"
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  topics_count=$(gh api repos/agent-kay-it/tene --jq '.topics | length' 2>/dev/null || echo "?")
-  stars=$(gh api repos/agent-kay-it/tene --jq '.stargazers_count' 2>/dev/null || echo "?")
-  description=$(gh api repos/agent-kay-it/tene --jq '.description' 2>/dev/null || echo "?")
+  topics_count=$(gh api repos/tene-ai/tene --jq '.topics | length' 2>/dev/null || echo "?")
+  stars=$(gh api repos/tene-ai/tene --jq '.stargazers_count' 2>/dev/null || echo "?")
+  description=$(gh api repos/tene-ai/tene --jq '.description' 2>/dev/null || echo "?")
   say "topics count:  $topics_count  (target: 20)"
   say "stars:         $stars"
   say "description:   $description"
@@ -35,7 +35,7 @@ fi
 header "T2 — llms.txt routes"
 llms_status=$(curl -sS -o /dev/null -w '%{http_code}' https://tene.sh/llms.txt || echo 000)
 llms_full_status=$(curl -sS -o /dev/null -w '%{http_code}' https://tene.sh/llms-full.txt || echo 000)
-root_llms_status=$(curl -sS -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/agent-kay-it/tene/main/llms.txt || echo 000)
+root_llms_status=$(curl -sS -o /dev/null -w '%{http_code}' https://raw.githubusercontent.com/tene-ai/tene/main/llms.txt || echo 000)
 say "tene.sh/llms.txt:          HTTP $llms_status      (want 200)"
 say "tene.sh/llms-full.txt:     HTTP $llms_full_status      (want 200)"
 say "github root llms.txt:      HTTP $root_llms_status      (want 200)"

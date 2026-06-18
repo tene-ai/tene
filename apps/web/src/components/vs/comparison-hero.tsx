@@ -34,7 +34,7 @@ export function ComparisonHero({ comparison }: Props) {
             source="vs_page"
           />
           <TrackedGithubLink
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             location="vs_page"
             className="inline-flex items-center gap-2 text-sm text-muted underline underline-offset-4 transition-colors hover:text-foreground"
           >

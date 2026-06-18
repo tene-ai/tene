@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/vault"
-	"github.com/agent-kay-it/tene/internal/vaultcfg"
+	"github.com/tene-ai/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vaultcfg"
 )
 
 // openTestVault constructs a vault.Vault under dir/.tene/vault.db and

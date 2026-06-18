@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/agent-kay-it/tene/internal/keychain"
+	"github.com/tene-ai/tene/internal/keychain"
 )
 
 // Sprint v1014-rc1-qa-fixes / FX1.

@@ -874,8 +874,8 @@ import (
     "github.com/spf13/cobra"
 
     // 3. internal
-    "github.com/agent-kay-it/tene/internal/vault"
-    teneerr "github.com/agent-kay-it/tene/pkg/errors"
+    "github.com/tene-ai/tene/internal/vault"
+    teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 ```
 

@@ -186,8 +186,8 @@ critical fixes. Full sprint reports under
 - `.github/copilot-instructions.md`, `.github/FUNDING.yml`.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md` (GitHub Community Health 42% → 90%+).
 - GitHub Issue templates (bug + feature) and PR template.
-- Homebrew tap (`brew install agent-kay-it/tene/tene` · pending first release cut).
-- Docker image on GHCR (`docker run ghcr.io/agent-kay-it/tene` · pending first release cut).
+- Homebrew tap (`brew install tene-ai/tene/tene` · pending first release cut).
+- Docker image on GHCR (`docker run ghcr.io/tene-ai/tene` · pending first release cut).
 - Man pages + shell completions bundled in release archives (pending first release cut).
 - Landing `/cli` public route with the full CLI reference.
 - Visual breadcrumb on `/vs/*` and `/blog/*` pages.
@@ -304,7 +304,7 @@ critical fixes. Full sprint reports under
   version — v1.0.5, v1.0.6, and v1.0.7 each required a manual S3
   hotfix before the next release.
 - Homebrew publishing disabled in `.goreleaser.yml` until the
-  `agent-kay-it/homebrew-tene` tap repository and
+  `tene-ai/homebrew-tene` tap repository and
   `HOMEBREW_TAP_GITHUB_TOKEN` secret are set up. Re-enable
   instructions are preserved inline as a comment block.
 

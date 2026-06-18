@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/agent-kay-it/tene/internal/keychain"
+	"github.com/tene-ai/tene/internal/keychain"
 )
 
 // TestFallback_KeychainAvailable_NoNotice — when info.Used == false (the

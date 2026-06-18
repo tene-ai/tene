@@ -80,7 +80,7 @@ changelog:
 
 release:
   github:
-    owner: agent-kay-it
+    owner: tene-ai
     name: tene
   draft: false
   prerelease: auto
@@ -89,10 +89,10 @@ release:
 # Homebrew tap — currently disabled (2026-04-24).
 #
 # Publishing to a Homebrew tap requires:
-#   1. A public GitHub repo `agent-kay-it/homebrew-tene` to exist.
+#   1. A public GitHub repo `tene-ai/homebrew-tene` to exist.
 #   2. A fine-grained PAT with `Contents: Read/Write` on that repo,
 #      stored as the `HOMEBREW_TAP_GITHUB_TOKEN` secret on this repo
-#      (agent-kay-it/tene).
+#      (tene-ai/tene).
 #
 # Neither is set up yet, and three consecutive stable releases
 # (v1.0.5, v1.0.6, v1.0.7) failed on this block with a 401 that
@@ -100,9 +100,9 @@ release:
 # install.sh pointing at a stale version.
 #
 # To re-enable:
-#   1. gh repo create agent-kay-it/homebrew-tene --public --license MIT --add-readme
+#   1. gh repo create tene-ai/homebrew-tene --public --license MIT --add-readme
 #   2. Create a fine-grained PAT (Contents: Read/Write on the tap repo),
-#      then: gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene
+#      then: gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo tene-ai/tene
 #   3. Uncomment the block below and keep `skip_upload: false` so stable
 #      releases always publish the formula.
 #
@@ -112,7 +112,7 @@ release:
 #     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
 #     license: "MIT"
 #     repository:
-#       owner: agent-kay-it
+#       owner: tene-ai
 #       name: homebrew-tene
 #       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 #     directory: Formula
@@ -134,7 +134,7 @@ release:
 #         tene init
 #
 #       Documentation:
-#         https://github.com/agent-kay-it/tene#readme
+#         https://github.com/tene-ai/tene#readme
 #
 #       For AI agents using this project:
 #         https://tene.sh/llms.txt
@@ -143,10 +143,10 @@ release:
 # Multi-arch via docker_manifests below.
 dockers:
   - image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:latest-amd64"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-amd64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}-amd64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/tene-ai/tene:latest-amd64"
     dockerfile: Dockerfile
     use: buildx
     goos: linux
@@ -157,13 +157,13 @@ dockers:
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.source=https://github.com/agent-kay-it/tene"
+      - "--label=org.opencontainers.image.source=https://github.com/tene-ai/tene"
       - "--label=org.opencontainers.image.licenses=MIT"
   - image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-arm64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}-arm64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}-arm64"
-      - "ghcr.io/agent-kay-it/tene:latest-arm64"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-arm64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}-arm64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "ghcr.io/tene-ai/tene:latest-arm64"
     dockerfile: Dockerfile
     use: buildx
     goos: linux
@@ -174,26 +174,26 @@ dockers:
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-      - "--label=org.opencontainers.image.source=https://github.com/agent-kay-it/tene"
+      - "--label=org.opencontainers.image.source=https://github.com/tene-ai/tene"
       - "--label=org.opencontainers.image.licenses=MIT"
 
 docker_manifests:
-  - name_template: "ghcr.io/agent-kay-it/tene:{{ .Tag }}"
+  - name_template: "ghcr.io/tene-ai/tene:{{ .Tag }}"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:{{ .Tag }}-arm64"
-  - name_template: "ghcr.io/agent-kay-it/tene:v{{ .Major }}"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-amd64"
+      - "ghcr.io/tene-ai/tene:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/tene-ai/tene:v{{ .Major }}"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}-arm64"
-  - name_template: "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}-amd64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}-arm64"
+  - name_template: "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}-amd64"
-      - "ghcr.io/agent-kay-it/tene:v{{ .Major }}.{{ .Minor }}-arm64"
-  - name_template: "ghcr.io/agent-kay-it/tene:latest"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/tene-ai/tene:v{{ .Major }}.{{ .Minor }}-arm64"
+  - name_template: "ghcr.io/tene-ai/tene:latest"
     image_templates:
-      - "ghcr.io/agent-kay-it/tene:latest-amd64"
-      - "ghcr.io/agent-kay-it/tene:latest-arm64"
+      - "ghcr.io/tene-ai/tene:latest-amd64"
+      - "ghcr.io/tene-ai/tene:latest-arm64"
 
 # S3 upload (existing; legacy curl|sh install path)
 blobs:

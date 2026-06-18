@@ -66,7 +66,7 @@ brews:
   - name: tene
     ...
     repository:
-      owner: agent-kay-it
+      owner: tene-ai
       name: homebrew-tene                      # ← 존재하지 않는 리포
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"  # ← secret 미설정
     skip_upload: auto                           # ← stable 릴리스에서는 skip 안 함
@@ -142,10 +142,10 @@ brews:
 # Homebrew tap — currently disabled.
 #
 # Publishing to a Homebrew tap requires:
-#   1. A public GitHub repo `agent-kay-it/homebrew-tene` to exist.
+#   1. A public GitHub repo `tene-ai/homebrew-tene` to exist.
 #   2. A fine-grained PAT with `Contents: Read/Write` on that repo,
 #      stored as the `HOMEBREW_TAP_GITHUB_TOKEN` secret on this repo
-#      (agent-kay-it/tene).
+#      (tene-ai/tene).
 #
 # Neither is set up yet, and three consecutive stable releases
 # (v1.0.5, v1.0.6, v1.0.7) failed on this block with a 401 that
@@ -153,9 +153,9 @@ brews:
 # install.sh pointing at a stale version.
 #
 # To re-enable:
-#   1. Create https://github.com/agent-kay-it/homebrew-tene (public, MIT).
+#   1. Create https://github.com/tene-ai/homebrew-tene (public, MIT).
 #   2. Create the PAT and run:
-#        gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo agent-kay-it/tene
+#        gh secret set HOMEBREW_TAP_GITHUB_TOKEN --repo tene-ai/tene
 #   3. Uncomment the block below.
 #
 # brews:
@@ -164,7 +164,7 @@ brews:
 #     description: "Local-first encrypted secret manager CLI for AI-safe developer workflows"
 #     license: "MIT"
 #     repository:
-#       owner: agent-kay-it
+#       owner: tene-ai
 #       name: homebrew-tene
 #       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
 #     directory: Formula
@@ -186,7 +186,7 @@ brews:
 #         tene init
 #
 #       Documentation:
-#         https://github.com/agent-kay-it/tene#readme
+#         https://github.com/tene-ai/tene#readme
 #
 #       For AI agents using this project:
 #         https://tene.sh/llms.txt
@@ -213,7 +213,7 @@ brews:
   skip this step and leave `install.sh` users on a stale version —
   v1.0.5, v1.0.6, and v1.0.7 each required a manual S3 hotfix.
 - Homebrew publishing disabled in `.goreleaser.yml` until the
-  `agent-kay-it/homebrew-tene` tap repository and `HOMEBREW_TAP_GITHUB_TOKEN`
+  `tene-ai/homebrew-tene` tap repository and `HOMEBREW_TAP_GITHUB_TOKEN`
   secret are set up. Re-enable instructions are preserved inline in the
   `brews:` comment block.
 ```
@@ -276,7 +276,7 @@ brews:
 
 ### 6.2 Homebrew 재활성 (사용자 결정 시)
 이 fix와 관계없이 독립적으로:
-1. `gh repo create agent-kay-it/homebrew-tene --public --license MIT --add-readme`
+1. `gh repo create tene-ai/homebrew-tene --public --license MIT --add-readme`
 2. Fine-grained PAT 발급 + `gh secret set HOMEBREW_TAP_GITHUB_TOKEN`
 3. `.goreleaser.yml` brews 블록 주석 제거
 4. 다음 stable 릴리스에서 자동 publish 확인

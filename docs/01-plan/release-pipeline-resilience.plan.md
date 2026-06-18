@@ -15,7 +15,7 @@
 지난 3번의 안정 릴리스(v1.0.5, v1.0.6, v1.0.7) 모두 **동일한 증상**으로 실패 처리됨:
 
 1. GoReleaser가 바이너리 빌드 + S3 업로드 + Docker GHCR publish + GitHub Release 모두 **성공**
-2. 마지막 `homebrew formula` 단계에서 `agent-kay-it/homebrew-tene` 리포(존재하지 않음) 401
+2. 마지막 `homebrew formula` 단계에서 `tene-ai/homebrew-tene` 리포(존재하지 않음) 401
 3. goreleaser 전체 exit 1
 4. 다음 스텝 `Update LATEST_VERSION (stable only)`가 **GitHub Actions 기본 동작(이전 스텝 실패 시 skip)** 으로 스킵됨
 5. 결과: `install.sh`가 참조하는 S3 `LATEST_VERSION` 파일이 **2번 연속 수동 핫픽스** 필요했음 (4/23, 4/24)
@@ -24,9 +24,9 @@
 
 ```bash
 # main v1.0.7 Auto Tag & Release (2026-04-24 12:27) 로그 마지막:
-• release published url=https://github.com/agent-kay-it/tene/releases/tag/v1.0.7
+• release published url=https://github.com/tene-ai/tene/releases/tag/v1.0.7
 • homebrew formula
-• error checking for default branch projectID=agent-kay-it/homebrew-tene statusCode=401
+• error checking for default branch projectID=tene-ai/homebrew-tene statusCode=401
 ⨯ release failed after 1m47s
 error=homebrew formula: could not get default branch: 401 Bad credentials
 
@@ -40,7 +40,7 @@ curl https://tene-releases.s3.ap-northeast-2.amazonaws.com/LATEST_VERSION
 사용자 의도 (2026-04-24 세션):
 
 1. **"LATEST_VERSION 업데이트를 CICD에 항상 포함해야겠어"** — 어떤 스텝 실패에도 install.sh 포인터는 갱신되어야
-2. **"homebrew는 아직 대응안할거야"** — 당분간 비활성화. 나중에 `agent-kay-it/homebrew-tene` 저장소 + PAT 준비 시 재활성화
+2. **"homebrew는 아직 대응안할거야"** — 당분간 비활성화. 나중에 `tene-ai/homebrew-tene` 저장소 + PAT 준비 시 재활성화
 3. 두 조치 모두 CICD 코드 변경 필요
 
 ## 3. 스코프
@@ -57,7 +57,7 @@ curl https://tene-releases.s3.ap-northeast-2.amazonaws.com/LATEST_VERSION
 - `install.sh` — 변경 없음 (S3 `LATEST_VERSION` 파일 갱신만 신경 쓰면 됨)
 - `dockers:` 섹션 — 정상 작동 중, 변경 없음
 - `blobs:` 섹션 — 정상 작동 중, 변경 없음
-- `agent-kay-it/homebrew-tene` 리포 — 생성 보류 (사용자 결정)
+- `tene-ai/homebrew-tene` 리포 — 생성 보류 (사용자 결정)
 - `HOMEBREW_TAP_GITHUB_TOKEN` secret — 설정 보류
 
 ### 3.3 문서 업데이트

@@ -122,7 +122,7 @@ brew install tomo-kay/tap/tene
 curl -fsSL https://tene.sh/install.sh | sh
 
 # Go 사용자
-go install github.com/agent-kay-it/tene@latest
+go install github.com/tene-ai/tene@latest
 ```
 
 ---
@@ -135,7 +135,7 @@ go install github.com/agent-kay-it/tene@latest
 ```markdown
 # Secrets Management
 
-This project uses [tene](https://github.com/agent-kay-it/tene) for secret management.
+This project uses [tene](https://github.com/tene-ai/tene) for secret management.
 
 ## Usage
 - Get a secret: `tene get <KEY>`
