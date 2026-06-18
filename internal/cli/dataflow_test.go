@@ -9,8 +9,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/agent-kay-it/tene/internal/vault"
-	"github.com/agent-kay-it/tene/internal/vaultcfg"
+	"github.com/tene-ai/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vaultcfg"
 )
 
 // openVaultReadOnly returns a low-level *sql.DB on the test vault.db so we

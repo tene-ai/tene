@@ -24,7 +24,7 @@ export function CTA() {
 
         <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <TrackedGithubLink
-            href="https://github.com/agent-kay-it/tene"
+            href="https://github.com/tene-ai/tene"
             location="cta"
             className="flex w-full items-center justify-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-6 py-3 text-sm font-medium text-accent transition-colors hover:bg-accent/20 sm:w-auto"
           >

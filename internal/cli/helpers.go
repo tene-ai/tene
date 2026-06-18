@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/agent-kay-it/tene/pkg/crypto"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/tene-ai/tene/pkg/crypto"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
 	"golang.org/x/term"
 )
 

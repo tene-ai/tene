@@ -29,7 +29,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 // Manager exposes audit_log operations over an open vault.Vault.

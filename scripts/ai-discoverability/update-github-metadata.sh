@@ -8,20 +8,20 @@
 #
 # Prerequisites:
 #   - `gh` CLI authenticated (`gh auth status` must show logged-in).
-#   - Repo write permission on github.com/agent-kay-it/tene.
+#   - Repo write permission on github.com/tene-ai/tene.
 #
 # Usage:
 #   ./scripts/ai-discoverability/update-github-metadata.sh          # apply
 #   ./scripts/ai-discoverability/update-github-metadata.sh --dry    # print only
 #
 # Verify after running:
-#   gh api repos/agent-kay-it/tene --jq '{topics, description}'
+#   gh api repos/tene-ai/tene --jq '{topics, description}'
 #
 # Source: docs/02-design/features/ai-discoverability.design.md §2.1
 
 set -euo pipefail
 
-REPO="agent-kay-it/tene"
+REPO="tene-ai/tene"
 
 # Final 20-topic list (GitHub max = 20). Lowercase, alphanumeric + dash only.
 # Rationale:

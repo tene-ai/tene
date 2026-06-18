@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 // Keys are the fully-qualified vault_meta keys (with the "config." prefix

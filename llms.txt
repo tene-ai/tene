@@ -35,6 +35,6 @@ never see plaintext values. MIT licensed, single Go binary, zero servers.
 
 - Canonical summary:   https://tene.sh/llms.txt
 - Extended reference:  https://tene.sh/llms-full.txt
-- Repository:          https://github.com/agent-kay-it/tene
+- Repository:          https://github.com/tene-ai/tene
 - Comparisons:         https://tene.sh/vs/{dotenv,doppler,dotenv-vault,infisical,vault}
 - License:             MIT

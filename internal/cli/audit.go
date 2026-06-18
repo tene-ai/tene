@@ -53,8 +53,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/agent-kay-it/tene/internal/auth"
-	"github.com/agent-kay-it/tene/internal/vault"
+	"github.com/tene-ai/tene/internal/auth"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 // auditActionFor formats the action column value for an F4 row.

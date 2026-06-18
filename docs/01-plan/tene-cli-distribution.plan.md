@@ -31,12 +31,12 @@
 ## 2. Tene CLI 배포 전략
 
 ### Phase 1 — MVP (지금 즉시)
-- `go install github.com/agent-kay-it/tene/cmd/tene@latest`
+- `go install github.com/tene-ai/tene/cmd/tene@latest`
 - GitHub Releases (GoReleaser로 자동화)
 - 크로스 컴파일 바이너리 + 체크섬
 
 ### Phase 2 — 안정화 후 (v0.5.0+)
-- Homebrew tap (`brew install agent-kay-it/tap/tene`)
+- Homebrew tap (`brew install tene-ai/tap/tene`)
 - install.sh 스크립트 (curl 한 줄 설치)
 
 ### Phase 3 — 인기 후 (v1.0.0+)
@@ -112,7 +112,7 @@ changelog:
 
 release:
   github:
-    owner: agent-kay-it
+    owner: tene-ai
     name: tene
   draft: false
   prerelease: auto
@@ -121,7 +121,7 @@ release:
 # Phase 2: Homebrew tap (주석 해제하여 활성화)
 # brews:
 #   - name: tene
-#     homepage: "https://github.com/agent-kay-it/tene"
+#     homepage: "https://github.com/tene-ai/tene"
 #     description: "Agentic Secret Runtime Platform - Secure secret management for AI agents"
 #     license: "MIT"
 #     directory: Formula
@@ -130,7 +130,7 @@ release:
 #       email: agent-kay-it@users.noreply.github.com
 #     commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
 #     repository:
-#       owner: agent-kay-it
+#       owner: tene-ai
 #       name: homebrew-tap
 #       branch: main
 #       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
@@ -283,7 +283,7 @@ jobs:
 ### 5.1 homebrew-tap 리포지토리 생성
 
 ```bash
-# 1. GitHub에 새 리포 생성: agent-kay-it/homebrew-tap
+# 1. GitHub에 새 리포 생성: tene-ai/homebrew-tap
 # 2. 리포에 빈 Formula 디렉토리 생성
 mkdir -p Formula
 touch Formula/.gitkeep
@@ -301,19 +301,19 @@ git add . && git commit -m "Initial commit" && git push
 위 `.goreleaser.yml`의 `brews` 섹션 주석을 해제하면, 태그 push 시 자동으로:
 1. GoReleaser가 바이너리 빌드 + GitHub Release 생성
 2. Homebrew Formula 파일을 자동 생성
-3. `agent-kay-it/homebrew-tap` 리포에 Formula를 커밋
+3. `tene-ai/homebrew-tap` 리포에 Formula를 커밋
 
 ### 5.4 사용자 설치 플로우
 
 ```bash
 # 최초 1회: tap 등록
-brew tap agent-kay-it/tap
+brew tap tene-ai/tap
 
 # 설치
-brew install agent-kay-it/tap/tene
+brew install tene-ai/tap/tene
 
 # 또는 한 줄로
-brew install agent-kay-it/tap/tene
+brew install tene-ai/tap/tene
 
 # 업그레이드
 brew upgrade tene
@@ -326,28 +326,28 @@ GoReleaser가 자동으로 생성하는 `Formula/tene.rb`:
 ```ruby
 class Tene < Formula
   desc "Agentic Secret Runtime Platform - Secure secret management for AI agents"
-  homepage "https://github.com/agent-kay-it/tene"
+  homepage "https://github.com/tene-ai/tene"
   version "0.1.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_darwin_arm64.tar.gz"
+      url "https://github.com/tene-ai/tene/releases/download/v0.1.0/tene_0.1.0_darwin_arm64.tar.gz"
       sha256 "<자동생성>"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_darwin_amd64.tar.gz"
+      url "https://github.com/tene-ai/tene/releases/download/v0.1.0/tene_0.1.0_darwin_amd64.tar.gz"
       sha256 "<자동생성>"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_linux_arm64.tar.gz"
+      url "https://github.com/tene-ai/tene/releases/download/v0.1.0/tene_0.1.0_linux_arm64.tar.gz"
       sha256 "<자동생성>"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/agent-kay-it/tene/releases/download/v0.1.0/tene_0.1.0_linux_amd64.tar.gz"
+      url "https://github.com/tene-ai/tene/releases/download/v0.1.0/tene_0.1.0_linux_amd64.tar.gz"
       sha256 "<자동생성>"
     end
   end
@@ -371,11 +371,11 @@ end
 ```bash
 #!/bin/sh
 # Tene CLI 설치 스크립트
-# 사용법: curl -fsSL https://raw.githubusercontent.com/agent-kay-it/tene/main/install.sh | sh
+# 사용법: curl -fsSL https://raw.githubusercontent.com/tene-ai/tene/main/install.sh | sh
 
 set -e
 
-REPO="agent-kay-it/tene"
+REPO="tene-ai/tene"
 BINARY_NAME="tene"
 INSTALL_DIR="/usr/local/bin"
 
@@ -573,13 +573,13 @@ git push origin v0.2.0-beta.1
 ### 8.1 현재 상태
 
 ```bash
-go install github.com/agent-kay-it/tene/cmd/tene@latest
+go install github.com/tene-ai/tene/cmd/tene@latest
 ```
 
 이 명령어가 동작하려면:
 1. `go.mod`에 **`replace` directive가 없어야 한다** (현재 없음 -- OK)
 2. GitHub에 **Git 태그가 있어야 한다** (`v0.1.0` 등)
-3. 모듈 경로가 정확해야 한다 (`github.com/agent-kay-it/tene`)
+3. 모듈 경로가 정확해야 한다 (`github.com/tene-ai/tene`)
 
 ### 8.2 주의사항
 
@@ -607,16 +607,16 @@ go install github.com/agent-kay-it/tene/cmd/tene@latest
 ## Installation
 
 ### Pre-built binaries (recommended)
-Download from [GitHub Releases](https://github.com/agent-kay-it/tene/releases/latest).
+Download from [GitHub Releases](https://github.com/tene-ai/tene/releases/latest).
 
 ### Go developers
 ```bash
-go install github.com/agent-kay-it/tene/cmd/tene@latest
+go install github.com/tene-ai/tene/cmd/tene@latest
 ```
 
 ### Build from source
 ```bash
-git clone https://github.com/agent-kay-it/tene.git
+git clone https://github.com/tene-ai/tene.git
 cd tene
 make build
 # Binary: ./bin/tene
@@ -628,12 +628,12 @@ make build
 ```markdown
 ### macOS / Linux (Homebrew)
 ```bash
-brew install agent-kay-it/tap/tene
+brew install tene-ai/tap/tene
 ```
 
 ### Quick install (macOS / Linux)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/agent-kay-it/tene/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/tene-ai/tene/main/install.sh | sh
 ```
 ```
 
@@ -669,7 +669,7 @@ scoop install tene
 
 현재 Makefile의 ldflags:
 ```
--X github.com/agent-kay-it/tene/internal/cli.version=$(VERSION)
+-X github.com/tene-ai/tene/internal/cli.version=$(VERSION)
 ```
 
 GoReleaser의 ldflags:
@@ -683,7 +683,7 @@ GoReleaser의 ldflags:
 
 ### v0.5.0 이후 해야 할 것
 
-- [ ] `agent-kay-it/homebrew-tap` 리포지토리 생성
+- [ ] `tene-ai/homebrew-tap` 리포지토리 생성
 - [ ] Personal Access Token 생성 및 시크릿 등록
 - [ ] `.goreleaser.yml`의 brews 섹션 주석 해제
 - [ ] `install.sh` 스크립트 프로젝트 루트에 추가

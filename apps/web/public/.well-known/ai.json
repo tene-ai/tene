@@ -5,15 +5,15 @@
     "https://tene.sh/llms.txt",
     "https://tene.sh/llms-full.txt"
   ],
-  "repository": "https://github.com/agent-kay-it/tene",
-  "documentation": "https://github.com/agent-kay-it/tene#readme",
+  "repository": "https://github.com/tene-ai/tene",
+  "documentation": "https://github.com/tene-ai/tene#readme",
   "cli_reference": "https://tene.sh/cli",
   "license": "MIT",
-  "contact": "https://github.com/agent-kay-it/tene/issues",
+  "contact": "https://github.com/tene-ai/tene/issues",
   "install": {
     "curl": "curl -sSfL https://tene.sh/install.sh | sh",
-    "brew": "brew install agent-kay-it/tene/tene",
-    "go": "go install github.com/agent-kay-it/tene/cmd/tene@latest",
-    "docker": "docker run ghcr.io/agent-kay-it/tene:latest"
+    "brew": "brew install tene-ai/tene/tene",
+    "go": "go install github.com/tene-ai/tene/cmd/tene@latest",
+    "docker": "docker run ghcr.io/tene-ai/tene:latest"
   }
 }

@@ -76,7 +76,7 @@ export const infisicalComparison: Comparison = {
     {
       question: "Is tene open source like Infisical?",
       answer:
-        "Yes, the entire CLI is MIT licensed at github.com/agent-kay-it/tene. Infisical's core is MIT as well, but some enterprise features use the Infisical License. Both are auditable.",
+        "Yes, the entire CLI is MIT licensed at github.com/tene-ai/tene. Infisical's core is MIT as well, but some enterprise features use the Infisical License. Both are auditable.",
     },
     {
       question: "What if I need RBAC?",

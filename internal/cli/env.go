@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
-	"github.com/agent-kay-it/tene/internal/vault"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
+	"github.com/tene-ai/tene/internal/vault"
 )
 
 var envCmd = &cobra.Command{

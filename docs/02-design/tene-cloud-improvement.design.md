@@ -151,7 +151,7 @@ import (
 
     "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/agent-kay-it/tene/internal/domain"
+    "github.com/tene-ai/tene/internal/domain"
 )
 
 // UserStore defines all user operations. Satisfies billing.UserStore.
@@ -290,7 +290,7 @@ import (
 
     "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgxpool"
-    "github.com/agent-kay-it/tene/internal/domain"
+    "github.com/tene-ai/tene/internal/domain"
 )
 
 // VaultRepo implements handler.VaultStore with PostgreSQL.
@@ -1914,9 +1914,9 @@ import (
     "github.com/labstack/echo/v4"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
-    "github.com/agent-kay-it/tene/internal/api/handler"
-    "github.com/agent-kay-it/tene/internal/api/middleware"
-    "github.com/agent-kay-it/tene/internal/auth"
+    "github.com/tene-ai/tene/internal/api/handler"
+    "github.com/tene-ai/tene/internal/api/middleware"
+    "github.com/tene-ai/tene/internal/auth"
 )
 
 func TestVaultHandler_List(t *testing.T) {

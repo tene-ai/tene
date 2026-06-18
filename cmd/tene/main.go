@@ -5,8 +5,8 @@ import (
 	"os"
 	"runtime/debug"
 
-	"github.com/agent-kay-it/tene/internal/cli"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/tene-ai/tene/internal/cli"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 
 // These are set via ldflags at build time (goreleaser).

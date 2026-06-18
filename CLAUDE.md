@@ -44,7 +44,7 @@ apps/web/              Next.js landing page (tene.sh, Vercel)
 
 ## Shared Packages (pkg/)
 
-Packages under `pkg/` are the public API of this module, imported by `github.com/agent-kay-it/tene-cloud`:
+Packages under `pkg/` are the public API of this module, imported by `github.com/tene-ai/tene-cloud`:
 
 - `pkg/domain` -- Domain models and types
 - `pkg/crypto` -- Encryption, key derivation, key wrapping

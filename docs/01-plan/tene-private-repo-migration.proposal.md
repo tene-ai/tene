@@ -114,11 +114,11 @@ tene-cloud (Private Repo)
 
 ```
 # Public repo
-module github.com/agent-kay-it/tene  (또는 go.tene.sh/tene)
+module github.com/tene-ai/tene  (또는 go.tene.sh/tene)
 
 # Private repo
-module github.com/agent-kay-it/tene-cloud
-require github.com/agent-kay-it/tene v0.x.x  // public 모듈 의존
+module github.com/tene-ai/tene-cloud
+require github.com/tene-ai/tene v0.x.x  // public 모듈 의존
 ```
 
 - `internal/` 패키지는 외부 import 불가이므로, 공개할 패키지는 `pkg/` 또는 최상위로 이동 필요
@@ -234,7 +234,7 @@ grep -r "507221376909" --include="*.tf" --include="*.yml" --include="*.go" .
 #    c) AWS 리소스 재생성 (Account ID는 변경 불가, IAM Role은 교체 가능)
 ```
 
-**권장:** 옵션 (b). Private 전환 자체로 추가 노출을 차단하고, AWS 보안 그룹/IAM 정책이 올바르면 Account ID 노출만으로는 실질적 공격이 어렵다. 단, IAM Role 신뢰 정책이 repo명 기반이므로 (`repo:agent-kay-it/tene:*`) 외부인이 같은 이름의 public repo를 만들어 OIDC를 시도할 리스크는 점검해야 한다.
+**권장:** 옵션 (b). Private 전환 자체로 추가 노출을 차단하고, AWS 보안 그룹/IAM 정책이 올바르면 Account ID 노출만으로는 실질적 공격이 어렵다. 단, IAM Role 신뢰 정책이 repo명 기반이므로 (`repo:tene-ai/tene:*`) 외부인이 같은 이름의 public repo를 만들어 OIDC를 시도할 리스크는 점검해야 한다.
 
 **기획서 반영 위치:** 섹션 5 "실행 계획" 앞에 Phase 0으로 추가.
 
@@ -369,7 +369,7 @@ func fetchLatestRelease() (*releaseInfo, error) {
 **분석:**
 
 ```
-현재 module path: (go.mod 확인 필요, 추정) github.com/agent-kay-it/tene
+현재 module path: (go.mod 확인 필요, 추정) github.com/tene-ai/tene
 ```
 
 Private 전환 시 `go.mod`의 module path 변경이 필요한가?
@@ -538,11 +538,11 @@ Private 전환 기획서(기존)의 일부로 포함되거나, 전환 직후 바
 커뮤니티 성장과 생태계 확장.
 
 - [ ] **Go SDK** (public 패키지) — Open Core Stage 2와 연동
-  - `go.tene.sh/sdk` 또는 `github.com/agent-kay-it/tene-go`
+  - `go.tene.sh/sdk` 또는 `github.com/tene-ai/tene-go`
   - 프로그래매틱 vault 접근 API
 
 - [ ] **GitHub Actions 공식 액션**
-  - `uses: agent-kay-it/tene-action@v1`
+  - `uses: tene-ai/tene-action@v1`
   - CI/CD에서 시크릿 주입 (vault 접근 없이 Sync Envelope 사용)
 
 - [ ] **MCP 서버** (Phase 2, CLAUDE.md 기반)

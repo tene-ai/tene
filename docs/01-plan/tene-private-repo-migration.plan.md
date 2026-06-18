@@ -10,7 +10,7 @@
 
 ### 배경
 
-Tene는 유료 SaaS(Agentic Secret Runtime)이지만, 현재 GitHub public repo(`agent-kay-it/tene`)에 전체 소스코드와 AWS 인프라 설정이 공개되어 있다.
+Tene는 유료 SaaS(Agentic Secret Runtime)이지만, 현재 GitHub public repo(`tene-ai/tene`)에 전체 소스코드와 AWS 인프라 설정이 공개되어 있다.
 
 노출 항목:
 - Go CLI + Cloud API 전체 소스코드
@@ -342,7 +342,7 @@ terraform apply
 # release 섹션 변경
 release:
   github:
-    owner: agent-kay-it
+    owner: tene-ai
     name: tene
   draft: false
   prerelease: auto
@@ -427,7 +427,7 @@ jobs:
 **1) 상수 변경 (L10-11)**
 ```sh
 # AS-IS
-REPO="agent-kay-it/tene"
+REPO="tene-ai/tene"
 
 # TO-BE
 RELEASE_BASE="https://tene-releases.s3.ap-northeast-2.amazonaws.com"
@@ -496,7 +496,7 @@ const releaseBaseURL = "https://tene-releases.s3.ap-northeast-2.amazonaws.com"
 ```go
 // AS-IS: GitHub API 호출
 func fetchLatestRelease() (*githubRelease, error) {
-    url := "https://api.github.com/repos/agent-kay-it/tene/releases/latest"
+    url := "https://api.github.com/repos/tene-ai/tene/releases/latest"
     // ...GitHub API 파싱...
 }
 
@@ -530,7 +530,7 @@ func fetchLatestRelease() (*githubRelease, error) {
 **3) 다운로드 URL 변경 (L119)**
 ```go
 // AS-IS
-downloadURL := fmt.Sprintf("https://github.com/agent-kay-it/tene/releases/download/%s/%s", targetVersion, assetName)
+downloadURL := fmt.Sprintf("https://github.com/tene-ai/tene/releases/download/%s/%s", targetVersion, assetName)
 
 // TO-BE
 downloadURL := fmt.Sprintf("%s/%s/%s", releaseBaseURL, targetVersion, assetName)
@@ -556,7 +556,7 @@ downloadURL := fmt.Sprintf("%s/%s/%s", releaseBaseURL, targetVersion, assetName)
 | 6 | `apps/web/src/components/cta.tsx` | L22 | GitHub 링크 | 제거 또는 docs 링크로 대체 |
 | 7 | `apps/web/src/data/hero.ts` | L11 | hero 섹션 GitHub 링크 | docs 또는 install 가이드로 대체 |
 | 8 | `apps/web/src/app/layout.tsx` | L150 | JSON-LD installUrl | `https://tene.sh/install.sh` (GitHub Releases 언급 제거) |
-| 9 | `apps/web/public/llms.txt` | L77 | `GitHub: https://github.com/agent-kay-it/tene` | 라인 제거 또는 `Website: https://tene.sh`로 변경 |
+| 9 | `apps/web/public/llms.txt` | L77 | `GitHub: https://github.com/tene-ai/tene` | 라인 제거 또는 `Website: https://tene.sh`로 변경 |
 
 #### security.tsx 특별 처리
 
@@ -586,14 +586,14 @@ sh apps/web/public/install.sh
 # - tene-dashboard: 동일 확인
 
 # 5. GitHub Actions OIDC 조건 확인
-# IAM: "repo:agent-kay-it/tene:*" → private 전환 시에도 유효 (repo명 불변)
+# IAM: "repo:tene-ai/tene:*" → private 전환 시에도 유효 (repo명 불변)
 ```
 
 #### 4-2. Private 전환 실행
 
 1. GitHub repo Settings → Danger Zone → Change repository visibility → Private
 2. 즉시 확인:
-   - `curl https://api.github.com/repos/agent-kay-it/tene` → 404 (정상)
+   - `curl https://api.github.com/repos/tene-ai/tene` → 404 (정상)
    - Vercel 배포 트리거 (빈 커밋 또는 수동)
    - GitHub Actions 워크플로우 실행 확인
 
@@ -700,7 +700,7 @@ Private 전환 후 문제 발생 시:
 | 2 | Vercel private repo 빌드 실패 | Landing + Dashboard 배포 중단 | 낮음 | 전환 전 Vercel GitHub App 권한 확인, Hobby 플랜에서 private repo 지원 확인 |
 | 3 | GoReleaser S3 업로드 실패 | 릴리스 바이너리 미배포 | 낮음 | dry-run으로 사전 검증, GitHub Releases는 fallback으로 유지 |
 | 4 | S3 버킷 퍼블릭 설정 오류 | install.sh 다운로드 403 | 중간 | Terraform plan에서 policy 확인, 배포 후 curl 테스트 |
-| 5 | OIDC 인증 실패 (private repo) | CI/CD 전체 중단 | 낮음 | IAM 조건 `repo:agent-kay-it/tene:*`는 visibility와 무관, 사전 테스트 가능 |
+| 5 | OIDC 인증 실패 (private repo) | CI/CD 전체 중단 | 낮음 | IAM 조건 `repo:tene-ai/tene:*`는 visibility와 무관, 사전 테스트 가능 |
 | 6 | SEO 하락 (GitHub 백링크 손실) | 검색 노출 감소 | 중간 | 랜딩페이지 SEO 강화, GitHub 프로필에 tene.sh 링크 유지 |
 | 7 | 오픈소스 신뢰도 하락 | 보안 제품 특성상 코드 공개 기대 | 중간 | 암호화 알고리즘 공개 문서화, 향후 crypto 모듈 Open Core 검토 |
 

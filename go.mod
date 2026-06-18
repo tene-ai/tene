@@ -1,4 +1,4 @@
-module github.com/agent-kay-it/tene
+module github.com/tene-ai/tene
 
 go 1.25.0
 

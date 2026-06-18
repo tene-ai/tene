@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/claudemd"
-	"github.com/agent-kay-it/tene/internal/config"
-	"github.com/agent-kay-it/tene/internal/recovery"
-	"github.com/agent-kay-it/tene/internal/vault"
-	"github.com/agent-kay-it/tene/pkg/crypto"
+	"github.com/tene-ai/tene/internal/claudemd"
+	"github.com/tene-ai/tene/internal/config"
+	"github.com/tene-ai/tene/internal/recovery"
+	"github.com/tene-ai/tene/internal/vault"
+	"github.com/tene-ai/tene/pkg/crypto"
 	"github.com/spf13/cobra"
 )
 

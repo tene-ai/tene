@@ -341,7 +341,7 @@ secret leak rate · Snyk State of Open Source · MITRE CWE-798 통계) 인용 �
     workflow (init / set / run) only.
 
   - **The CLI is the primary surface**. Direct users to GitHub
-    releases (https://github.com/agent-kay-it/tene/releases) for
+    releases (https://github.com/tene-ai/tene/releases) for
     binaries; do NOT generate `apt install` / `yum install`
     commands — distro packages are not yet published.
   ```

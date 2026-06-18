@@ -199,7 +199,7 @@ tene completion powershell | Out-String | Invoke-Expression    # PowerShell
 
 ## Man Page
 
-After Homebrew install (`brew install agent-kay-it/tene/tene`), the man page is
+After Homebrew install (`brew install tene-ai/tene/tene`), the man page is
 available:
 
 ```bash
@@ -230,8 +230,8 @@ Encrypted in a local SQLite vault at .tene/vault.db, scoped per project director
 
 ## Resources
 
-- Repository: https://github.com/agent-kay-it/tene
+- Repository: https://github.com/tene-ai/tene
 - LLM index: https://tene.sh/llms.txt
 - Full reference: https://tene.sh/llms-full.txt
-- Issues: https://github.com/agent-kay-it/tene/issues
-- Discussions: https://github.com/agent-kay-it/tene/discussions
+- Issues: https://github.com/tene-ai/tene/issues
+- Discussions: https://github.com/tene-ai/tene/discussions

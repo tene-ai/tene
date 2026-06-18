@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 
 // TestGet_NonTTY_BlocksByDefault verifies U-1: when stdout is not a TTY

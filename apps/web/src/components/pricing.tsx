@@ -88,11 +88,11 @@ export function Pricing() {
           <p className="text-sm text-muted">
             Star us on GitHub to follow updates:{" "}
             <TrackedGithubLink
-              href="https://github.com/agent-kay-it/tene"
+              href="https://github.com/tene-ai/tene"
               location="pricing"
               className="text-accent hover:underline"
             >
-              github.com/agent-kay-it/tene
+              github.com/tene-ai/tene
             </TrackedGithubLink>
           </p>
         </div>

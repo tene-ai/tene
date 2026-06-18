@@ -662,9 +662,9 @@ import (
     "golang.org/x/term"
 
     // 3. Internal
-    "github.com/agent-kay-it/tene/internal/vault"
-    "github.com/agent-kay-it/tene/pkg/crypto"
-    teneerr "github.com/agent-kay-it/tene/pkg/errors"
+    "github.com/tene-ai/tene/internal/vault"
+    "github.com/tene-ai/tene/pkg/crypto"
+    teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 ```
 

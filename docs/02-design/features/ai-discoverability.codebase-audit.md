@@ -29,7 +29,7 @@
 | `.goreleaser.yml` | 릴리스 파이프라인 | **S-1 `brews:`**, **S-2 `dockers:`**, S-4 `man_pages:` · completion archive, S-5 `signs:` (선택) |
 | (신규) `Dockerfile` | Docker 이미지 빌드 | S-2 |
 | `apps/web/public/install.sh` | curl install 스크립트 | S-3 (힌트 확장), S-5 (GPG verify, 선택) |
-| (신규 리포) `agent-kay-it/homebrew-tap/Formula/tene.rb` | Homebrew formula | S-1 (GoReleaser 자동 생성) |
+| (신규 리포) `tene-ai/homebrew-tap/Formula/tene.rb` | Homebrew formula | S-1 (GoReleaser 자동 생성) |
 
 ### 1.3 GitHub 리포 루트 / `.github/`
 
@@ -278,7 +278,7 @@ aggregateRating:
 
 ### 2.9 GitHub — Community Health 42% 증거
 
-**실측 (`gh api repos/agent-kay-it/tene/community/profile`)**:
+**실측 (`gh api repos/tene-ai/tene/community/profile`)**:
 ```json
 {
   "health_percentage": 42,
@@ -333,7 +333,7 @@ drwxr-xr-x@  4 popup-kay  staff   128B 4 22 15:09 workflows
 | I-1 Community Health 4+2 | 5 (신규) | No | No | No |
 | I-2 Trust Section | 2 (신규 컴포 + 홈 조합) | No | No | No |
 | I-3 Breadcrumb | 3 (신규 + /vs + /blog) | No | No | No |
-| S-1 Homebrew tap | 1 (.goreleaser) + 신규 리포 | No | **Yes** | **Yes (`agent-kay-it/homebrew-tap`)** |
+| S-1 Homebrew tap | 1 (.goreleaser) + 신규 리포 | No | **Yes** | **Yes (`tene-ai/homebrew-tap`)** |
 | S-2 Docker GHCR | 2 (Dockerfile + .goreleaser) | No | **Yes (packages:write)** | No |
 | S-3 install.sh 힌트 | 1 | No | No | No |
 | S-4 man/completion | 2 (.goreleaser + CLI completion.go) | No (opt-in) | **Yes (archive 포함)** | No |
@@ -362,8 +362,8 @@ drwxr-xr-x@  4 popup-kay  staff   128B 4 22 15:09 workflows
 
 - `curl -I https://tene.sh/robots.txt` → LLM bots 포함 확인
 - `curl https://tene.sh/.well-known/ai.json` → 200
-- `brew install agent-kay-it/tap/tene && tene version` → 성공
-- `docker run ghcr.io/agent-kay-it/tene version` → 성공
+- `brew install tene-ai/tap/tene && tene version` → 성공
+- `docker run ghcr.io/tene-ai/tene version` → 성공
 - `tene get X | cat` → exit 2 + `STDOUT_SECRET_BLOCKED`
 - `tene get X` (터미널) → 정상 출력
 - `tene completion bash` → 스크립트 출력

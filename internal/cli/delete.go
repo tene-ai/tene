@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
 )
 
 var deleteFlagForce bool

@@ -8,7 +8,7 @@ type Props = {
 };
 
 export function PostFooter({ meta }: Props) {
-  const githubEditUrl = `https://github.com/agent-kay-it/tene/edit/main/apps/web/content/blog/${meta.slug}.mdx`;
+  const githubEditUrl = `https://github.com/tene-ai/tene/edit/main/apps/web/content/blog/${meta.slug}.mdx`;
 
   return (
     <footer className="mt-16 border-t border-border/50 pt-8">

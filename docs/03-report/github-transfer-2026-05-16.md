@@ -1,4 +1,4 @@
-# GitHub Repository Transfer Report — tomo-kay/tene → agent-kay-it/tene
+# GitHub Repository Transfer Report — tomo-kay/tene → tene-ai/tene
 
 > **날짜**: 2026-05-16
 > **소요 시간**: 약 1시간 (transfer API call 14:36 KST ~ main merge 22:09 KST 사이 사용자 manual 대기 포함)
@@ -12,7 +12,7 @@ GitHub repository 를 사용자의 두 User 계정 (`tomo-kay` → `agent-kay-it
 
 | 지표 | Before | After |
 |------|--------|-------|
-| Repository URL | github.com/tomo-kay/tene | github.com/agent-kay-it/tene |
+| Repository URL | github.com/tomo-kay/tene | github.com/tene-ai/tene |
 | Stars | 8 | 8 (유지) |
 | Forks | 0 | 0 (유지) |
 | Issues/PR history | 113 PRs | 113 PRs (+ 2 신규: #112/#113) |
@@ -20,7 +20,7 @@ GitHub repository 를 사용자의 두 User 계정 (`tomo-kay` → `agent-kay-it
 | Old URL redirect | — | HTTP 301 → 새 URL ✅ |
 | Vercel project (prj_AT0w...) | tomo-kay 연결 | agent-kay-it 자동 follow ✅ |
 | tene.sh production | 200 | 200 ✅ |
-| Go module path | github.com/tomo-kay/tene | github.com/agent-kay-it/tene |
+| Go module path | github.com/tomo-kay/tene | github.com/tene-ai/tene |
 
 ---
 
@@ -46,7 +46,7 @@ GitHub repository 를 사용자의 두 User 계정 (`tomo-kay` → `agent-kay-it
 | 5.1 Full build + test verification | #51 | ✅ go build clean, web build clean, 23 articles indexability PASS |
 | 5.2 PR → staging → main | #52 | ✅ PR #112 merged 34a39a6, PR #113 admin-merged 5266682 |
 | 6.1 외부 referrer 안내 | #53 | (pending — Daily.dev/Reddit/Awesome PRs cross-share, GitHub redirect 가 처리 중) |
-| 6.2 Homebrew tap 결정 | #54 | (pending — Sprint 3 brew-tap-reactivation 시 agent-kay-it/homebrew-tene 으로 직접 생성) |
+| 6.2 Homebrew tap 결정 | #54 | (pending — Sprint 3 brew-tap-reactivation 시 tene-ai/homebrew-tene 으로 직접 생성) |
 | 7 Post-transfer 검증 + 보고 | #55 | ✅ 본 문서 |
 
 ## 신규 발견 task
@@ -104,8 +104,8 @@ Not authorized to perform sts:AssumeRoleWithWebIdentity
 1. AWS Console → IAM → Roles → `tene-prod-github-actions`
 2. Trust relationships → Edit JSON
 3. `"token.actions.githubusercontent.com:sub": "repo:tomo-kay/tene:*"` →
-   `"token.actions.githubusercontent.com:sub": "repo:agent-kay-it/tene:*"`
-   (또는 array `["repo:tomo-kay/tene:*", "repo:agent-kay-it/tene:*"]` 으로 둘 다 허용 — 안전한 transition period)
+   `"token.actions.githubusercontent.com:sub": "repo:tene-ai/tene:*"`
+   (또는 array `["repo:tomo-kay/tene:*", "repo:tene-ai/tene:*"]` 으로 둘 다 허용 — 안전한 transition period)
 4. 다음 release tag push 시 goreleaser S3 upload 정상화
 
 **Impact when unfixed**:
@@ -124,7 +124,7 @@ require github.com/tomo-kay/tene v1.0.0-rc1
 
 본 PR 이 v2 release 로 tag 되면 tene-cloud 에서:
 ```
-go get github.com/agent-kay-it/tene@v...
+go get github.com/tene-ai/tene@v...
 ```
 실행하여 require 갱신 필요. 별도 PR 로 처리. tene-cloud 자체의 owner transfer 도 사용자 결정 사항.
 
@@ -145,7 +145,7 @@ Vercel/GitHub redirect 로 인해 broken link 0 — 우선순위 낮음.
 
 | 검증 | Pre-transfer | Post-transfer | Status |
 |------|:------------:|:-------------:|:------:|
-| Repo URL accessible | github.com/tomo-kay/tene | github.com/agent-kay-it/tene | ✅ |
+| Repo URL accessible | github.com/tomo-kay/tene | github.com/tene-ai/tene | ✅ |
 | Old URL redirect | n/a | HTTP 301 | ✅ |
 | Star count | 8 | 8 | ✅ |
 | Fork count | 0 | 0 | ✅ |
@@ -156,7 +156,7 @@ Vercel/GitHub redirect 로 인해 broken link 0 — 우선순위 낮음.
 | tene.sh root HTTP | 200 | 200 (585ms) | ✅ |
 | /blog/bkit-sprint-orchestration | 200 | 200 | ✅ |
 | Vercel preview deploy on PR | 작동 | 자동 follow | ✅ |
-| Go module path | tomo-kay/tene | agent-kay-it/tene | ✅ |
+| Go module path | tomo-kay/tene | tene-ai/tene | ✅ |
 | go build ./... | clean | clean | ✅ |
 | go test pass | pass | pass | ✅ |
 | apps/web build | clean | clean | ✅ |
@@ -191,4 +191,4 @@ Vercel/GitHub redirect 로 인해 broken link 0 — 우선순위 낮음.
 
 > **Status**: ✅ Complete (with 2 documented follow-ups)
 >
-> Production live at https://tene.sh — GitHub repo at https://github.com/agent-kay-it/tene
+> Production live at https://tene.sh — GitHub repo at https://github.com/tene-ai/tene

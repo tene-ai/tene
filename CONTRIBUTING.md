@@ -20,7 +20,7 @@ All participation is governed by [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 ### Clone and build
 
 ```bash
-git clone https://github.com/agent-kay-it/tene.git
+git clone https://github.com/tene-ai/tene.git
 cd tene
 go build -o tene ./cmd/tene
 go test -race ./...

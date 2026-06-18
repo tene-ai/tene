@@ -240,7 +240,7 @@ func ErrCommandNotFound(cmd string) *TeneError {
 #### 예시: `internal/cli/root.go` loadApp() 수정
 
 ```go
-import teneerr "github.com/agent-kay-it/tene/internal/errors"
+import teneerr "github.com/tene-ai/tene/internal/errors"
 
 func loadApp() (*App, error) {
 	dir := resolveDir()
@@ -256,7 +256,7 @@ func loadApp() (*App, error) {
 #### 예시: `internal/cli/helpers.go` validateKeyName() 수정
 
 ```go
-import teneerr "github.com/agent-kay-it/tene/internal/errors"
+import teneerr "github.com/tene-ai/tene/internal/errors"
 
 func validateKeyName(name string) error {
 	if len(name) == 0 || len(name) > 256 {
@@ -285,7 +285,7 @@ func validateEnvName(name string) error {
 #### 예시: `internal/cli/get.go` 수정
 
 ```go
-import teneerr "github.com/agent-kay-it/tene/internal/errors"
+import teneerr "github.com/tene-ai/tene/internal/errors"
 
 func runGet(cmd *cobra.Command, args []string) error {
 	keyName := args[0]
@@ -329,7 +329,7 @@ func runGet(cmd *cobra.Command, args []string) error {
 #### 예시: `internal/cli/run.go` 수정
 
 ```go
-import teneerr "github.com/agent-kay-it/tene/internal/errors"
+import teneerr "github.com/tene-ai/tene/internal/errors"
 
 func runRun(cmd *cobra.Command, args []string) error {
 	cmdArgs := extractArgsAfterDash(args)
@@ -466,8 +466,8 @@ import (
 	"os"
 	"runtime/debug"
 
-	"github.com/agent-kay-it/tene/internal/cli"
-	teneerr "github.com/agent-kay-it/tene/internal/errors"
+	"github.com/tene-ai/tene/internal/cli"
+	teneerr "github.com/tene-ai/tene/internal/errors"
 )
 
 var (
@@ -877,7 +877,7 @@ func IncrementSyncAttempts() error {
 `runInit()` 함수에서 글로벌 config 디렉토리 확인/생성을 추가한다.
 
 ```go
-import "github.com/agent-kay-it/tene/internal/config"
+import "github.com/tene-ai/tene/internal/config"
 
 // runInit() 내부, 기존 단계 4 (.tene/ 디렉토리 생성) 후에 추가
 // 4.5 (신규) Ensure global config directory
@@ -889,7 +889,7 @@ _ = config.EnsureConfigDir() // 실패해도 계속 진행 (non-critical)
 `runSync()` 함수에 analytics 기록을 추가한다.
 
 ```go
-import "github.com/agent-kay-it/tene/internal/config"
+import "github.com/tene-ai/tene/internal/config"
 
 func runSync(cmd *cobra.Command, args []string) error {
 	// 기존 JSON 출력 / 텍스트 출력 로직 동일...
@@ -1029,7 +1029,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/agent-kay-it/tene/internal/crypto"
+	"github.com/tene-ai/tene/internal/crypto"
 )
 
 var (
@@ -1223,7 +1223,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/agent-kay-it/tene/internal/encfile"
+	"github.com/tene-ai/tene/internal/encfile"
 )
 
 // ExportPayload는 .tene.enc 파일의 암호화 전 JSON 구조이다.
@@ -1318,7 +1318,7 @@ func exportEncrypted(app *App, env string, keys []string, decrypted map[string]s
 `--encrypted` 모드에서 `encfile.Decrypt()`를 사용하도록 변경한다.
 
 ```go
-import "github.com/agent-kay-it/tene/internal/encfile"
+import "github.com/tene-ai/tene/internal/encfile"
 
 func importEncrypted(app *App, filePath string) error {
 	data, err := os.ReadFile(filePath)
@@ -2057,7 +2057,7 @@ const SecretsMdTemplate = `# Secrets Management
 This project uses [tene](https://github.com/agentkay/tene) for secret management.
 ```
 
-`go.mod`의 모듈 경로는 `github.com/agent-kay-it/tene`이다.
+`go.mod`의 모듈 경로는 `github.com/tene-ai/tene`이다.
 
 ### 9.2 수정 파일: `internal/claudemd/template.go`
 
@@ -2066,7 +2066,7 @@ This project uses [tene](https://github.com/agentkay/tene) for secret management
 This project uses [tene](https://github.com/agentkay/tene) for secret management.
 
 // 변경 후
-This project uses [tene](https://github.com/agent-kay-it/tene) for secret management.
+This project uses [tene](https://github.com/tene-ai/tene) for secret management.
 ```
 
 ### 9.3 테스트
@@ -2075,7 +2075,7 @@ This project uses [tene](https://github.com/agent-kay-it/tene) for secret manage
 
 ```go
 func TestTemplate_URL(t *testing.T) {
-	if !strings.Contains(SecretsMdTemplate, "github.com/agent-kay-it/tene") {
+	if !strings.Contains(SecretsMdTemplate, "github.com/tene-ai/tene") {
 		t.Error("template should contain tomo-kay URL")
 	}
 	if strings.Contains(SecretsMdTemplate, "agentkay") {
@@ -2177,7 +2177,7 @@ type App struct {
 // internal/cli/mock_test.go
 package cli
 
-import "github.com/agent-kay-it/tene/internal/vault"
+import "github.com/tene-ai/tene/internal/vault"
 
 // mockVault는 테스트용 VaultStore 구현이다.
 type mockVault struct {

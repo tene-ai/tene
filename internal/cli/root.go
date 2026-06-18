@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/agent-kay-it/tene/internal/auth"
-	"github.com/agent-kay-it/tene/internal/keychain"
-	"github.com/agent-kay-it/tene/internal/vault"
-	teneerr "github.com/agent-kay-it/tene/pkg/errors"
+	"github.com/tene-ai/tene/internal/auth"
+	"github.com/tene-ai/tene/internal/keychain"
+	"github.com/tene-ai/tene/internal/vault"
+	teneerr "github.com/tene-ai/tene/pkg/errors"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -66,9 +66,9 @@ Typical workflow:
 Resources:
   AI index:    https://tene.sh/llms.txt
   CLI ref:     https://tene.sh/cli
-  Docs:        https://github.com/agent-kay-it/tene#readme
-  Issues:      https://github.com/agent-kay-it/tene/issues
-  Discussions: https://github.com/agent-kay-it/tene/discussions
+  Docs:        https://github.com/tene-ai/tene#readme
+  Issues:      https://github.com/tene-ai/tene/issues
+  Discussions: https://github.com/tene-ai/tene/discussions
 `,
 	Version:       version,
 	SilenceErrors: true,
